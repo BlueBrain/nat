@@ -6,6 +6,27 @@ import urllib
 from bs4 import BeautifulSoup
 
 
+
+def getIDfromPMID(PMID):
+    url = "http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?tool=neurocurator&email=christian.oreilly@epfl.ch&ids=" + PMID + "&format=json&versions=no"
+    try:
+        with urllib.request.urlopen(url) as response:
+           html = response.read()
+    except urllib.error.HTTPError:
+        return None
+
+    soup = BeautifulSoup(html, "lxml")
+    jsonStr = eval(str(soup)[15:-19])
+    if jsonStr["status"] == "ok":
+        if "doi" in jsonStr["records"][0]:
+            return jsonStr["records"][0]["doi"]
+        else:
+            return "PMID_" + PMID
+    else:
+        return None
+
+    
+
 def checkID(ID): 
 	if "PMID" in ID:
 		return checkPMID(ID)
@@ -15,7 +36,7 @@ def checkID(ID):
 
 def checkPMID(ID):
 	idKind, PMID = ID.split("_")
-	url = "http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?tool=curator&email=christian.oreilly@epfl.ch&ids=" + PMID + "&format=json&versions=no"
+	url = "http://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?tool=neurocurator&email=christian.oreilly@epfl.ch&ids=" + PMID + "&format=json&versions=no"
 	try:
 		with urllib.request.urlopen(url) as response:
 		   html = response.read()
@@ -23,6 +44,7 @@ def checkPMID(ID):
 		return False
 
 	soup = BeautifulSoup(html, "lxml")
+     
 	return eval(str(soup)[15:-19])["status"] == "ok"
 
 

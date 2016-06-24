@@ -3,14 +3,16 @@
 __author__ = 'oreilly'
 __email__  = 'christian.oreilly@epfl.ch'
 
-from tagUtilities import nlx2ks
+from .tagUtilities import nlx2ks
+from .treeData import OntoManager
 
-
-import qtNeurolexTree 
 class Tag:
     
     ## TODO: remove this line once tag ids have been corrected in all annotatiuons
-    treeData, dicData    = qtNeurolexTree.loadTreeData()   
+    ontoMng  = OntoManager()
+    treeData = ontoMng.trees 
+    dicData  = ontoMng.dics    
+    
     invDicData = {val:(nlx2ks[key] if key in nlx2ks else key) for key, val in dicData.items()}
     invDicData['Thalamus geniculate nucleus (lateral) principal neuron'] = 'NIFCELL:nlx_cell_20081203'
     invDicData["Young rat"] = "nlx_151691"
@@ -40,14 +42,8 @@ class Tag:
                 id = Tag.invDicData[name]
                 name = Tag.dicData[id]
             except:
-                # "Thalamus relay cell"
-                raise                
-                #treeData, Tag.dicData    = qtNeurolexTree.loadTreeData()   
-                #Tag.invDicData = {val:key for key, val in Tag.dicData.items()}  
-                #print("Incompatibility between in " + str(id) + ":" + str(name) + ". Correcting to " + 
-                #      str(Tag.invDicData[name]) + ":" + str(name))
-                #id = Tag.invDicData[name]                
-        ##       
+                raise                 
+        ######
             
         self.id = id
         self.name = name

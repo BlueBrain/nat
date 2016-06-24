@@ -3,7 +3,7 @@
 __author__ = "Christian O'Reilly"
 
 import os
-from PySide import QtGui, QtCore
+from PySide import QtCore
 import quantities as pq
 import csv
 from io import StringIO
@@ -11,12 +11,13 @@ from uuid import uuid1
 from abc import abstractmethod
 import pandas as pd
 
-from tag import Tag, RequiredTag
-
-statisticList  = ["raw", "mean", "median", "mode", "sem", "sd",  "var", "CI_01", "CI_02.5", "CI_90", "CI_95", "CI_97.5", "CI_99", "N", "min", "max", "other"]
+from .tag import Tag, RequiredTag
 
 
-expPropertyStrList  = ["Temperature", "Age", "Junction potential correction"]
+statisticList  = ["raw", "mean", "median", "mode", "sem", "sd",  "var", "CI_01", "CI_02.5", "CI_90", "CI_95", "CI_97.5", "CI_99", "N", "min", "max", "other", "deviation", "average"]
+
+
+#expPropertyStrList  = ["Temperature", "Age", "Junction potential correction"]
 
 
 
@@ -252,65 +253,6 @@ class ParameterType:
         return self.parseStr.format(self.ID, self.parent, self.name, self.description, self.requiredTags)
 
 
-"""
-class ExperimentProperty:
-
-
-    def __init__(self, name, value, unit):
-        self.__name   = name
-        self.__value  = value
-        self.__unit   = unit
-
-
-    @property
-    def name(self):
-        return self.__name
-        
-    @name.setter
-    def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError        
-        self.__name = name
-        
-    @property
-    def value(self):
-        return self.__value
-        
-    @value.setter
-    def value(self, value):
-        if not isinstance(value, float):
-            raise TypeError        
-        self.__value = value
-        
-    @property
-    def unit(self):
-        return self.__unit
-        
-    @unit.setter
-    def unit(self, unit):
-        if not isinstance(unit, str):
-            raise TypeError
-        if not unitIsValid(unit):
-            raise ValueError
- 
-        self.__unit = unit
-
-
-    @staticmethod    
-    def fromJSON(jsonString):
-        return ExperimentProperty(jsonString["name"], jsonString["value"], jsonString["unit"])
-
-    def toJSON(self):
-        return {"name": self.name, "value": self.value, "unit": self.unit}
-
-    def __str__(self):
-        return str(self.toJSON())
-
-    def __repr__(self):
-        return str(self.toJSON())
-
-"""
-
 
 
 class Values:
@@ -319,8 +261,8 @@ class Values:
     def fromJSON(jsonString):
         if jsonString["type"] == "simple":
             return ValuesSimple.fromJSON(jsonString)
-        elif jsonString["type"] == "compounded":
-            return ValuesCompounded.fromJSON(jsonString)
+        elif jsonString["type"] == "compounded" or jsonString["type"] == "compound":
+            return ValuesCompound.fromJSON(jsonString)
         else:
             raise ValueError
 
@@ -386,7 +328,7 @@ class ValuesSimple(Values):
         else:
             return np.mean(self.values)
 
-class ValuesCompounded(Values):
+class ValuesCompound(Values):
 
     def __init__(self, valueLst):
         if not isinstance(valueLst, list):
@@ -399,10 +341,10 @@ class ValuesCompounded(Values):
 
     @staticmethod    
     def fromJSON(jsonString):
-        return ValuesCompounded([Values.fromJSON(v) for v in jsonString["valueLst"]])
+        return ValuesCompound([Values.fromJSON(v) for v in jsonString["valueLst"]])
 
     def toJSON(self):
-        return {"type": "compounded", "valueLst": [v.toJSON() for v in self.valueLst]}
+        return {"type": "compound", "valueLst": [v.toJSON() for v in self.valueLst]}
 
     def __str__(self):
         return str(self.toJSON())
@@ -422,6 +364,8 @@ class ValuesCompounded(Values):
             dev = "+/- " + self.valueLst[stats.index("sd")].text()
         elif "var" in stats :
             dev = "+/- " + self.valueLst[stats.index("var")].text()
+        elif "deviation" in stats :
+            dev = "+/- " + self.valueLst[stats.index("deviation")].text()
         else:
             dev = ""
 
@@ -445,6 +389,8 @@ class ValuesCompounded(Values):
             avg = self.valueLst[stats.index("median")].text()
         elif "mode" in stats :
             avg = self.valueLst[stats.index("mode")].text()
+        elif "average" in stats :
+            avg = self.valueLst[stats.index("average")].text()
         else:
             avg = ""
 
@@ -475,6 +421,8 @@ class ValuesCompounded(Values):
             unit = self.valueLst[stats.index("median")].unit
         elif "mode" in stats :
             unit = self.valueLst[stats.index("mode")].unit
+        elif "average" in stats :
+            unit = self.valueLst[stats.index("average")].unit
 
         return unit
 
@@ -522,8 +470,8 @@ class NumericalVariable:
             raise TypeError
 
 
-        self.typeId      = typeId
-        self.values        = values
+        self.typeId = typeId
+        self.values = values
 
     @staticmethod    
     def fromJSON(jsonString):
@@ -546,9 +494,9 @@ class NumericalVariable:
 class Variable:
 
     def __init__(self, typeId, unit, statistic):
-        self.typeId      = typeId
-        self.unit          = unit
-        self.statistic  = statistic
+        self.typeId    = typeId
+        self.unit      = unit
+        self.statistic = statistic
 
     @staticmethod    
     def fromJSON(jsonString):
@@ -856,7 +804,7 @@ class ParameterInstance:
             valuesObject = self.description.depVar.values
             if isinstance(valuesObject, ValuesSimple):
                 return valuesObject.values
-            elif isinstance(valuesObject, ValuesCompounded):
+            elif isinstance(valuesObject, ValuesCompound):
                 return [val.values for val in valuesObject.valueLst]
             else:
                 raise TypeError

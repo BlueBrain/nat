@@ -2,22 +2,11 @@
 
 __author__ = "Christian O'Reilly"
 
-import sys
 from PySide import QtGui, QtCore
 
 import re
-import parse
-import operator
-import os
-from shutil import copyfile
-import getpass
 import pickle
 from dateutil.parser import parse
-
-from annotation import Annotation
-from approximateMatchDlg import MatchDlg
-from tagWidget import TagWidget, Tag
-
 from pyzotero import zotero
 
 class ZoteroTableModel(QtCore.QAbstractTableModel):

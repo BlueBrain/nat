@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+"""
 __author__ = "Christian O'Reilly"
 
 import urllib
@@ -16,3 +17,4 @@ def checkDOI(DOI):
 	soup = BeautifulSoup(html, "lxml")
 	return not "DOI Not Found" in soup.title.string
 
+"""

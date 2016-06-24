@@ -18,21 +18,21 @@ from PySide import QtGui, QtCore
 import numpy as np
 
 # Local imports
-from utils import Id2FileName #, fileName2Id
-from annotation import Annotation, AnnotationListModel
-from tagWidget import TagWidget, Tag
-from autocomplete import AutoCompleteEdit
-from suggestedTagMng import TagSuggester
-from gitManager import GitManager
-from qtNeurolexTree import TreeModel, TreeView, loadTreeData
-from zoteroWrap import ZoteroTableModel
-from id import checkID
-from uiUtilities import errorMessage, disableTextWidget
-from settingsDlg import getSettings, SettingsDlg
-from annotWidgets import EditAnnotWgt
-from modParamWidgets import ParamModWgt
-from experimentalPropertyWgt import ExpPropWgt
-from searchInterface import SearchWgt
+from .utils import Id2FileName #, fileName2Id
+from .annotation import Annotation, AnnotationListModel
+from .tagWidget import TagWidget, Tag
+from .autocomplete import AutoCompleteEdit
+from .suggestedTagMng import TagSuggester
+from .gitManager import GitManager
+from .qtNeurolexTree import TreeModel, TreeView, loadTreeData
+from .zoteroWrap import ZoteroTableModel
+from .id import checkID
+from .uiUtilities import errorMessage, disableTextWidget
+from .settingsDlg import getSettings, SettingsDlg
+from .annotWidgets import EditAnnotWgt
+from .modParamWidgets import ParamModWgt
+from .experimentalPropertyWgt import ExpPropWgt
+from .searchInterface import SearchWgt
 
 # Should PDF be included in the GIT database?
 gitPDF = True
@@ -100,8 +100,8 @@ class Window(QtGui.QMainWindow):
         # True when the annotationEdt field has been modified BY THE USER
         self.detectAnnotChange     = False
     
-        # Load the Neurolex ontological tree (pre-save for efficiency)
-        self.builtNeurolexTree()
+        # Load the ontological trees (pre-save for efficiency)
+        self.builtOntoTrees()
 
         # Load the tag suggester (based on saved tagging history)
         self.tagSuggester = TagSuggester.load()
@@ -115,7 +115,7 @@ class Window(QtGui.QMainWindow):
 
         # Load the object used to transparently interact with GIT to save annotations
         # using versioning.
-        self.gitMng = GitManager(self.settings)
+        self.gitMng = GitManager(self.settings.config["GIT"])
 
         # Load from config the path where the GIT database is located.
         self.dbPath   = os.path.abspath(self.settings.config["GIT"]["local"])
@@ -467,8 +467,8 @@ class Window(QtGui.QMainWindow):
 
         # This fields provide a text fields that can be used
         # to enter tags. It is using an autocompletion scheme which
-        # suggests available Neurolex tags according to entrer word.
-        # Matching between entered text and Neurolex concepts are
+        # suggests available ontological tags according to entrer word.
+        # Matching between entered text and ontological concepts are
         # is not case-sensitive and is not using a prefix scheme (i.e., 
         # matching can be done anywhere within the strings, not only with
         # their begininings)  
@@ -517,7 +517,7 @@ class Window(QtGui.QMainWindow):
         gridTagAnnotations     = QtGui.QGridLayout(self.tagAnnotGroupBox)
         gridTagAnnotations.addWidget(QtGui.QLabel('Annotation tags', self), 0, 0)
         gridTagAnnotations.addWidget(QtGui.QLabel('Suggested tags', self), 0, 1)
-        gridTagAnnotations.addWidget(QtGui.QLabel('Neurolex tags', self), 0, 2)
+        gridTagAnnotations.addWidget(QtGui.QLabel('Ontological tags', self), 0, 2)
         gridTagAnnotations.addWidget(self.selectedTagsWidget, 1, 0)
         gridTagAnnotations.addWidget(self.tagEdit, 2, 0)
         gridTagAnnotations.addWidget(self.suggestedTagsWidget, 1, 1, 2, 1)
@@ -637,7 +637,7 @@ class Window(QtGui.QMainWindow):
 
 
 
-    def builtNeurolexTree(self):
+    def builtOntoTrees(self):
         self.treeData, self.dicData    = loadTreeData()
         self.nlTreeModel               = TreeModel(self.treeData)
         self.nlTreeView                = TreeView(self.nlTreeModel)

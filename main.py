@@ -5,7 +5,6 @@ __author__ = "Christian O'Reilly"
 
 import sys
 from PySide import QtGui
-from qtNeurolexTree import TreeData
 from mainWin import Window
 
 if __name__ == '__main__':

@@ -2,8 +2,8 @@ from distutils.core import setup, Extension
 import os
 import numpy
 
-PACKAGE = "neurocurator"
-NAME = "neurocurator"
+PACKAGE = "nat"
+NAME = "NeuroAnnotation Toolbox"
 DESCRIPTION = "GUI-based application and API to perform systematic and collaborative scientific literature curation."
 AUTHOR = "Christian O'Reilly"
 AUTHOR_EMAIL = "christian.oreilly@epfl.ch"
@@ -36,8 +36,8 @@ setup(
     name=NAME,
     packages=packages.keys(),
     package_dir=packages,
-    package_data={},
-    version=VERSION,
+    package_data={PACKAGE: ["additionsToOntologies.csv", "modelingDictionary.csv", "onto/*.dic", "onto/*.tree"]},
+    version=VERSION, #data_files=[("", ["additionsToNeurolex.csv"])],
     description=DESCRIPTION,
     long_description=DESCRIPTION, #open("README.txt").read(),
     author=AUTHOR,

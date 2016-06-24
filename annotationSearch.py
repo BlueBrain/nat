@@ -4,13 +4,15 @@ __author__ = 'oreilly'
 __email__  = 'christian.oreilly@epfl.ch'
 
 
-import sys, os
+import os
 from glob import glob
-from annotation import Annotation
-from modelingParameter import NumericalVariable, getParameterTypeNameFromID, Variable
-from qtNeurolexTree import flatten_list, loadTreeData, TreeData
 import pandas as pd
 import numpy as np
+
+from .annotation import Annotation
+from .modelingParameter import NumericalVariable, getParameterTypeNameFromID, Variable
+from .treeData import flatten_list, OntoManager
+
 
 annotationKeys         = ["Annotation type", "Publication ID", "Has parameter", "Tag name", "Author"]
 annotationResultFields = ["Annotation type", "Publication ID", "Nb. parameters", "Tag name", "Comment", "Authors", "Localizer"]
@@ -209,7 +211,10 @@ class Search:
         if pathDB is None:
             pathDB = os.path.join(os.path.dirname(__file__), './curator_DB')
 
-        self.treeData, self.dicData    = loadTreeData()
+        ontoMng = OntoManager()
+        self.treeData                  = ontoMng.trees 
+        self.dicData                   = ontoMng.dics
+        
         self.conditions = Condition()    
         
         self.pathDB     = pathDB 

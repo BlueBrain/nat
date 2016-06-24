@@ -2,16 +2,15 @@ __author__ = "Christian O'Reilly"
 
 
 from git import Repo, exc
-import os
 
-from PySide import QtGui, QtCore
+from PySide import QtGui
 
 
 class GitManager:
 
-    def __init__(self, settings):
+    def __init__(self, gitSettings):
 
-        self.localRepoDir = settings.config["GIT"]["local"]
+        self.localRepoDir = gitSettings["local"]
         self.offline = False        
 
         try:
@@ -19,7 +18,7 @@ class GitManager:
             assert not self.repo.bare
 
         except (exc.InvalidGitRepositoryError,exc.NoSuchPathError):
-            self.repo = Repo.clone_from("ssh://" + settings.config["GIT"]["user"] + "@" + settings.config["GIT"]["remote"], self.localRepoDir)
+            self.repo = Repo.clone_from("ssh://" + gitSettings["user"] + "@" + gitSettings["remote"], self.localRepoDir)
 
 
         self.tryToFetch()
@@ -156,8 +155,7 @@ class GitManager:
         # we use this "..." default message.
 
         try:
-            commitObj = self.repo.index.commit(msg)
-            #print(commitObj)
+            self.repo.index.commit(msg)
         except exc.UnmergedEntriesError as e:
             print(e)
             raise
