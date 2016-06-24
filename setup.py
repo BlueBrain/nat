@@ -18,7 +18,7 @@ def find_packages(path, base="" ):
     """ Find all packages in path """
     packages = {}
     for item in os.listdir(path):
-        dir = os.path.join(path, item)
+        dir = os.path.realpath(os.path.join(path, item))
         if is_package( dir ):
             if base:
                 module_name = "%(base)s.%(item)s" % vars()
@@ -29,7 +29,6 @@ def find_packages(path, base="" ):
     return packages
 
 packages=find_packages(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-print(packages)
 
 setup(
     name=NAME,
