@@ -3,7 +3,6 @@
 __author__ = "Christian O'Reilly"
 
 import os
-from PySide import QtCore
 import quantities as pq
 import csv
 from io import StringIO
@@ -948,82 +947,6 @@ class CustomParameterInstance (AbstractParameterInstance):
         return True
 
 
-
-
-
-
-
-
-
-class ParameterListModel(QtCore.QAbstractTableModel):
-
-    def __init__(self, parent, parameterList = [], header = ['Type', 'Description'], *args):
-        QtCore.QAbstractTableModel.__init__(self, parent, *args)
-        self.parameterList = parameterList
-        self.header = header
-        self.nbCol = len(header)
-
-    def rowCount(self, parent=None):
-        return len(self.parameterList)
-
-    def columnCount(self, parent=None):
-        return self.nbCol 
-
-
-    def getSelectedParameter(self, selection):
-
-        if isinstance(selection, list):
-            if selection == []:
-                return None
-            elif isinstance(selection[0], QtCore.QModelIndex):
-                index = selection[0]
-        else:
-            if selection.at(0) is None:
-                return None
-            index = selection.at(0).indexes()[0]
-        return self.parameterList[index.row()]
-
-
-
-    def getByIndex(self, param, ind):
-        if ind == 0:
-            return param.typeDesc
-        elif ind == 1:
-            if param.typeDesc == "pointValue":
-                return param.name + " = " + param.description.depVar.values.text(True)
-            elif param.typeDesc == "function":
-                return param.description.equation
-            elif param.typeDesc == "numericalTrace":
-                return getParameterTypeNameFromID(param.description.depVar.typeId) \
-                          + "=f(" + " ,".join([getParameterTypeNameFromID(v.typeId) for v in param.description.indepVars]) +  ")"
-            else:
-                raise ValueError
-        else:
-            raise ValueError
-
-    def data(self, index, role):
-        if not index.isValid():
-            return None
-
-        if role != QtCore.Qt.DisplayRole:
-            return None
-
-        return self.getByIndex(self.parameterList[index.row()], index.column())
-
-    def headerData(self, col, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self.header[col]
-        return None
-
-    def sort(self, col, order):
-        """sort table by given column number col"""
-        self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-        reverse = (order == QtCore.Qt.DescendingOrder)
-        self.annotationList = sorted(self.parameterList, key=lambda x: x.getByIndex(col), reverse = reverse) 
-        self.emit(QtCore.SIGNAL("layoutChanged()"))
-
-    def refresh(self):
-        self.emit(QtCore.SIGNAL("layoutChanged()"))
 
 
 
