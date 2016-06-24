@@ -1,9 +1,8 @@
-from distutils.core import setup, Extension
+from distutils.core import setup
 import os
-import numpy
 
 PACKAGE = "nat"
-NAME = "NeuroAnnotation Toolbox"
+NAME = "nat"
 DESCRIPTION = "GUI-based application and API to perform systematic and collaborative scientific literature curation."
 AUTHOR = "Christian O'Reilly"
 AUTHOR_EMAIL = "christian.oreilly@epfl.ch"
@@ -36,7 +35,7 @@ setup(
     name=NAME,
     packages=packages.keys(),
     package_dir=packages,
-    package_data={PACKAGE: ["additionsToOntologies.csv", "modelingDictionary.csv", "onto/*.dic", "onto/*.tree"]},
+    package_data={PACKAGE: ["additionsToOntologies.csv", "modelingDictionary.csv"]},
     version=VERSION, #data_files=[("", ["additionsToNeurolex.csv"])],
     description=DESCRIPTION,
     long_description=DESCRIPTION, #open("README.txt").read(),
@@ -56,8 +55,3 @@ setup(
 			"Natural Language :: English",
 			"Programming Language :: Python :: 3.4",
 			"Topic :: Scientific/Engineering"])
-
-	
-	
-	
-	
