@@ -28,7 +28,7 @@ def find_packages(path, base="" ):
             packages.update(find_packages(dir, module_name))
     return packages
 
-packages=find_packages("..")
+packages=find_packages(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 print(packages)
 
 setup(
