@@ -40,6 +40,8 @@ setup(
     long_description=DESCRIPTION, #open("README.txt").read(),
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
+    install_requires=["numpy", "parse", "metapub", "pyzotero", "GitPython",
+                      "biopython", "beautifulsoup4", "quantities", "wand"],
     maintainer=AUTHOR,
     maintainer_email=AUTHOR_EMAIL,  
     license='LICENSE.txt',
