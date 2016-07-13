@@ -29,6 +29,7 @@ def find_packages(path, base="" ):
     return packages
 
 packages=find_packages(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
+#packages=find_packages("..")
 
 setup(
     name=NAME,
@@ -45,7 +46,7 @@ setup(
     maintainer=AUTHOR,
     maintainer_email=AUTHOR_EMAIL,  
     license='LICENSE.txt',
-    requires=[],
+    requires=['numpy'],
     classifiers=["Development Status :: 3 - Alpha",
 			"Environment :: MacOS X", #"Environment :: Win32 (MS Windows)",
 			"Environment :: X11 Applications",

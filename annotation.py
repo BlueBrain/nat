@@ -7,16 +7,9 @@ from os.path import join
 from abc import abstractmethod
 import json
 
-print("Start annotation imports...")
-print("Importing from modelingParameter...")
 from .modelingParameter import ParameterInstance, ParamRef
-print("Importing from tag...")
 from .tag import Tag
-print("Importing from utils...")
 from . import utils
-print("End annotation imports...")
-
-
 
 
 def getParametersForPub(dbPath, pubId):
@@ -33,7 +26,8 @@ def getParametersForPub(dbPath, pubId):
     return parameters
 
 
-
+from .restClient import RESTClient
+from os.path import join, isfile
 
 class Localizer:
     @staticmethod    
@@ -299,18 +293,34 @@ class Annotation:
             raise AttributeError
 
 
-    def getContext(self, contextLength=100, dbPath="./curator_DB"):
+    def getContext(self, contextLength=100, dbPath="./curator_DB", restServerURL=None):
+        
+        if not isinstance(self.localizer, TextLocalizer):
+            return ""        
+
         try:
             txtFileName = join(dbPath, utils.Id2FileName(self.pubId)) + ".txt"
-            with open(txtFileName, 'r', encoding="utf-8", errors='ignore') as f :
-                fileText = f.read()
-                
-                if isinstance(self.localizer, TextLocalizer):
+            
+            if isfile(txtFileName):
+                # Context is fetch locally
+                with open(txtFileName, 'r', encoding="utf-8", errors='ignore') as f :
+                    fileText = f.read()
                     contextStart = max(0, self.localizer.start - contextLength)
-                    contextEnd = self.localizer.start + len(self.localizer.text) + contextLength
+                    contextEnd = min(self.localizer.start + len(self.localizer.text) + contextLength, len(fileText))
                     return fileText[contextStart:contextEnd]
-                else:
-                    return ""
+                    
+            else:
+                # Context is fetch through the RESTful server
+                if restServerURL is None:
+                    raise IOError("The context cannot be determined. The text " +
+                                  "is not available in the local database and " +
+                                  "no RESTful server URL has been provided to " +
+                                  "fetch it remotely.")
+                
+                restClient = RESTClient(restServerURL)
+                return restClient.getContext(self.pubId, contextLength,
+                                             self.localizer.start, self.localizer.text)    
+
         except FileNotFoundError:
             print("File not found.")
             return ""
