@@ -9,9 +9,13 @@ from glob import glob
 import pandas as pd
 import numpy as np
 
+print("importin Annotation...")
 from .annotation import Annotation
+print("importin modelingParameter...")
 from .modelingParameter import NumericalVariable, getParameterTypeNameFromID, Variable
+print("importing treeData...")
 from .treeData import flatten_list, OntoManager
+print("Done importing...")
 
 
 annotationKeys         = ["Annotation type", "Publication ID", "Has parameter", "Tag name", "Author"]

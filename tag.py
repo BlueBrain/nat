@@ -3,8 +3,13 @@
 __author__ = 'oreilly'
 __email__  = 'christian.oreilly@epfl.ch'
 
+print("import from tagUtilities")
 from .tagUtilities import nlx2ks
+print("import from treeData")
 from .treeData import OntoManager
+print("import from ontoServ")
+from .ontoServ import getCuriesFromLabel
+print("done importing for tag")
 
 class Tag:
     
@@ -37,6 +42,10 @@ class Tag:
         ## TODO: remove this line once tag ids have been corrected in all annotatiuons   
         if not Tag.dicData[id] == name:
             try:
+                if not name in Tag.invDicData:
+                    curies = getCuriesFromLabel(name)
+                    Tag.invDicData[name] = curies[0]
+                    
                 print("Incompatibility between in " + str(id) + ":" + str(name) + ". Correcting to " + 
                       str(Tag.invDicData[name]) + ":" + str(Tag.dicData[Tag.invDicData[name]]))
                 id = Tag.invDicData[name]

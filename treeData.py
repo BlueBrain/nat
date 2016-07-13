@@ -5,15 +5,46 @@ __email__  = 'christian.oreilly@epfl.ch'
 
 
 from .tagUtilities import nlx2ks
+from .ontoServ import getLabelFromCurie
+
 import json
 import os
 from glob import glob
 import pandas as pd
 import collections
+import pickle
 
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
+
+
+# From http://stackoverflow.com/a/3387975/1825043
+class TransformedDict(collections.MutableMapping):
+    """A dictionary that applies an arbitrary key-altering
+       function before accessing the keys"""
+
+    def __init__(self, *args, **kwargs):
+        self.store = dict()
+        self.update(dict(*args, **kwargs))  # use the free update to set keys
+
+    def __getitem__(self, key):
+        return self.store[self.__keytransform__(key)]
+
+    def __setitem__(self, key, value):
+        self.store[self.__keytransform__(key)] = value
+
+    def __delitem__(self, key):
+        del self.store[self.__keytransform__(key)]
+
+    def __iter__(self):
+        return iter(self.store)
+
+    def __len__(self):
+        return len(self.store)
+
+    def __keytransform__(self, key):
+        return key        
 
 
 """
@@ -120,21 +151,69 @@ def name_from_id(region_id, attempt=0, maxAttemps=10):
 
 """
 
+
+
+class OntoDic(TransformedDict):
+
+    # We reimplement __setitem__ because we don't want to check ontology services
+    # when adding new item to the dict.
+    def __setitem__(self, key, value):
+        self.store[key] = value
+
+    def __keytransform__(self, id):
+        if id in nlx2ks:
+            id = nlx2ks[id]
+        if not id in self.store:                
+            label = getLabelFromCurie(id)
+            if label is None:
+                raise KeyError("The id '" + id + "' is not known locally and is not available in the registered ontology services.")    
+            
+            self.store[id] = label
+            #print("Adding label " + label + " for the id " + id + " to the local tag id dict.")    
+        return id
+    
+
+
 __ontoTrees__ = {}
 __ontoDics__  = {}
+
+try:
+    with open('ontoDics.pickle', 'rb') as f:
+        __ontoDics__ = pickle.load(f)
+    with open('ontoTrees.pickle', 'rb') as f:
+        __ontoTrees__ = pickle.load(f)
+except:
+    pass
 
 class OntoManager:
     
     def __init__(self, fileNamePattern=None):
 
+        print("Init OntoManager...")
         if fileNamePattern is None:
             self.fileNamePattern = os.path.join(os.path.dirname(__file__), "onto/onto*")            
         else:
             self.fileNamePattern = fileNamePattern
         
-        if not self.fileNamePattern in __ontoTrees__: 
-            __ontoTrees__[self.fileNamePattern], \
-            __ontoDics__[self.fileNamePattern] = __loadTreeData__(self.fileNamePattern)
+        if not self.fileNamePattern in __ontoTrees__:
+            __ontoTrees__[self.fileNamePattern] = []
+        
+        if not self.fileNamePattern in __ontoDics__:
+            __ontoDics__[self.fileNamePattern]  = OntoDic()   
+
+        print("Start OntoManager.appendAdditions...")        
+        __ontoTrees__[self.fileNamePattern], \
+        __ontoDics__[self.fileNamePattern] = appendAdditions(__ontoTrees__[self.fileNamePattern], 
+                                                             __ontoDics__[self.fileNamePattern])
+        print("Start OntoManager.addSuppTerms...")        
+        __ontoDics__[self.fileNamePattern] = addSuppTerms(__ontoDics__[self.fileNamePattern])
+        print("End OntoManager.appendAdditions...")        
+            
+        self.savePickle()
+            
+        #if not self.fileNamePattern in __ontoTrees__: 
+        #    __ontoTrees__[self.fileNamePattern], \
+        #    __ontoDics__[self.fileNamePattern] = __loadTreeData__(self.fileNamePattern)
         
     @property
     def dics(self):
@@ -144,6 +223,14 @@ class OntoManager:
     def trees(self):
         return __ontoTrees__[self.fileNamePattern]
 
+    def savePickle(self):
+        with open('ontoDics.pickle', 'wb') as f:
+            pickle.dump(__ontoDics__, f, pickle.HIGHEST_PROTOCOL)
+        with open('ontoTrees.pickle', 'wb') as f:
+            pickle.dump(__ontoTrees__, f, pickle.HIGHEST_PROTOCOL)
+
+
+
 
 """
  Better not to define as a TreeData static method because it cause problem
@@ -151,38 +238,12 @@ class OntoManager:
  class, which can be not loaded yet.
 """
 def __loadTreeData__(fileNamePattern):
+    
+    raise ValueError()
     print("######## loadTreeData ######")
     
     if fileNamePattern is None:
         fileNamePattern = os.path.join(os.path.dirname(__file__), "onto/onto*")    
-    
-    # From http://stackoverflow.com/a/3387975/1825043
-    class TransformedDict(collections.MutableMapping):
-        """A dictionary that applies an arbitrary key-altering
-           function before accessing the keys"""
-    
-        def __init__(self, *args, **kwargs):
-            self.store = dict()
-            self.update(dict(*args, **kwargs))  # use the free update to set keys
-    
-        def __getitem__(self, key):
-            return self.store[self.__keytransform__(key)]
-    
-        def __setitem__(self, key, value):
-            self.store[self.__keytransform__(key)] = value
-    
-        def __delitem__(self, key):
-            del self.store[self.__keytransform__(key)]
-    
-        def __iter__(self):
-            return iter(self.store)
-    
-        def __len__(self):
-            return len(self.store)
-    
-        def __keytransform__(self, key):
-            return key        
-
 
     class TranslatingDict(TransformedDict):
     

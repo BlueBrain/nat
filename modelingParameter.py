@@ -10,7 +10,9 @@ from uuid import uuid1
 from abc import abstractmethod
 import pandas as pd
 
+print("Importing from tag...")
 from .tag import Tag, RequiredTag
+print("End importing from tag...")
 
 
 statisticList  = ["raw", "mean", "median", "mode", "sem", "sd",  "var", "CI_01", "CI_02.5", "CI_90", "CI_95", "CI_97.5", "CI_99", "N", "min", "max", "other", "deviation", "average"]
@@ -72,7 +74,7 @@ class ParameterTypeTree:
             subTree = child.getSubTree(ID)
             if not subTree is None :
                 return subTree
-        return None
+        return Noneprint("Start annotation imports...")
 
 
 

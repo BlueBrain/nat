@@ -7,9 +7,14 @@ from os.path import join
 from abc import abstractmethod
 import json
 
+print("Start annotation imports...")
+print("Importing from modelingParameter...")
 from .modelingParameter import ParameterInstance, ParamRef
+print("Importing from tag...")
 from .tag import Tag
+print("Importing from utils...")
 from . import utils
+print("End annotation imports...")
 
 
 
