@@ -103,12 +103,12 @@ def importPDF():
                                         "PDF does not correspond to the stored " +
                                         "version."
                            })
-	else:
+        else:
             importMsg = "The PDF was already in the server database. " + \
                         "A copy has been saved locally."
 
 
-    with open(fileName + ".pdf", 'r', encoding="utf8") as f:
+    with open(fileName + ".pdf", 'rb') as f:
         pdfFile = f.read()
     with open(fileName + ".txt", 'r', encoding="utf8") as f:
         txtFile = f.read()
