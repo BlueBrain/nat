@@ -108,7 +108,7 @@ def importPDF():
                            })
         #else:
         #    importMsg = "The PDF was already in the server database. " + \
-                        "A copy has been saved locally."
+        #                "A copy has been saved locally."
 
 
     #with open(fileName + ".pdf", 'rb') as f:
@@ -121,16 +121,16 @@ def importPDF():
     with zipfile.ZipFile(memory_file, 'w') as zf:
 
         with open(fileName + ".pdf", 'rb') as f:
-            data = zipfile.ZipInfo(fileName + ".pdf")
+            data = zipfile.ZipInfo(os.path.basename(fileName + ".pdf"))
             data.date_time = time.localtime(time.time())[:6]
             data.compress_type = zipfile.ZIP_DEFLATED
-            zf.writestr(data, f)
+            zf.writestr(data, f.read())
 
-        with open(fileName + ".txt", 'r', encoding="utf8") as f:
-            data = zipfile.ZipInfo(fileName + ".txt")
+        with open(fileName + ".txt", 'rb') as f:
+            data = zipfile.ZipInfo(os.path.basename(fileName + ".txt"))
             data.date_time = time.localtime(time.time())[:6]
             data.compress_type = zipfile.ZIP_DEFLATED
-            zf.writestr(data, f)
+            zf.writestr(data, f.read())
 
     memory_file.seek(0)
     return send_file(memory_file, attachment_filename='paper.zip', as_attachment=True)
