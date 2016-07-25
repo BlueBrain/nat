@@ -102,7 +102,6 @@ def importPDF():
         pdf.save(fileName + ".pdf")
         # check_call is blocking
         check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
-        importMsg = "PDF importation has been sucessful."
     else:
         if not isUserPDFValid(paperId, pdf):
             return genericError(jsonify(**{"status"  : "error",
@@ -111,17 +110,7 @@ def importPDF():
                                                 "for this publication and the provided " +
                                                 "PDF does not correspond to the stored " +
                                                 "version."
-                                   })
-        #else:
-        #    importMsg = "The PDF was already in the server database. " + \
-        #                "A copy has been saved locally."
-
-
-    #with open(fileName + ".pdf", 'rb') as f:
-    #    pdfFile = f.read()
-    #with open(fileName + ".txt", 'r', encoding="utf8") as f:
-    #    txtFile = f.read()
-
+                                   }))
 
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w') as zf:
@@ -140,20 +129,6 @@ def importPDF():
 
     memory_file.seek(0)
     return send_file(memory_file, attachment_filename='paper.zip', as_attachment=True)
-
-
-    """
-    js = json.dumps({"status"  : "success",
-                     "errorNo" : 0,
-                     "message" : importMsg,
-                     "paperId" : paperId,
-                     "txtFile" : txtFile,
-                     "pdfFile" : pdfFile
-                     })
-
-
-    return Response(js, status=200, mimetype="application/json")
-    """
 
 
 
