@@ -7,11 +7,14 @@ Created on Sun Jun  5 14:50:40 2016
 """
 
 
-from flask import Flask, jsonify, abort, make_response, request, Response
+from flask import Flask, jsonify, abort, make_response, request, Response, send_file
 import json, os
 from subprocess import check_call
 import difflib as dl
+import time
 
+import zipfile
+import io
 from os.path import join, isfile
 dbPath = "/mnt/curator_DB/"
 
@@ -95,7 +98,7 @@ def importPDF():
         check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
         importMsg = "PDF importation has been sucessful."
     else:
-       	if not isUserPDFValid(paperId, pdf):
+        if not isUserPDFValid(paperId, pdf):
             return jsonify(**{"status"  : "error",
                             "errorNo" :     2,
                             "message" : "The database already contains a PDF "   +
@@ -103,16 +106,37 @@ def importPDF():
                                         "PDF does not correspond to the stored " +
                                         "version."
                            })
-	else:
-            importMsg = "The PDF was already in the server database. " + \
+        #else:
+        #    importMsg = "The PDF was already in the server database. " + \
                         "A copy has been saved locally."
 
 
-    with open(fileName + ".pdf", 'r', encoding="utf8") as f:
-        pdfFile = f.read()
-    with open(fileName + ".txt", 'r', encoding="utf8") as f:
-        txtFile = f.read()
+    #with open(fileName + ".pdf", 'rb') as f:
+    #    pdfFile = f.read()
+    #with open(fileName + ".txt", 'r', encoding="utf8") as f:
+    #    txtFile = f.read()
 
+
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w') as zf:
+
+        with open(fileName + ".pdf", 'rb') as f:
+            data = zipfile.ZipInfo(fileName + ".pdf")
+            data.date_time = time.localtime(time.time())[:6]
+            data.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(data, f)
+
+        with open(fileName + ".txt", 'r', encoding="utf8") as f:
+            data = zipfile.ZipInfo(fileName + ".txt")
+            data.date_time = time.localtime(time.time())[:6]
+            data.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(data, f)
+
+    memory_file.seek(0)
+    return send_file(memory_file, attachment_filename='paper.zip', as_attachment=True)
+
+
+    """
     js = json.dumps({"status"  : "success",
                      "errorNo" : 0,
                      "message" : importMsg,
@@ -121,8 +145,9 @@ def importPDF():
                      "pdfFile" : pdfFile
                      })
 
-    return Response(js, status=200, mimetype="application/json")
 
+    return Response(js, status=200, mimetype="application/json")
+    """
 
 
 
