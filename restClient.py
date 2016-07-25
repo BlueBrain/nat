@@ -9,6 +9,8 @@ import requests
 import json
 import os
 from shutil import copyfileobj
+import io
+from zipfile import ZipFile
 
 """
             if os.path.isfile(saveFileName + ".txt"):
@@ -58,37 +60,22 @@ class RESTClient:
         pass
         # return true/false
         
-    def importPDF(self, localPDF, paperId):
+    def importPDF(self, localPDF, paperId, pathDB):
         files = {"file": (os.path.basename(localPDF), open(localPDF, 'rb'), 'application/octet-stream'),
          "json": (None, json.dumps({"paperId": paperId}), 'application/json')}
  
         response = requests.post(#"http://httpbin.org/post", 
                                  self.serverURL + "import_pdf", 
                                  files=files, stream=True)
-                                 
-        #if response.status_code == 200:
-        #    with open("test.pdf", 'wb') as f:
-        #        response.raw.decode_content = True
-        #        copyfileobj(response.raw, f)     
-        #        print("pdf copied.")
-        #else:
-        #    print("Invalid response code.")
-        
-        print(response)
-        print(response.content)
-        with open("test2.zip", "wb") as f:
-            f.write(response.content)
-        #print(response.content.decode("utf8"))
-        raise ValueError()
-        response = json.loads(response.content.decode("utf8"))
-        
-        print(response)
-        if response["status"] == "error":
-            raise AttributeError(response["message"])
-        
-        return response["txtFile"], response["pdfFile"]
 
-
+        if response.status_code == 200:
+            #if response["status"] == "error":
+            #    raise AttributeError(response["message"])
+                        
+            zipDoc = ZipFile(io.BytesIO(response.content)) 
+            zipDoc.extractall(pathDB)
+        
+        raise AttributeError("REST server returned an error number " + str(response.status_code))
 
 
 

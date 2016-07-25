@@ -24,6 +24,12 @@ app = Flask(__name__)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
+
+
+@app.errorhandler(500)
+def genericError(error):
+    return make_response(jsonify({'error': str(error)}), 500)
+
 """
 @app.route('/neurocurator/api/v1.0/localize', methods=['POST'])
 def localizeAnnotation():
@@ -99,13 +105,13 @@ def importPDF():
         importMsg = "PDF importation has been sucessful."
     else:
         if not isUserPDFValid(paperId, pdf):
-            return jsonify(**{"status"  : "error",
-                            "errorNo" :     2,
-                            "message" : "The database already contains a PDF "   +
-                                        "for this publication and the provided " +
-                                        "PDF does not correspond to the stored " +
-                                        "version."
-                           })
+            return genericError(jsonify(**{"status"  : "error",
+                                    "errorNo" :     2,
+                                    "message" : "The database already contains a PDF "   +
+                                                "for this publication and the provided " +
+                                                "PDF does not correspond to the stored " +
+                                                "version."
+                                   })
         #else:
         #    importMsg = "The PDF was already in the server database. " + \
                         "A copy has been saved locally."
@@ -121,16 +127,16 @@ def importPDF():
     with zipfile.ZipFile(memory_file, 'w') as zf:
 
         with open(fileName + ".pdf", 'rb') as f:
-            data = zipfile.ZipInfo(fileName + ".pdf")
+            data = zipfile.ZipInfo(os.path.basename(fileName + ".pdf"))
             data.date_time = time.localtime(time.time())[:6]
             data.compress_type = zipfile.ZIP_DEFLATED
-            zf.writestr(data, f)
+            zf.writestr(data, f.read())
 
-        with open(fileName + ".txt", 'r', encoding="utf8") as f:
-            data = zipfile.ZipInfo(fileName + ".txt")
+        with open(fileName + ".txt", 'rb') as f:
+            data = zipfile.ZipInfo(os.path.basename(fileName + ".txt"))
             data.date_time = time.localtime(time.time())[:6]
             data.compress_type = zipfile.ZIP_DEFLATED
-            zf.writestr(data, f)
+            zf.writestr(data, f.read())
 
     memory_file.seek(0)
     return send_file(memory_file, attachment_filename='paper.zip', as_attachment=True)
