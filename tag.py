@@ -3,32 +3,28 @@
 __author__ = 'oreilly'
 __email__  = 'christian.oreilly@epfl.ch'
 
-print("import from tagUtilities")
 from .tagUtilities import nlx2ks
-print("import from treeData")
-from .treeData import OntoManager
-print("import from ontoServ")
-from .ontoServ import getCuriesFromLabel
-print("done importing for tag")
+#from .treeData import OntoManager
+#from .ontoServ import getCuriesFromLabel
 
 class Tag:
     
     ## TODO: remove this line once tag ids have been corrected in all annotatiuons
-    ontoMng  = OntoManager()
-    treeData = ontoMng.trees 
-    dicData  = ontoMng.dics    
-    
-    invDicData = {val:(nlx2ks[key] if key in nlx2ks else key) for key, val in dicData.items()}
-    invDicData['Thalamus geniculate nucleus (lateral) principal neuron'] = 'NIFCELL:nlx_cell_20081203'
-    invDicData["Young rat"] = "nlx_151691"
-    invDicData["Thalamus geniculate nucleus (lateral) interneuron"] = "NIFCELL:nifext_46"
-    invDicData["Temperature"] = "PATO:0000146"
-    invDicData["Sleep"] = "GO:0030431"
-    invDicData['Burst firing pattern'] = "nlx_78803"
-    invDicData['Cat'] = 'NIFORG:birnlex_113'
-    invDicData['Thalamus reticular nucleus cell'] = 'NIFCELL:nifext_45'
-    invDicData['Afferent'] = "NIFGA:nlx_anat_1010"
-    invDicData['Morphology'] = 'PATO:0000051'
+    #ontoMng  = OntoManager()
+    #treeData = ontoMng.trees 
+    #dicData  = ontoMng.dics    
+    #
+    #invDicData = {val:(nlx2ks[key] if key in nlx2ks else key) for key, val in dicData.items()}
+    #invDicData['Thalamus geniculate nucleus (lateral) principal neuron'] = 'NIFCELL:nlx_cell_20081203'
+    #invDicData["Young rat"] = "nlx_151691"
+    #invDicData["Thalamus geniculate nucleus (lateral) interneuron"] = "NIFCELL:nifext_46"
+    #invDicData["Temperature"] = "PATO:0000146"
+    #invDicData["Sleep"] = "GO:0030431"
+    #invDicData['Burst firing pattern'] = "nlx_78803"
+    #invDicData['Cat'] = 'NIFORG:birnlex_113'
+    #invDicData['Thalamus reticular nucleus cell'] = 'NIFCELL:nifext_45'
+    #invDicData['Afferent'] = "NIFGA:nlx_anat_1010"
+    #invDicData['Morphology'] = 'PATO:0000051'
     ##    
     
     def __init__(self, id, name):
@@ -40,18 +36,18 @@ class Tag:
         id = nlx2ks[id] if id in nlx2ks else id
         
         ## TODO: remove this line once tag ids have been corrected in all annotatiuons   
-        if not Tag.dicData[id] == name:
-            try:
-                if not name in Tag.invDicData:
-                    curies = getCuriesFromLabel(name)
-                    Tag.invDicData[name] = curies[0]
-                    
-                print("Incompatibility between in " + str(id) + ":" + str(name) + ". Correcting to " + 
-                      str(Tag.invDicData[name]) + ":" + str(Tag.dicData[Tag.invDicData[name]]))
-                id = Tag.invDicData[name]
-                name = Tag.dicData[id]
-            except:
-                raise                 
+        #if not Tag.dicData[id] == name:
+        #    try:
+        #        if not name in Tag.invDicData:
+        #            curies = getCuriesFromLabel(name)
+        #            Tag.invDicData[name] = curies[0]
+        #            
+        #        print("Incompatibility between in " + str(id) + ":" + str(name) + ". Correcting to " + 
+        #              str(Tag.invDicData[name]) + ":" + str(Tag.dicData[Tag.invDicData[name]]))
+        #        id = Tag.invDicData[name]
+        #        name = Tag.dicData[id]
+        #    except:
+        #        raise                 
         ######
             
         self.id = id
@@ -80,15 +76,19 @@ class RequiredTag(Tag):
         if not isinstance(rootId, str):
             raise TypeError
 
+        self.rootId, self.modifier = RequiredTag.processTagRoot(rootId)
+        self.optional = "OPTIONAL" in self.modifier
+        self.noLoad   = "NOLOAD" in self.modifier
+
+
+    @staticmethod
+    def processTagRoot(rootId):
         if "||" in rootId:
-            self.modifier, rootId = rootId.split("||")
-            self.optional = "OPTIONAL" in self.modifier
+            modifier, rootId = rootId.split("||")
         else:
-            self.modifier = ""
+            modifier = ""        
+        return rootId, modifier
 
-
-
-        self.rootId = rootId
 
     def __repr__(self):
         return str(self.toJSON())

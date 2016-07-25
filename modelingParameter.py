@@ -10,18 +10,9 @@ from uuid import uuid1
 from abc import abstractmethod
 import pandas as pd
 
-print("Importing from tag...")
 from .tag import Tag, RequiredTag
-print("End importing from tag...")
-
 
 statisticList  = ["raw", "mean", "median", "mode", "sem", "sd",  "var", "CI_01", "CI_02.5", "CI_90", "CI_95", "CI_97.5", "CI_99", "N", "min", "max", "other", "deviation", "average"]
-
-
-#expPropertyStrList  = ["Temperature", "Age", "Junction potential correction"]
-
-
-
 
 
 def unitIsValid(unit):
@@ -30,7 +21,6 @@ def unitIsValid(unit):
     except:
         return False
     return True
-
 
 
 
@@ -87,9 +77,6 @@ class ParameterTypeTree:
     @staticmethod
     def load(fileName = None, root = "BBP-000000"):
 
-        if fileName is None:
-            fileName = os.path.join(os.path.dirname(__file__), "modelingDictionary.csv")
-
         def addChildren(tree, df):
             children = df[df["parentId"] == tree.value.ID]
             for index, row in children.iterrows():
@@ -100,10 +87,7 @@ class ParameterTypeTree:
 
             return tree
 
-        df = pd.read_csv(fileName, skip_blank_lines=True, comment="#", 
-                         delimiter=";", quotechar='"', 
-                         names=["id", "parentId", "name", "description", "requiredTags"])
-
+        df = ParameterTypeTree.getParamTypeDF(fileName)
 
         row = df[df["id"] == root]        
 
@@ -112,6 +96,20 @@ class ParameterTypeTree:
 
         return addChildren(tree, df)
 
+
+    @staticmethod
+    def getParamTypeDF(fileName = None):
+
+        if fileName is None:
+            fileName = os.path.join(os.path.dirname(__file__), "modelingDictionary.csv")
+            
+        df = pd.read_csv(fileName, skip_blank_lines=True, comment="#", 
+                         delimiter=";", quotechar='"', 
+                         names=["id", "parentId", "name", "description", "requiredTags"])
+
+        return df
+    
+    
 
 
 def getParameterTypes(fileName = None):

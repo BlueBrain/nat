@@ -7,7 +7,7 @@ Created on Sun Jun  5 14:50:40 2016
 """
 
 
-from flask import Flask, jsonify, abort, make_response, request
+from flask import Flask, jsonify, abort, make_response, request, Response
 import json, os
 from subprocess import check_call
 import difflib as dl
@@ -35,9 +35,9 @@ def localizeAnnotation():
 
 
     return jsonify({'tasks': tasks})
-	if ...:
-		abort(404)
-	return ...
+    if ...:
+        abort(404)
+    return ...
 
 """
 
@@ -62,11 +62,27 @@ def getContext():
         not 'annotStr' in request.json):
         abort(400)
 
+
+    # paperId, contextLength, annotStart, annotText
     id       = request.json['id']
     annotStr = request.json['annotStr']
 
     return jsonify({'test': "get_context"})
 
+
+
+
+def get_file(filename):  # pragma: no cover
+    try:
+        src = os.path.join(root_dir(), filename)
+        # Figure out how flask returns static files
+        # Tried:
+        # - render_template
+        # - send_file
+        # This should not be so non-obvious
+        return open(src).read()
+    except IOError as exc:
+        return str(exc)
 
 
 @app.route('/neurocurator/api/v1.0/import_pdf', methods=['POST'])
@@ -78,31 +94,42 @@ def importPDF():
         not 'paperId' in request.form["json"]):
         abort(400)
 
-
     paperId = json.loads(request.form["json"])["paperId"]
-    pdf           = request.files["file"] #.read()
-
+    pdf     = request.files["file"]
 
     if isPDFInDb(paperId):    
         similarity = isUserPDFValid(paperId, pdf)
-        return str(similarity)
- 
-    #pdf           = request.files["file"] #.read()
-
-    print(type(pdf))
-    return jsonify({'paperId': paperId, "pdf":pdf})
-    #return None
-
-
-
-
+        if float(similarity) < 0.6:
+            return jsonify({'error': 'The submitted PDF does not correspond to' + 
+                            ' the one in our archive for this publication.'})
+        else:
+            with open(join(dbPath, paperId) + ".pdf", 'r') as f:
+                pdfFile = f.read()
+            with open(join(dbPath, paperId) + ".txt", 'r') as f:
+                txtFile = f.read()
+            return jsonify({"pdfFile": pdfFile, 
+                            "txtFile": txtFile})
+    else:
+        # Import the new pdf
+        pdf.save(join(dbPath, paperId) + ".pdf")
+        # check_call is blocking
+        check_call(['pdftotext', '-enc', 'UTF-8', join(dbPath, paperId) + ".pdf", 
+                    join(dbPath, paperId) + ".txt"])
+        
+        with open(join(dbPath, paperId) + ".pdf", 'r') as f:
+            pdfFile = f.read()
+        with open(join(dbPath, paperId) + ".txt", 'r') as f:
+            txtFile = f.read()
+        return jsonify({"pdfFile": pdfFile, 
+                        "txtFile": txtFile})        
+        
 
 
 
 
 @app.route('/neurocurator/api/v1.0/check_similarity', methods=['POST'])
 def checkSimilarity():
-    if (not request.files	or
+    if (not request.files    or
         not request.form        or
         not "file" in request.files or
         not "json" in request.form  or

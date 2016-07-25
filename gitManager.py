@@ -124,6 +124,7 @@ class GitManager:
         try:
             fetchInfo = self.repo.remotes.origin.push(no_thin=True)[0]
         except exc.GitCommandError as e:
+            print(dir(e))
             print(e)
             raise
 

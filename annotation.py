@@ -293,7 +293,7 @@ class Annotation:
             raise AttributeError
 
 
-    def getContext(self, contextLength=100, dbPath="./curator_DB", restServerURL=None):
+    def getContext(self, contextLength=100, dbPath="./curator_DB", restServerURL="http://bbpca063.epfl.ch:5000/neurocurator/api/v1.0/"):
         
         if not isinstance(self.localizer, TextLocalizer):
             return ""        
@@ -318,8 +318,11 @@ class Annotation:
                                   "fetch it remotely.")
                 
                 restClient = RESTClient(restServerURL)
-                return restClient.getContext(self.pubId, contextLength,
+                context = restClient.getContext(self.pubId, contextLength,
                                              self.localizer.start, self.localizer.text)    
+                print("Returned context:", context)
+                return context
+
 
         except FileNotFoundError:
             print("File not found.")
@@ -389,3 +392,29 @@ class Annotation:
     def __str__(self):
         return '"{}";"{}";"{}";"{}";{}'.format(self.ID, self.comment, type(TextLocalizer), self.users, self.tags)
 
+
+
+
+
+        
+            
+    
+import os
+from glob import glob
+def resaveAnnotation(pathDB, pathOut=None):
+    
+    if pathDB is None:
+        pathDB = os.path.join(os.path.dirname(__file__), './curator_DB')
+
+    if pathOut is None:
+        pathOut = pathDB
+
+    for fileName in glob(pathDB + "/*.pcr"):
+        annotations = Annotation.readIn(open(fileName, "r", encoding="utf-8", errors='ignore'))
+        with open(fileName, "w", encoding="utf-8", errors='ignore') as f:
+            Annotation.dump(f, annotations)
+
+
+
+if __name__ == "__main__":
+    resaveAnnotation("/home/oreilly/GIT_repos/neurocurator_UI/notebooks/neurocuratorDB")

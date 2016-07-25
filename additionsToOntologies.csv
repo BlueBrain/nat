@@ -1,5 +1,6 @@
 #Id;label;definition;SuperCategory;synonyms
 
+# Completing the ionic current ontology...
 BBP_nlx_0001;Leak ionic current;General leaking ionic current, including different potential ionic sources (i.e., Na channels, k channels, ...).;"NIFMOL:nifext_8054";""
 BBP_nlx_0002;Sodium leak current;Sodium leaking ionic current.;"NIFMOL:nifext_8055";""
 BBP_nlx_0003;Sodium transient fast current;"Fast, transient, inactivating sodium current [NeuronDB: I Na,t].";"NIFMOL:nifext_8055";""
@@ -20,6 +21,8 @@ BBP_nlx_0017;Cyclic-nucleotide gated nonspecific cation current;"Cyclic-Nucleoti
 BBP_nlx_0018;Inward rectifier (h-type) current;"Inward rectifier ('Queer'), activated by hyperpolarization, cyclic-nucleotide gated mixed cation current. Prevents strong hyperpolarization; increases membrane resistance during membrane depolarization [NeuronDB: I h]. See (Luthi and McCormick, 1998, Neuron, pp.9-12)";"BBP_nlx_0017";""
 BBP_nlx_0019;Potassium inward rectifier (Kir) current;"Potassium inward rectifier activated by hyperpolarization. [included in I h in NeuronDB]. See (Lee and Ishida, 2007, J Neurophysiol, pp.3790-9)";"NIFMOL:nifext_8056";""
 BBP_nlx_0020;Fast voltage-gated potassium (Kf) current;"Fast voltage-gated potassium current. See (Kang, Huguenard and Prince, 2000, J Neurophysiol, pp.70-80)";"NIFMOL:nifext_8056";""
+
+# Various terms used in the past through Neurolex that are not available anymore in Knowledge-space
 BBP_nlx_0021;Sleep spindle;"Burst of 11-16 Hz transient (0.5-2.0 s duration) activity typically observed on EEG during non-rapid eye movement sleep stage (NREM) 2.";"";""
 BBP_nlx_0022;Cav3.3;"Calcium channel Cav3.3.";"NIFMOL:nifext_2653";""
 nlx_57050;Brain region role;Role assigned to particular brain regions according to some criteria that distinguishes among different territories, e.g., association cortex, thalamic relay nucleus;"BFO:0000023";""
@@ -28,5 +31,9 @@ nlx_151963;Higher order thalamic relay nucleus;A thalamic relay nucleus that rel
 nlx_151962;First order thalamic relay nucleus;Thalamic relay nucleus that relays subcortical information to the cortex for the first time, as proposed by Sherman and Guillery, e.g., lateral geniculate nucleus. First order relay nuclei are distinguished from higher order relay nuclei, e.g., the pulvinar, which relay information from the cortex itself.;Nlx_137281;""
 nlx_151691;Thalamus ventroposterior nucleus principal neuron;;"NIFCELL:sao1417703748";""
 
-
+# We add a neuronal part manually because the one included in Knowledge-space is much too big, with lots of irrelevant term for our use.
+GO:0097458;neuron part;;;
+GO:0030424;axon;;GO:0097458;
+GO:0030425;dendrite;;GO:0097458;
+GO:0044297;cell body;;GO:0097458;
 

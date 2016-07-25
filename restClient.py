@@ -8,6 +8,7 @@ Created on Sun Jun  5 13:08:43 2016
 import requests   
 import json
 import os
+from shutil import copyfileobj
 
 """
             if os.path.isfile(saveFileName + ".txt"):
@@ -41,7 +42,15 @@ class RESTClient:
         pass
         # return blocks
     
-    def getContext(self, paperId, contextLength, annotStart, annotText):
+    def getContext(self, paperId, contextLength, annotStart, annotStr):
+        response = requests.post(self.serverURL + "get_context", 
+                                 json=json.dumps({"paperId"      : paperId, 
+                                                  "annotStr"     : annotStr,
+                                                  "contextLength": contextLength,
+                                                  "annotStart"   : annotStart}))
+        #                         
+        #return json.loads(response.content.decode("utf8"))        
+        
         pass
         # return contextString...
         
@@ -51,12 +60,20 @@ class RESTClient:
         
     def importPDF(self, localPDF, paperId):
         files = {"file": (os.path.basename(localPDF), open(localPDF, 'rb'), 'application/octet-stream'),
-		 "json": (None, json.dumps({"paperId": paperId}), 'application/json')}
+         "json": (None, json.dumps({"paperId": paperId}), 'application/json')}
  
         response = requests.post(#"http://httpbin.org/post", 
                                  self.serverURL + "import_pdf", 
-                                 files=files)
+                                 files=files, stream=True)
                                  
+        if response.status_code == 200:
+            with open("test.pdf", 'wb') as f:
+                response.raw.decode_content = True
+                copyfileobj(response.raw, f)     
+                print("pdf copied.")
+        else:
+            print("Invalid response code.")
+        
         return json.loads(response.content.decode("utf8"))
 
 
