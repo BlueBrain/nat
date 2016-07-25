@@ -24,6 +24,12 @@ app = Flask(__name__)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
+
+
+@app.errorhandler(500)
+def genericError(error):
+    return make_response(jsonify({'error': str(error)}), 500)
+
 """
 @app.route('/neurocurator/api/v1.0/localize', methods=['POST'])
 def localizeAnnotation():
@@ -99,13 +105,13 @@ def importPDF():
         importMsg = "PDF importation has been sucessful."
     else:
         if not isUserPDFValid(paperId, pdf):
-            return jsonify(**{"status"  : "error",
-                            "errorNo" :     2,
-                            "message" : "The database already contains a PDF "   +
-                                        "for this publication and the provided " +
-                                        "PDF does not correspond to the stored " +
-                                        "version."
-                           })
+            return genericError(jsonify(**{"status"  : "error",
+                                    "errorNo" :     2,
+                                    "message" : "The database already contains a PDF "   +
+                                                "for this publication and the provided " +
+                                                "PDF does not correspond to the stored " +
+                                                "version."
+                                   })
         #else:
         #    importMsg = "The PDF was already in the server database. " + \
         #                "A copy has been saved locally."
