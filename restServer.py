@@ -71,18 +71,9 @@ def getContext():
 
 
 
-
-def get_file(filename):  # pragma: no cover
-    try:
-        src = os.path.join(root_dir(), filename)
-        # Figure out how flask returns static files
-        # Tried:
-        # - render_template
-        # - send_file
-        # This should not be so non-obvious
-        return open(src).read()
-    except IOError as exc:
-        return str(exc)
+@app.route('/neurocurator/api/v1.0/is_pdf_in_db/<string:paperId>', methods=['GET'])
+def is_pdf_in_db(paperId):
+    return jsonify({"result":isPDFInDb(paperId)})
 
 
 @app.route('/neurocurator/api/v1.0/import_pdf', methods=['POST'])
@@ -94,35 +85,43 @@ def importPDF():
         not 'paperId' in request.form["json"]):
         abort(400)
 
-    paperId = json.loads(request.form["json"])["paperId"]
-    pdf     = request.files["file"]
+    paperId  = json.loads(request.form["json"])["paperId"]
+    pdf      = request.files["file"]
+    fileName = join(dbPath, paperId)
 
-    if isPDFInDb(paperId):    
-        similarity = isUserPDFValid(paperId, pdf)
-        if float(similarity) < 0.6:
-            return jsonify({'error': 'The submitted PDF does not correspond to' + 
-                            ' the one in our archive for this publication.'})
-        else:
-            with open(join(dbPath, paperId) + ".pdf", 'r') as f:
-                pdfFile = f.read()
-            with open(join(dbPath, paperId) + ".txt", 'r') as f:
-                txtFile = f.read()
-            return jsonify({"pdfFile": pdfFile, 
-                            "txtFile": txtFile})
-    else:
-        # Import the new pdf
-        pdf.save(join(dbPath, paperId) + ".pdf")
+    if not isPDFInDb(paperId):
+        pdf.save(fileName + ".pdf")
         # check_call is blocking
-        check_call(['pdftotext', '-enc', 'UTF-8', join(dbPath, paperId) + ".pdf", 
-                    join(dbPath, paperId) + ".txt"])
-        
-        with open(join(dbPath, paperId) + ".pdf", 'r') as f:
-            pdfFile = f.read()
-        with open(join(dbPath, paperId) + ".txt", 'r') as f:
-            txtFile = f.read()
-        return jsonify({"pdfFile": pdfFile, 
-                        "txtFile": txtFile})        
-        
+        check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
+        importMsg = "PDF importation has been sucessful."
+    else:
+       	if not isUserPDFValid(paperId, pdf):
+            return jsonify(**{"status"  : "error",
+                            "errorNo" :     2,
+                            "message" : "The database already contains a PDF "   +
+                                        "for this publication and the provided " +
+                                        "PDF does not correspond to the stored " +
+                                        "version."
+                           })
+	else:
+            importMsg = "The PDF was already in the server database. " + \
+                        "A copy has been saved locally."
+
+
+    with open(fileName + ".pdf", 'r', encoding="utf8") as f:
+        pdfFile = f.read()
+    with open(fileName + ".txt", 'r', encoding="utf8") as f:
+        txtFile = f.read()
+
+    js = json.dumps({"status"  : "success",
+                     "errorNo" : 0,
+                     "message" : importMsg,
+                     "paperId" : paperId,
+                     "txtFile" : txtFile,
+                     "pdfFile" : pdfFile
+                     })
+
+    return Response(js, status=200, mimetype="application/json")
 
 
 
@@ -139,9 +138,8 @@ def checkSimilarity():
     paperId = json.loads(request.form["json"])["paperId"]
     pdf     = request.files["file"] #.read()
 
-
     if isPDFInDb(paperId):
-        similarity = isUserPDFValid(paperId, pdf)
+        similarity = computePDFSimilarity(paperId, pdf)
         return str(similarity)
     
     return None
@@ -175,7 +173,21 @@ def runRESTServer():
 def isPDFInDb(paperId):
     return isfile(join(dbPath, paperId) + ".pdf")
 
+
+
+
 def isUserPDFValid(paperId, userPDF):
+    if not isPDFInDb(paperId):
+         return None
+
+    if computePDFSimilarity(paperId, userPDF) >= 0.5:
+         return True
+    return False
+
+
+
+
+def computePDFSimilarity(paperId, userPDF):
     if not isPDFInDb(paperId):
          return None
 
@@ -184,28 +196,6 @@ def isUserPDFValid(paperId, userPDF):
     check_call(['pdftotext', '-enc', 'UTF-8', "temp.pdf", "temp.txt"])
     os.remove("temp.pdf")
     
-    ##### isSimilar = compare temp.txt to open(join(dbPath, paperId) + ".txt", 'r')
-
-    """
-    print("####1")
-    a = open("temp.txt", 'r').read()
-    b = open(join(dbPath, paperId) + ".txt", 'r').read()
-
-    sim = dl.get_close_matches
-    s = 0
-    wa = a.split()
-    wb = b.split()
-
-    print("####2")
-    for i in wa:
-        if sim(i, wb):
-            s += 1
-
-    n = float(s) / float(len(wa))
-    print('%d%% similarity' % int(n * 100))
-    """
-
-
     a = open("temp.txt", 'r').read()
     b = open(join(dbPath, paperId) + ".txt", 'r').read()
 
@@ -232,8 +222,6 @@ def isUserPDFValid(paperId, userPDF):
 
     os.remove("temp.txt")
 
-    #isSimilar = True
-    #return isSimilar
     return similarity
 
     
