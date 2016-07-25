@@ -66,15 +66,27 @@ class RESTClient:
                                  self.serverURL + "import_pdf", 
                                  files=files, stream=True)
                                  
-        if response.status_code == 200:
-            with open("test.pdf", 'wb') as f:
-                response.raw.decode_content = True
-                copyfileobj(response.raw, f)     
-                print("pdf copied.")
-        else:
-            print("Invalid response code.")
+        #if response.status_code == 200:
+        #    with open("test.pdf", 'wb') as f:
+        #        response.raw.decode_content = True
+        #        copyfileobj(response.raw, f)     
+        #        print("pdf copied.")
+        #else:
+        #    print("Invalid response code.")
         
-        return json.loads(response.content.decode("utf8"))
+        print(response)
+        print(response.content)
+        with open("test2.zip", "wb") as f:
+            f.write(response.content)
+        #print(response.content.decode("utf8"))
+        raise ValueError()
+        response = json.loads(response.content.decode("utf8"))
+        
+        print(response)
+        if response["status"] == "error":
+            raise AttributeError(response["message"])
+        
+        return response["txtFile"], response["pdfFile"]
 
 
 
