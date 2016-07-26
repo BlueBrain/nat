@@ -74,8 +74,8 @@ class RESTClient:
                         
             zipDoc = ZipFile(io.BytesIO(response.content)) 
             zipDoc.extractall(pathDB)
-        
-        raise AttributeError("REST server returned an error number " + str(response.status_code))
+        else:
+            raise AttributeError("REST server returned an error number " + str(response.status_code))
 
 
 
