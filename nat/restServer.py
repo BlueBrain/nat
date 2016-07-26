@@ -16,6 +16,8 @@ import zipfile
 import io
 from os.path import join, isfile
 
+from nat import utils
+
 
 #from nat.annotationSearch import AnnotationGetter
 
@@ -79,18 +81,22 @@ def localizeAnnotation():
                                                   "annotStart"   : annotStart}))
 @app.route('/neurocurator/api/v1.0/get_context', methods=['POST'])
 def getContext():
-    if (not request.json                     or
-        not 'paperId'        in request.json or
-        not 'annotStr'       in request.json or
-        not 'contextLength'  in request.json or
-        not 'annotStart    ' in request.json):
+    if not request.json:
         abort(400)
 
-    paperId       = request.json['paperId']
-    annotStr      = request.json['annotStr']
-    contextLength = request.json['contextLength']
-    annotStart    = request.json['annotStart']
+    requestJSON = json.loads(request.json)
 
+    if (not 'paperId'        in requestJSON or
+        not 'annotStr'       in requestJSON or
+        not 'contextLength'  in requestJSON or
+        not 'annotStart'     in requestJSON):
+        abort(400)
+
+
+    paperId       = utils.Id2FileName(requestJSON['paperId'])
+    annotStr      = requestJSON['annotStr']
+    contextLength = requestJSON['contextLength']
+    annotStart    = requestJSON['annotStart']
 
     try:
         txtFileName = join(dbPath, paperId + ".txt")
@@ -102,10 +108,11 @@ def getContext():
             return jsonify({'context': fileText[contextStart:contextEnd]}) 
             
     except FileNotFoundError:
-        return genericError(jsonify(**{"status"  : "error",
+        return make_response(jsonify({"status"  : "error",
                                 "errorNo" :     3,
-                                "message" : "No paper corresponding to this id."
-                               }))
+                                "message" : "No paper corresponding to this id. File " +\
+                                            txtFileName + " not found." 
+                                      }), 500)
 
 
 
