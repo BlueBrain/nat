@@ -320,9 +320,8 @@ class Annotation:
                                   "fetch it remotely.")
                 
                 restClient = RESTClient(restServerURL)
-                context = restClient.getContext(self.pubId, contextLength,
+                context = restClient.getContext(utils.Id2FileName(self.pubId), contextLength,
                                              self.localizer.start, self.localizer.text)    
-                print("Returned context:", context)
                 return context
 
 
