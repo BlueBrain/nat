@@ -9,16 +9,11 @@ from glob import glob
 import pandas as pd
 import numpy as np
 
-print("importin Annotation...")
 from .annotation import Annotation
-print("importin modelingParameter...")
 from .modelingParameter import NumericalVariable, getParameterTypeNameFromID, Variable
-print("importing treeData...")
 from .treeData import flatten_list, OntoManager
-print("Done importing...")
 
-
-annotationKeys         = ["Annotation type", "Publication ID", "Has parameter", "Tag name", "Author"]
+annotationKeys         = ["Annotation type", "Annotation ID", "Publication ID", "Has parameter", "Tag name", "Author"]
 annotationResultFields = ["Annotation type", "Publication ID", "Nb. parameters", "Tag name", "Comment", "Authors", "Localizer"]
 
 parameterKeys          = ["Parameter name", "Result type", "Unit", "Required tag name", "Annotation ID", "Publication ID", "Tag name"]
@@ -47,6 +42,9 @@ def checkAnnotation(annotation, key, value):
         
     elif key == "Publication ID":        
         return annotation.pubId == value    
+        
+    elif key == "Annotation ID":        
+        return annotation.ID == value    
         
     elif key == "Has parameter":        
         return (len(annotation.parameters) > 0) == bool(value)   
@@ -252,6 +250,26 @@ class Search:
             #    print("Skipping: ", fileName)    
             #    raise
             
+
+
+
+
+
+class AnnotationGetter(Search):
+    
+    def __init__(self, pathDB=None):
+        super(AnnotationSearch, self).__init__(pathDB)
+
+    def getAnnot(self, annotId):
+        self.setSearchConditions(ConditionAtom("Annotation ID", annotId))
+        self.selectedItem = self.conditions.apply_annot(self.annotations)
+        if len(self.selectedItem) == 1 :
+            return self.selectedItem[0]
+            
+        if len(self.selectedItem) == 0 :            
+            raise ValueError("No corresponding annotations where found.")
+        
+        raise ValueError("More than one annotation have been found for this ID.")
 
 
 class AnnotationSearch(Search):

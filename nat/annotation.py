@@ -3,13 +3,14 @@
 __author__ = "Christian O'Reilly"
 
 from uuid import uuid1
-from os.path import join
+from os.path import join, isfile
 from abc import abstractmethod
 import json
 
 from .modelingParameter import ParameterInstance, ParamRef
 from .tag import Tag
 from . import utils
+from .restClient import RESTClient
 
 
 def getParametersForPub(dbPath, pubId):
@@ -26,8 +27,9 @@ def getParametersForPub(dbPath, pubId):
     return parameters
 
 
-from .restClient import RESTClient
-from os.path import join, isfile
+
+
+
 
 class Localizer:
     @staticmethod    

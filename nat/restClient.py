@@ -50,11 +50,9 @@ class RESTClient:
                                                   "annotStr"     : annotStr,
                                                   "contextLength": contextLength,
                                                   "annotStart"   : annotStart}))
-        #                         
-        #return json.loads(response.content.decode("utf8"))        
+                                 
+        return json.loads(response.content.decode("utf8"))["context"]        
         
-        pass
-        # return contextString...
         
     def gotConnectivity(self):
         pass

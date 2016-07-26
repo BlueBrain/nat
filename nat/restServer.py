@@ -30,6 +30,12 @@ def not_found(error):
 def genericError(error):
     return make_response(jsonify({'error': str(error)}), 500)
 
+
+from nat.annotationSearch import AnnotationGetter
+
+annotGetter = AnnotationGetter(dbPath)
+
+
 """
 @app.route('/neurocurator/api/v1.0/localize', methods=['POST'])
 def localizeAnnotation():
@@ -64,20 +70,61 @@ def localizeAnnotation():
     return jsonify({'test': "localize"})
 
 
+
 @app.route('/neurocurator/api/v1.0/get_context', methods=['POST'])
 def getContext():
-    if (not request.json         or
-        not 'id' in request.json or
-        not 'annotStr' in request.json):
+    if (not request.json                     or
+        not 'paperId'        in request.json or
+        not 'annotStr'       in request.json or
+        not 'contextLength'  in request.json or
+        not 'annotStart    ' in request.json):
         abort(400)
 
 
+
+        paperId       = request.json['paperId']
+        annotStr      = request.json['annotStr']
+        contextLength = request.json['contextLength']
+        annotStart    = request.json['annotStart']
+
+
+        try:
+            txtFileName = join(dbPath, paperId + ".txt")
+            
+            with open(txtFileName, 'r', encoding="utf-8", errors='ignore') as f :
+                fileText = f.read()
+                contextStart = max(0, annotStart - contextLength)
+                contextEnd = min(annotStart + len(annotStr) + contextLength, len(fileText))
+                return jsonify({'context': fileText[contextStart:contextEnd]}) 
+                
+        except FileNotFoundError:
+            return genericError(jsonify(**{"status"  : "error",
+                                    "errorNo" :     3,
+                                    "message" : "No paper corresponding to this id."
+                                   }))
+
+
+
+
+
+
+
+"""    
+
     # paperId, contextLength, annotStart, annotText
-    id       = request.json['id']
-    annotStr = request.json['annotStr']
+    annotId       = request.json['annotId']
 
-    return jsonify({'test': "get_context"})
+    try:       
+        annot = annotGetter.getAnnot(annotId)
+    except ValueError:
+        return genericError(jsonify(**{"status"  : "error",
+                                "errorNo" :     3,
+                                "message" : "Annotation not found."
+                               }))
+        
 
+    return jsonify({'annotation': annot.toJSON()})
+"""
 
 
 @app.route('/neurocurator/api/v1.0/is_pdf_in_db/<string:paperId>', methods=['GET'])
