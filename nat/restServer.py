@@ -12,10 +12,14 @@ import json, os
 from subprocess import check_call
 import difflib as dl
 import time
-
 import zipfile
 import io
 from os.path import join, isfile
+
+
+from nat.annotationSearch import AnnotationGetter
+
+
 dbPath = "/mnt/curator_DB/"
 
 app = Flask(__name__)
@@ -30,10 +34,6 @@ def not_found(error):
 def genericError(error):
     return make_response(jsonify({'error': str(error)}), 500)
 
-
-from nat.annotationSearch import AnnotationGetter
-
-annotGetter = AnnotationGetter(dbPath)
 
 
 """
@@ -216,9 +216,6 @@ def getServerPDF():
     return jsonify({'test': "get_pdf"})
 
 
-def runRESTServer():
-    app.run(debug=True, host= '0.0.0.0')
-
 
 
 
@@ -284,3 +281,9 @@ def getDbTxt(paperId):
 
 
 # copy this script at /usr/local/neurocurator and run with "curl -i bbpca063.epfl.ch:5000/neurocurator/api/v1.0/tasks"
+
+
+
+def runRESTServer():
+    annotGetter = AnnotationGetter(dbPath)
+    app.run(debug=True, host= '0.0.0.0')
