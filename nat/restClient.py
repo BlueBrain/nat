@@ -12,6 +12,8 @@ from shutil import copyfileobj
 import io
 from zipfile import ZipFile
 
+from nat import utils
+
 """
             if os.path.isfile(saveFileName + ".txt"):
                 errorMessage(self, "Error", "This PDF has already been imported to the database.")
@@ -39,15 +41,13 @@ class RESTClient:
         # return blocks
     
     def getContext(self, paperId, contextLength, annotStart, annotStr):
+                
         response = requests.post(self.serverURL + "get_context", 
-                                 json=json.dumps({"paperId"      : paperId, 
+                                 json=json.dumps({"paperId"      : utils.Id2FileName(paperId), 
                                                   "annotStr"     : annotStr,
                                                   "contextLength": contextLength,
                                                   "annotStart"   : annotStart}))
-                                 
-                                 
-                                 
-        print(response.content.decode("utf8"))
+
         return json.loads(response.content.decode("utf8"))["context"]        
         
         
