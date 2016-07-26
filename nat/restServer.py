@@ -71,6 +71,12 @@ def localizeAnnotation():
 
 
 
+    def getContext(self, paperId, contextLength, annotStart, annotStr):
+        response = requests.post(self.serverURL + "get_context", 
+                                 json=json.dumps({"paperId"      : paperId, 
+                                                  "annotStr"     : annotStr,
+                                                  "contextLength": contextLength,
+                                                  "annotStart"   : annotStart}))
 @app.route('/neurocurator/api/v1.0/get_context', methods=['POST'])
 def getContext():
     if (not request.json                     or
@@ -80,28 +86,26 @@ def getContext():
         not 'annotStart    ' in request.json):
         abort(400)
 
+    paperId       = request.json['paperId']
+    annotStr      = request.json['annotStr']
+    contextLength = request.json['contextLength']
+    annotStart    = request.json['annotStart']
 
 
-        paperId       = request.json['paperId']
-        annotStr      = request.json['annotStr']
-        contextLength = request.json['contextLength']
-        annotStart    = request.json['annotStart']
-
-
-        try:
-            txtFileName = join(dbPath, paperId + ".txt")
+    try:
+        txtFileName = join(dbPath, paperId + ".txt")
+        
+        with open(txtFileName, 'r', encoding="utf-8", errors='ignore') as f :
+            fileText = f.read()
+            contextStart = max(0, annotStart - contextLength)
+            contextEnd = min(annotStart + len(annotStr) + contextLength, len(fileText))
+            return jsonify({'context': fileText[contextStart:contextEnd]}) 
             
-            with open(txtFileName, 'r', encoding="utf-8", errors='ignore') as f :
-                fileText = f.read()
-                contextStart = max(0, annotStart - contextLength)
-                contextEnd = min(annotStart + len(annotStr) + contextLength, len(fileText))
-                return jsonify({'context': fileText[contextStart:contextEnd]}) 
-                
-        except FileNotFoundError:
-            return genericError(jsonify(**{"status"  : "error",
-                                    "errorNo" :     3,
-                                    "message" : "No paper corresponding to this id."
-                                   }))
+    except FileNotFoundError:
+        return genericError(jsonify(**{"status"  : "error",
+                                "errorNo" :     3,
+                                "message" : "No paper corresponding to this id."
+                               }))
 
 
 
