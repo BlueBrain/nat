@@ -258,7 +258,7 @@ class Search:
 class AnnotationGetter(Search):
     
     def __init__(self, pathDB=None):
-        super(AnnotationSearch, self).__init__(pathDB)
+        super(AnnotationGetter, self).__init__(pathDB)
 
     def getAnnot(self, annotId):
         self.setSearchConditions(ConditionAtom("Annotation ID", annotId))

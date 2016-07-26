@@ -17,7 +17,7 @@ import io
 from os.path import join, isfile
 
 
-from nat.annotationSearch import AnnotationGetter
+#from nat.annotationSearch import AnnotationGetter
 
 
 dbPath = "/mnt/curator_DB/"
@@ -284,6 +284,9 @@ def getDbTxt(paperId):
 
 
 
-def runRESTServer():
-    annotGetter = AnnotationGetter(dbPath)
-    app.run(debug=True, host= '0.0.0.0')
+def runRESTServer(port=None):
+    #annotGetter = AnnotationGetter(dbPath)
+    if port is None:
+        app.run(debug=True, host= '0.0.0.0')
+    else:
+        app.run(debug=True, host='0.0.0.0', port=port)
