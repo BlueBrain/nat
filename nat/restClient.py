@@ -43,7 +43,7 @@ class RESTClient:
     def getContext(self, paperId, contextLength, annotStart, annotStr):
                 
         response = requests.post(self.serverURL + "get_context", 
-                                 json=json.dumps({"paperId"      : utils.Id2FileName(paperId), 
+                                 json=json.dumps({"paperId"      : paperId, 
                                                   "annotStr"     : annotStr,
                                                   "contextLength": contextLength,
                                                   "annotStart"   : annotStart}))
