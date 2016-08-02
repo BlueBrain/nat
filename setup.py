@@ -3,10 +3,14 @@ import os
 
 PACKAGE = "nat"
 NAME = "nat"
-DESCRIPTION = "GUI-based application and API to perform systematic and collaborative scientific literature curation."
+DESCRIPTION = "This is the repository for the NeuroAnnotation Toolbox (NAT)" +\
+              " project. This project is a sprout from the NeuroCurator "    +\
+              "project which has been divided in a front-end (NeuroCurator)" +\
+              " and a back-end (NAT) to provide more flexibility for "       +\
+              "programmatic interaction with created annotation corpora. "
 AUTHOR = "Christian O'Reilly"
 AUTHOR_EMAIL = "christian.oreilly@epfl.ch"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 def is_package(path):
     return (
@@ -35,7 +39,7 @@ setup(
     packages=packages.keys(),
     package_dir=packages,
     package_data={PACKAGE: ["additionsToOntologies.csv", "modelingDictionary.csv"]},
-    version=VERSION, #data_files=[("", ["additionsToNeurolex.csv"])],
+    version=VERSION,
     description=DESCRIPTION,
     long_description=DESCRIPTION, #open("README.txt").read(),
     author=AUTHOR,
