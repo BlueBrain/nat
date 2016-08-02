@@ -135,10 +135,9 @@ def checkImportPDF(localPDF, paperId):
 
 if __name__ == "__main__":
     from qtNeurolexTree import TreeData
-    from utils import Id2FileName    
     
     #checkSimilarities("/mnt/curator_DB/")
-    paperId  = Id2FileName("10.3389/fncel.2016.00168")
+    paperId  = "10.3389/fncel.2016.00168"
     localPDF = "test.pdf" 
     response = checkImportPDF(localPDF, paperId)
     print(response)

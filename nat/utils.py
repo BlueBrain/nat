@@ -22,7 +22,7 @@ encoders                 = {}
 encoders["forwardSlash"] = ("/", "%2F")
 encoders["colon"]        = (":", "%3A")
 encoders["greater"]      = (">", "%3E")
-encoders["smaller"]      = (">", "%3C")
+encoders["smaller"]      = ("<", "%3C")
 
 
 
