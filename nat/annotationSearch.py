@@ -128,8 +128,8 @@ class ConditionAtom(Condition):
                             if checkParameter(param, annot, self.key, self.value)}
         
     def apply_annot(self, annotations):
-        return {annot for annot in annotations 
-                            if checkAnnotation(annot, self.key, self.value)}
+        return [annot for annot in annotations 
+                            if checkAnnotation(annot, self.key, self.value)]
 
 
 class ConditionAND(Condition):
