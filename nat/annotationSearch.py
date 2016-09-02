@@ -16,7 +16,8 @@ from .treeData import flatten_list, OntoManager
 annotationKeys         = ["Annotation type", "Annotation ID", "Publication ID", "Has parameter", "Tag name", "Author"]
 annotationResultFields = ["Annotation type", "Publication ID", "Nb. parameters", "Tag name", "Comment", "Authors", "Localizer"]
 
-parameterKeys          = ["Parameter name", "Result type", "Unit", "Required tag name", "Annotation ID", "Publication ID", "Tag name"]
+parameterKeys          = ["Parameter name", "Result type", "Parameter instance ID", \
+                          "Unit", "Required tag name", "Annotation ID", "Publication ID", "Tag name"]
 parameterResultFields  = ["Required tag names", "Result type", "Values", "Parameter name", 
                           "Parameter type ID", "Parameter instance ID", "Unit", "Text", "Context"] 
 
@@ -75,6 +76,9 @@ def checkParameter(parameter, annotation, key, value):
 
     if key == "Parameter name":
         return getParameterTypeNameFromID(parameter.description.depVar.typeId) == value  
+        
+    elif key == "Parameter instance ID":        
+        return parameter.id == value
         
     elif key == "Result type":        
         return parameter.description.type == value        
@@ -270,6 +274,29 @@ class AnnotationGetter(Search):
             raise ValueError("No corresponding annotations where found.")
         
         raise ValueError("More than one annotation have been found for this ID.")
+
+
+
+
+
+class ParameterGetter(Search):
+    
+    def __init__(self, pathDB=None):
+        super(ParameterGetter, self).__init__(pathDB)
+        self.parameters = flatten_list([[(param, annot) for param in annot.parameters] for annot in self.annotations])
+        self.parameters = {param:annot for param, annot in self.parameters}
+                
+
+    def getParam(self, instanceId):
+        self.setSearchConditions(ConditionAtom("Parameter instance ID", instanceId))
+        self.selectedItem = self.conditions.apply_param(self.parameters)
+        if len(self.selectedItem) == 1 :
+            return list(self.selectedItem.keys())[0]
+            
+        if len(self.selectedItem) == 0 :            
+            raise ValueError("No corresponding parameter instance where found.")
+        
+        raise ValueError("More than one parameter instance have been found for this ID.")
 
 
 class AnnotationSearch(Search):
