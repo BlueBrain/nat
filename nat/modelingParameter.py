@@ -9,6 +9,9 @@ from io import StringIO
 from uuid import uuid1
 from abc import abstractmethod
 import pandas as pd
+from scipy import interpolate
+from copy import deepcopy
+import numpy as np
 
 from .tag import Tag, RequiredTag
 
@@ -270,6 +273,30 @@ class Values:
         raise NotImplementedError
 
 
+    @abstractmethod
+    def __matOperator__(self, other, operatorFct):
+        raise NotImplementedError
+
+    @abstractmethod
+    def rescale(unit):
+        raise NotImplementedError
+
+
+    def __mul__(self, other):
+        return self.__matOperator__(other, "__mul__")
+        
+    def __truediv__(self, other):
+        return self.__matOperator__(other, "__truediv__")
+        
+    def __add__(self, other):
+        return self.__matOperator__(other, "__add__")
+        
+    def __sub__(self, other):
+        return self.__matOperator__(other, "__sub__")
+
+
+
+
 
 class ValuesSimple(Values):
 
@@ -327,6 +354,43 @@ class ValuesSimple(Values):
         else:
             return np.mean(self.values)
 
+
+    def rescale(self, unit):
+        retVal = deepcopy(self)        
+        if isinstance(unit, str):
+            quant = pq.Quantity(self.values, self.unit).rescale(unit)
+            retVal.values = quant.base
+            retVal.unit   = str(quant.dimensionality)
+        return retVal
+
+
+    def __matOperator__(self, other, operatorFct):
+        
+        if isinstance(other, (int, float)):
+            values = np.array(self.values)            
+        elif isinstance(other, (pq.Quantity)):
+            values = pq.Quantity(self.values, self.unit)        
+        else:
+            raise TypeError        
+        
+        functionList = {'__mul__': values.__mul__, 
+                        '__truediv__': values.__truediv__, 
+                        '__add__': values.__add__, 
+                        '__sub__': values.__sub__}
+
+        retVal = deepcopy(self)
+        if isinstance(other, (int, float)):
+            retVal.values = functionList[operatorFct](other)                       
+        elif isinstance(other, (pq.Quantity)):
+            quant = functionList[operatorFct](other)              
+            retVal.values = quant.base
+            retVal.unit   = str(quant.dimensionality)
+
+        return retVal
+
+
+
+
 class ValuesCompound(Values):
 
     def __init__(self, valueLst):
@@ -350,6 +414,26 @@ class ValuesCompound(Values):
 
     def __repr__(self):
         return str(self.toJSON())
+
+
+
+    def __matOperator__(self, other, operatorFct):
+        
+        retVal = deepcopy(self)
+        for ind, value in enumerate(retVal.valueLst):
+            if value.statistic != "N":
+                retVal.valueLst[ind] = value.__matOperator__(other, operatorFct)
+        return retVal
+
+
+    def rescale(self, unit):
+        retVal = deepcopy(self)    
+        for ind, value in enumerate(retVal.valueLst):
+            if value.statistic != "N":
+                retVal.valueLst[ind] = value.rescale(unit)
+        return retVal
+
+
 
     def text(self, withUnit=False):
         
@@ -456,6 +540,11 @@ class ValuesCompound(Values):
         return np.nan
 
 
+
+
+    @property
+    def unit(self):
+        return self.textUnit()
 
 
 
@@ -753,16 +842,17 @@ class ParameterInstance:
 
 
         if not isinstance(relationship, Relationship) and not relationship is None:
-            raise ValueError
+            print(relationship, type(relationship))
+            raise TypeError
         if not isinstance(description, ParamDesc):
-            raise ValueError
+            raise TypeError
         if not isinstance(requiredTags, list):
-            raise ValueError
+            raise TypeError
         for reqTag in requiredTags:
             if not isinstance(reqTag, RequiredTag):
-                raise ValueError
+                raise TypeError
         if not isinstance(isExperimentProperty, bool):
-            raise ValueError
+            raise TypeError
 
         if id is None:
             self.id = str(uuid1())
@@ -811,6 +901,73 @@ class ParameterInstance:
             return None
         else:
             raise TypeError
+
+
+    def valuesText(self, withUnit=False):
+        if isinstance(self.description.depVar, NumericalVariable):
+            return self.description.depVar.values.text(withUnit)
+        elif isinstance(self.description.depVar, Variable):
+            return None
+        else:
+            raise TypeError
+
+
+
+    @property
+    def indepUnits(self):
+        if not hasattr(self.description, "indepVars"):
+            return None
+        indepVarUnits = []
+        for indepVar in self.description.indepVars:
+            if isinstance(indepVar, Variable):
+                indepVarUnits.append(indepVar.unit)
+            elif isinstance(indepVar, NumericalVariable):
+                indepVarUnits.append(indepVar.values.unit)
+        return indepVarUnits
+
+
+    @property
+    def indepValues(self):
+        if not hasattr(self.description, "indepVars"):
+            return None
+        indepVarValues = []
+        for indepVar in self.description.indepVars:
+            if isinstance(indepVar, NumericalVariable):
+                valuesObject = indepVar.values
+                if isinstance(valuesObject, ValuesSimple):
+                    indepVarValues.append(valuesObject.values)
+                elif isinstance(valuesObject, ValuesCompound):
+                    indepVarValues.append([val.values for val in valuesObject.valueLst])
+                else:
+                    raise TypeError
+        return indepVarValues
+
+
+    def getInterp1dValues(self, indepValues, kind='linear'):
+        y = self.values
+        x = self.indepValues[0]
+        f = interpolate.interp1d(x, y, kind=kind)
+        return f(indepValues)
+
+
+    @property
+    def indepTypeIds(self):
+        if not hasattr(self.description, "indepVars"):
+            return None
+        indepVarTypes = []
+        for indepVar in self.description.indepVars:
+            if isinstance(indepVar, NumericalVariable):
+                indepVarTypes.append(indepVar.typeId)
+        return indepVarTypes
+
+
+
+    @property
+    def indepNames(self):
+        if self.indepTypeIds is None:
+            return None
+        return [getParameterTypeNameFromID(typeId) for typeId in self.indepTypeIds]
+
 
 
     @property
@@ -902,6 +1059,56 @@ class ParameterInstance:
         #return self.parseStr.format(self.typeID, self.unit, self.value, self.__annotID, self.__pubID, self.requirements)
 
 
+    def __mul__(self, other):
+        retPar = deepcopy(self)
+        if isinstance(self.description.depVar, NumericalVariable):
+            retPar.description.depVar.values = self.description.depVar.values*other
+        else:
+            raise TypeError
+        return retPar
+
+    __rmul__ = __mul__
+
+
+    def __truediv__(self, other):
+        retPar = deepcopy(self)
+        if isinstance(self.description.depVar, NumericalVariable):
+            retPar.description.depVar.values = self.description.depVar.values/other
+        else:
+            raise TypeError
+        return retPar
+
+
+    def __add__(self, other):
+        retPar = deepcopy(self)
+        if isinstance(self.description.depVar, NumericalVariable):
+            retPar.description.depVar.values = self.description.depVar.values + other
+        else:
+            raise TypeError
+        return retPar
+
+
+    def __sub__(self, other):
+        retPar = deepcopy(self)
+        if isinstance(self.description.depVar, NumericalVariable):
+            retPar.description.depVar.values = self.description.depVar.values - other
+        else:
+            raise TypeError
+        return retPar
+
+
+    def rescale(self, unit):
+        retPar = deepcopy(self)
+        if isinstance(self.description.depVar, NumericalVariable):
+            retPar.description.depVar.values = self.description.depVar.values.rescale(unit)
+        else:
+            raise TypeError
+        return retPar
+
+
+
+
+
     @property
     def name(self):
         return getParameterTypeNameFromID(self.typeId)
@@ -924,16 +1131,11 @@ class ParameterInstance:
 
 
 class CustomParameterInstance (AbstractParameterInstance):
-    #### TODO: NEED TO BE REDEFINED IN AGREEMENT WITH THE 
-    ####       NEW CODE REFACTORING.
-
 
     def __init__(self, name, justification = None):
         super(CustomParameterInstance, self).__init__()
         self.name            = name
         self.justification     = justification
-
-
 
     def isComplete(self):
         # No need to check unit because value-units are always
