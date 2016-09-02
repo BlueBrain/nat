@@ -8,38 +8,14 @@ Created on Sun Jun  5 13:08:43 2016
 import requests   
 import json
 import os
-from shutil import copyfileobj
 import io
 from zipfile import ZipFile
-
-from nat import utils
-
-"""
-            if os.path.isfile(saveFileName + ".txt"):
-                errorMessage(self, "Error", "This PDF has already been imported to the database.")
-
-            check_call(['pdftotext', '-enc', 'UTF-8', fileName.encode("utf-8").decode("utf-8"), saveFileName + ".txt"])
-            copyfile(fileName, saveFileName + ".pdf")
-
-            open(saveFileName + ".pcr", 'w', encoding="utf-8", errors='ignore')
-            self.gitMng.addFiles([saveFileName + ".pcr", saveFileName + ".txt"])
-
-            if gitPDF:
-                self.gitMng.addFiles([saveFileName + ".pdf"])
-                self.needPush = True
-
-"""
 
 class RESTClient:
 
     def __init__(self, serverURL):
         self.serverURL = serverURL
 
-
-    def localizeAnnotation(self, paperId, textToAnnotate):
-        pass
-        # return blocks
-    
     def getContext(self, paperId, contextLength, annotStart, annotStr):
                 
         response = requests.post(self.serverURL + "get_context", 
@@ -50,10 +26,7 @@ class RESTClient:
 
         return json.loads(response.content.decode("utf8"))["context"]        
         
-        
-    def gotConnectivity(self):
-        pass
-        # return true/false
+
         
     def importPDF(self, localPDF, paperId, pathDB):
         files = {"file": (os.path.basename(localPDF), open(localPDF, 'rb'), 'application/octet-stream'),
@@ -74,18 +47,6 @@ class RESTClient:
 
 
 
-    #def removePDF(self, paperID):
-    #    files = {"file": (os.path.basename(localPDF), open(localPDF, 'rb'), 'application/octet-stream'),
-    #             "json": (None, json.dumps({"paperId": paperId}), 'application/json')}
-    # 
-    #    response = requests.post(#"http://httpbin.org/post",
-    #                             self.serverURL + "check_similarity",
-    #                             files=files)
-    #    return response.content        
-
-
-
-
     def checkSimilarity(self, localPDF, paperId):
         files = {"file": (os.path.basename(localPDF), open(localPDF, 'rb'), 'application/octet-stream'),
                  "json": (None, json.dumps({"paperId": paperId}), 'application/json')}
@@ -96,11 +57,6 @@ class RESTClient:
         return response.content
 
 
-
-        
-    def getServerPDF(self, paperId):
-        pass
-        # return pdfFile
 
 
 
