@@ -368,7 +368,7 @@ class ValuesSimple(Values):
         
         if isinstance(other, (int, float)):
             values = np.array(self.values)            
-        elif isinstance(other, (pq.Quantity)):
+        elif isinstance(other, (pq.Quantity, ParameterInstance)):
             values = pq.Quantity(self.values, self.unit)        
         else:
             raise TypeError        
@@ -432,7 +432,6 @@ class ValuesCompound(Values):
             if value.statistic != "N":
                 retVal.valueLst[ind] = value.rescale(unit)
         return retVal
-
 
 
     def text(self, withUnit=False):
@@ -901,6 +900,28 @@ class ParameterInstance:
             return None
         else:
             raise TypeError
+
+    @property
+    def means(self):
+        if isinstance(self.description.depVar, NumericalVariable):
+            valuesObject = self.description.depVar.values
+            if isinstance(valuesObject, ValuesSimple):
+                if valuesObject.statistic == "mean":
+                    return valuesObject.values
+                else:
+                    return None
+            elif isinstance(valuesObject, ValuesCompound):
+                for val in valuesObject.valueLst:
+                    if val.statistic == "mean":
+                        return val.values 
+                return None
+            else:
+                raise TypeError
+        elif isinstance(self.description.depVar, Variable):
+            return None
+        else:
+            raise TypeError
+
 
 
     def valuesText(self, withUnit=False):
