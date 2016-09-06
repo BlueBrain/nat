@@ -866,7 +866,7 @@ class ParameterInstance:
         self.relationship           = relationship
         self.isExperimentProperty   = isExperimentProperty
 
-        self.checkRequiredTag()
+        #self.checkRequiredTag()
 
 
     def checkRequiredTag(self):

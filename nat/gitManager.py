@@ -1,7 +1,8 @@
 __author__ = "Christian O'Reilly"
 
 
-from git import Repo, exc
+from git import Repo, exc, cmd
+import os
 
 from PySide import QtGui
 
@@ -11,6 +12,29 @@ class GitManager:
     def __init__(self, gitSettings):
 
         self.localRepoDir = gitSettings["local"]
+        
+        try:
+            # Getting the "fetching" URL
+            #print("local repository:", self.localRepoDir)
+            g = cmd.Git(os.path.abspath(self.localRepoDir))
+            urlInUse = ":".join(g.execute(["git", "remote", "show", "origin"]).split("\n")[1].split(":")[1:]).strip()
+            urlToUse = gitSettings["protocol"] + "://" + gitSettings["user"] + "@" + gitSettings["remote"]
+            #print(urlInUse)
+            #print(urlToUse)
+            if urlInUse != urlToUse:
+                #print("Changing URL in use...")
+                g.execute(["git", "remote", "set-url", "origin", urlToUse])
+                urlInUse = ":".join(g.execute(["git", "remote", "show", "origin"]).split("\n")[1].split(":")[1:]).strip()
+                #print(urlInUse)
+                #print(urlToUse)                
+                
+        except:
+            #print("show remote failed")
+            raise
+        
+        #if not os.path.isdir(self.localRepoDir):
+        #    os.makedirs(self.localRepoDir)
+        
         self.offline = False        
 
         try:
@@ -18,7 +42,7 @@ class GitManager:
             assert not self.repo.bare
 
         except (exc.InvalidGitRepositoryError,exc.NoSuchPathError):
-            self.repo = Repo.clone_from( gitSettings["protocol"] + "://" + gitSettings["user"] + "@" + gitSettings["remote"], self.localRepoDir)
+            self.repo = Repo.clone_from(gitSettings["protocol"] + "://" + gitSettings["user"] + "@" + gitSettings["remote"], self.localRepoDir)
 
 
         self.tryToFetch()
