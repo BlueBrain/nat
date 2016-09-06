@@ -11,7 +11,9 @@ import numpy as np
 
 from .annotation import Annotation
 from .modelingParameter import NumericalVariable, getParameterTypeNameFromID, Variable
-from .treeData import flatten_list, OntoManager
+from .treeData import flatten_list
+from .ontoManager import OntoManager
+from .tagUtilities import nlx2ks    
 
 annotationKeys         = ["Annotation type", "Annotation ID", "Publication ID", "Has parameter", "Tag name", "Author"]
 annotationResultFields = ["Annotation type", "Publication ID", "Nb. parameters", "Tag name", "Comment", "Authors", "Localizer"]
@@ -393,6 +395,9 @@ class ParameterSearch(Search):
                                                                   if len(param.requiredTags) 
                                                                   else "" 
                                                                   for param in parameters]))
+                                                                   
+                    tagCats = np.unique([nlx2ks[id] if id in nlx2ks else id for id in tagCats])                                                                  
+
                     for tagCatId in tagCats:
                         tagNames = []
                         for param in parameters:
@@ -404,7 +409,7 @@ class ParameterSearch(Search):
                             tagNames.append(tagName)
                                 
                         results[self.dicData[tagCatId]] = tagNames
-
+                        
                 else:
                      results[field] = [[tag.name for tag in param.requiredTags] 
                                                  if len(param.requiredTags) 

@@ -412,10 +412,10 @@ def resaveAnnotation(pathDB, pathOut=None):
 
     for fileName in glob(pathDB + "/*.pcr"):
         annotations = Annotation.readIn(open(fileName, "r", encoding="utf-8", errors='ignore'))
-        with open(fileName, "w", encoding="utf-8", errors='ignore') as f:
+        with open(os.path.join(pathOut, os.path.basename(fileName)), "w", encoding="utf-8", errors='ignore') as f:
             Annotation.dump(f, annotations)
 
 
 
 if __name__ == "__main__":
-    resaveAnnotation("/home/oreilly/GIT_repos/neurocurator_UI/notebooks/neurocuratorDB")
+    resaveAnnotation("/home/oreilly/GIT_repos/neurocurator/notebooks/neurocuratorDB", "/home/oreilly/GIT_repos/neurocurator/notebooks/neurocuratorDB2")

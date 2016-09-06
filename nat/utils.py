@@ -40,13 +40,15 @@ def fileName2Id(fileName):
     
     
 def reprocessFileNames(path = "/home/oreilly/curator_DB/"):
-    for f in glob(path + "*"):
-        
+    for f in glob(path + "*"):   
         f_in  = basename(f)
         f_out = copy(f_in) 
         for key, (symbol, replacement) in encoders.items():
             f_out = f_out.replace(symbol, replacement)
-        if f_in != f_out:
-            print(f_in, " ===> ", f_out)
-            os.rename(path + f_in, 
-                      path + f_out)
+            if f_in != f_out:
+                print(f_in, " ===> ", f_out)
+                os.rename(path + f_in, 
+                          path + f_out)
+
+if __name__ == "__main__":
+    reprocessFileNames('/home/oreilly/GIT_repos/nat/notebooks/neurocuratorDB/')

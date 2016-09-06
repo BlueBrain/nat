@@ -4,7 +4,7 @@ __author__ = 'oreilly'
 __email__  = 'christian.oreilly@epfl.ch'
 
 from .tagUtilities import nlx2ks
-#from .treeData import OntoManager
+#from .ontoManager import OntoManager
 #from .ontoServ import getCuriesFromLabel
 
 class Tag:
@@ -29,9 +29,9 @@ class Tag:
     
     def __init__(self, id, name):
         if not isinstance(id, str):
-            raise TypeError
+            raise TypeError("The 'id' parameter need to be of type 'str'. Type passed: " + str(type(id)))
         if not isinstance(name, str):
-            raise TypeError
+            raise TypeError("The 'name' parameter need to be of type 'str'. Type passed: " + str(type(name)))
 
         id = nlx2ks[id] if id in nlx2ks else id
         

@@ -14,6 +14,9 @@ from copy import deepcopy
 import numpy as np
 
 from .tag import Tag, RequiredTag
+from .tagUtilities import nlx2ks
+
+
 
 statisticList  = ["raw", "mean", "median", "mode", "sem", "sd",  "var", "CI_01", "CI_02.5", "CI_90", "CI_95", "CI_97.5", "CI_99", "N", "min", "max", "other", "deviation", "average"]
 
@@ -862,6 +865,62 @@ class ParameterInstance:
         self.description            = description
         self.relationship           = relationship
         self.isExperimentProperty   = isExperimentProperty
+
+        self.checkRequiredTag()
+
+
+    def checkRequiredTag(self):
+        from .ontoManager import OntoManager
+        ## TODO: remove this line once tag ids have been corrected in all annotatiuons
+        ontoMng  = OntoManager()
+        dicData  = ontoMng.dics    
+        
+        invDicData = {val:(nlx2ks[key] if key in nlx2ks else key) for key, val in dicData.items()}
+        invDicData['Thalamus geniculate nucleus (lateral) principal neuron'] = 'NIFCELL:nlx_cell_20081203'
+        invDicData["Young rat"] = "nlx_151691"
+        invDicData["Thalamus geniculate nucleus (lateral) interneuron"] = "NIFCELL:nifext_46"
+        invDicData["Temperature"] = "PATO:0000146"
+        invDicData["Sleep"] = "GO:0030431"
+        invDicData['Burst firing pattern'] = "nlx_78803"
+        invDicData['Cat'] = 'NIFORG:birnlex_113'
+        invDicData['Thalamus reticular nucleus cell'] = 'NIFCELL:nifext_45'
+        invDicData['Afferent'] = "NIFGA:nlx_anat_1010"
+        invDicData['Morphology'] = 'PATO:0000051'
+
+        for reqTag in self.requiredTags:
+    
+            #id = nlx2ks[id] if id in nlx2ks else id
+            
+            ## TODO: remove this line once tag ids have been corrected in all annotatiuons   
+            if not dicData[reqTag.id] == reqTag.name:
+                try:
+                    if not reqTag.name in invDicData:
+                        curies = getCuriesFromLabel(reqTag.name)
+                        invDicData[reqTag.name] = curies[0]
+                        
+                    print("Incompatibility between in " + str(reqTag.id) + ":" + str(reqTag.name) + ". Correcting to " + 
+                          str(invDicData[reqTag.name]) + ":" + str(dicData[invDicData[reqTag.name]]))
+                    reqTag.id = invDicData[reqTag.name]
+                    reqTag.name = dicData[reqTag.id]
+                except:
+                    raise                 
+            ######
+                
+    
+        
+    
+    
+
+
+
+
+
+
+
+
+
+
+
 
 
     def toJSON(self):
