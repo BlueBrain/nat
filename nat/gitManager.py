@@ -18,7 +18,7 @@ class GitManager:
             assert not self.repo.bare
 
         except (exc.InvalidGitRepositoryError,exc.NoSuchPathError):
-            self.repo = Repo.clone_from("ssh://" + gitSettings["user"] + "@" + gitSettings["remote"], self.localRepoDir)
+            self.repo = Repo.clone_from( gitSettings["protocol"] + "://" + gitSettings["user"] + "@" + gitSettings["remote"], self.localRepoDir)
 
 
         self.tryToFetch()
