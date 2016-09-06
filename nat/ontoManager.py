@@ -26,14 +26,14 @@ class OntoManager:
         pass
 
 
-    def __init__(self, fileNamePattern=None):
+    def __init__(self, fileNamePattern=None, recompute=False):
 
         if fileNamePattern is None:
-            self.fileNamePattern = os.path.join(os.path.dirname(__file__), "onto/onto*")            
+            self.fileNamePattern = os.path.dirname(__file__)            
         else:
             self.fileNamePattern = fileNamePattern
         
-        if not self.fileNamePattern in OntoManager.__ontoTrees__:
+        if not self.fileNamePattern in OntoManager.__ontoTrees__ or recompute:
             OntoManager.__ontoTrees__[self.fileNamePattern] = OntoDic()
             OntoManager.__ontoDics__[self.fileNamePattern]  = OntoDic()   
     
