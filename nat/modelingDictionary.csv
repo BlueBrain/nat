@@ -14,6 +14,7 @@
 "BBP-002001";"BBP-002000";"age";"Age of subjects/animals."; {}
 "BBP-002002";"BBP-002000";"temperature";"Temperature used for the experiment."; {}
 "BBP-002003";"BBP-002000";"junction_potential";"Junction potential used for recording correction."; {}
+"BBP-002004";"BBP-002000";"slice_thickness";"Thickness of a slice of tissue."; {}
 
 "BBP-010000";"BBP-000000";"potential";"Potential."; {}
 "BBP-010001";"BBP-010000";"potential_membrane";"Potential of a cell membrane."; {"sao1813327414":"Cell"}
