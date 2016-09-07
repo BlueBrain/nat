@@ -18,10 +18,12 @@ from .tagUtilities import nlx2ks
 annotationKeys         = ["Annotation type", "Annotation ID", "Publication ID", "Has parameter", "Tag name", "Author"]
 annotationResultFields = ["Annotation type", "Publication ID", "Nb. parameters", "Tag name", "Comment", "Authors", "Localizer"]
 
-parameterKeys          = ["Parameter name", "Result type", "Parameter instance ID", \
-                          "Unit", "Required tag name", "Annotation ID", "Publication ID", "Tag name"]
+parameterKeys          = ["Parameter name", "Result type", "Parameter instance ID", 
+                          "Unit", "Required tag name", "Annotation ID", 
+                          "Publication ID", "Tag name"]
 parameterResultFields  = ["Required tag names", "Result type", "Values", "Parameter name", 
-                          "Parameter type ID", "Parameter instance ID", "Unit", "Text", "Context"] 
+                          "Parameter type ID", "Parameter instance ID", "Unit", 
+                          "Text", "Context", "Species"] 
 
 
 class Condition:
@@ -289,11 +291,14 @@ class ParameterGetter(Search):
         self.parameters = {param:annot for param, annot in self.parameters}
                 
 
-    def getParam(self, instanceId):
+    def getParam(self, instanceId, returnAnnotation=False):
         self.setSearchConditions(ConditionAtom("Parameter instance ID", instanceId))
         self.selectedItem = self.conditions.apply_param(self.parameters)
         if len(self.selectedItem) == 1 :
-            return list(self.selectedItem.keys())[0]
+            if returnAnnotation:
+                return list(self.selectedItem.keys())[0], list(self.selectedItem.values())[0]
+            else:
+                return list(self.selectedItem.keys())[0]
             
         if len(self.selectedItem) == 0 :            
             raise ValueError("No corresponding parameter instance where found.")
@@ -435,7 +440,9 @@ class ParameterSearch(Search):
                         raise TypeError
                 results[field] = units
 
-
+        
+            elif field == "Species":
+                results[field] = [annot.getSpecies() for annot in annotations]     
 
             elif field == "Values":
                 if self.onlyCentralTendancy:
