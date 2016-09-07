@@ -11,6 +11,27 @@ bases = {"KS":"http://matrix.neuinfo.org:9000/scigraph",
          "NIP":"https://nip.humanbrainproject.eu/api/scigraph"}
 
 
+def getOntoCategory(curie):
+
+    base = bases["KS"] 
+    query = base + "/vocabulary/id/" + curie
+    response = requests.get(query)
+    if not response.ok:
+        return []
+    try:
+        concepts = response.json()
+    except ValueError:
+        print(query)
+        print(response)
+        raise
+    
+    if len(concepts["categories"]):
+        return concepts["categories"]
+    return []
+
+
+
+
 def getLabelFromCurie(curie):
 
     for service, base in bases.items():

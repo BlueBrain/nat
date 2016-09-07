@@ -11,6 +11,7 @@ from .modelingParameter import ParameterInstance, ParamRef
 from .tag import Tag
 from . import utils
 from .restClient import RESTClient
+from .ontoServ import getOntoCategory
 
 
 def getParametersForPub(dbPath, pubId):
@@ -25,8 +26,6 @@ def getParametersForPub(dbPath, pubId):
     for annot in annotations:
         parameters.extend(annot.parameters)
     return parameters
-
-
 
 
 
@@ -364,9 +363,8 @@ class Annotation:
         self.tags = []
 
 
-    def getSpecies(self):
-        #TODO
-        return None
+    def getSpecies(self): 
+        return [tag for tag in self.tags if "organism" in getOntoCategory(tag.id)]
         
     def getBrainRegion(self):
         #TODO
