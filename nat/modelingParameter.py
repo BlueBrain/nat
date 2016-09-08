@@ -1041,7 +1041,7 @@ class ParameterInstance:
                         x = self.indepValues[0]
                         f = interpolate.interp1d(x, y, kind=kind)
                         interVals.append(f(indepValues))
-            
+                return interVals
 
     @property
     def indepTypeIds(self):
