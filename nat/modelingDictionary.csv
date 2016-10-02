@@ -88,7 +88,7 @@
 "BBP-110001";"BBP-110000";"connectivity_prob";"Probability of connection.";{}
 "BBP-110002";"BBP-110000";"connectivity_strength";"Coefficient stating the strength of connectivity. Generally a pure number.";{}
 "BBP-110003";"BBP-110000";"connectivity_delay";"Delay for propagation of information from X to Y.";{}
-"BBP-110004";"BBP-110000";"connectivity_nbCell";"Number of cells a given cell is connected with.";{"sao1813327414":"Cell"}
+"BBP-110004";"BBP-110000";"connectivity_nbCell";"Number of cells a given cell is connected with.";{"sao1813327414":"Cell", "NIFSUB:sao914572699":"Synapse"}
 
 "BBP-110100";"BBP-110000";"coupling_coefficient";"The coupling coefficient between two connected entities.";{}
 "BBP-110100";"BBP-110000";"elec_synap_coupling_coefficient";"The coupling coefficient can be measured in electrical synapse by assessing the voltage deflection caused by a stimulus applied to one paired cell (dV1) (i.e., presynaptic cell) and the voltage deflection observed in the second paired cell (dV2) (i.e., postsynaptic cell), and calculating the ratio of these deflections such that coupling_coefficient=dV2/dV1";{"sao1813327414":"Cell"}
