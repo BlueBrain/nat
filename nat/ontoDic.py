@@ -47,6 +47,8 @@ class OntoDic(TransformedDict):
     # We reimplement __setitem__ and __contains__ because we don't want to 
     # check ontology services when adding new item to the dict.
     def __setitem__(self, key, value):
+        if value is None:
+            raise ValueError("The OntoDic class do not accept None as values.")
         if key in nlx2ks:
             key = nlx2ks[key]        
         self.store[key] = value
