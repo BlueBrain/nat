@@ -16,7 +16,11 @@ class GitManager:
         try:
             # Getting the "fetching" URL
             #print("local repository:", self.localRepoDir)
-            g = cmd.Git(os.path.abspath(self.localRepoDir))
+            gitPath = os.path.abspath(self.localRepoDir)
+            if not os.path.exists(gitPath):
+                os.makedirs(gitPath)
+                
+            g = cmd.Git(gitPath)
             urlInUse = ":".join(g.execute(["git", "remote", "show", "origin"]).split("\n")[1].split(":")[1:]).strip()
             urlToUse = gitSettings["protocol"] + "://" + gitSettings["user"] + "@" + gitSettings["remote"]
             #print(urlInUse)
