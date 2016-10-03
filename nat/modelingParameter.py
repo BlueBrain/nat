@@ -36,7 +36,7 @@ class ParameterTypeTree:
         if not isinstance(value, ParameterType):
             raise TypeError
 
-        self.children = []    
+        self.children = []
         self.value      = value
 
     def addChild(self, child):
@@ -86,7 +86,7 @@ class ParameterTypeTree:
         def addChildren(tree, df):
             children = df[df["parentId"] == tree.value.ID]
             for index, row in children.iterrows():
-                child = ParameterTypeTree(ParameterType(row["id"], row["parentId"], 
+                child = ParameterTypeTree(ParameterType(row["id"], row["parentId"],
                          row["name"], row["description"], eval(row["requiredTags"])))
                 child = addChildren(child, df)
                 tree.addChild(child)
@@ -95,9 +95,9 @@ class ParameterTypeTree:
 
         df = ParameterTypeTree.getParamTypeDF(fileName)
 
-        row = df[df["id"] == root]        
+        row = df[df["id"] == root]
 
-        tree = ParameterTypeTree(ParameterType(row["id"][0], row["parentId"][0], 
+        tree = ParameterTypeTree(ParameterType(row["id"][0], row["parentId"][0],
                                  row["name"][0], row["description"][0], eval(row["requiredTags"][0])))
 
         return addChildren(tree, df)
@@ -108,14 +108,14 @@ class ParameterTypeTree:
 
         if fileName is None:
             fileName = os.path.join(os.path.dirname(__file__), "modelingDictionary.csv")
-            
-        df = pd.read_csv(fileName, skip_blank_lines=True, comment="#", 
-                         delimiter=";", quotechar='"', 
+
+        df = pd.read_csv(fileName, skip_blank_lines=True, comment="#",
+                         delimiter=";", quotechar='"',
                          names=["id", "parentId", "name", "description", "requiredTags"])
 
         return df
-    
-    
+
+
 
 
 def getParameterTypes(fileName = None):
@@ -176,7 +176,7 @@ def getParameterTypeFromName(name, parameterTypes = None):
 
 
 class Relationship:
-    
+
     def __init__(self, type_, entity1, entity2):
         if not isinstance(type_, str):
             raise TypeError
@@ -211,7 +211,7 @@ class Relationship:
 
     @staticmethod
     def fromJSON(jsonString):
-        return Relationship(jsonString["type"], Tag.fromJSON(jsonString["entity1"]), 
+        return Relationship(jsonString["type"], Tag.fromJSON(jsonString["entity1"]),
                             None if jsonString["entity2"] == "None" else Tag.fromJSON(jsonString["entity2"]))
 
 
@@ -234,10 +234,10 @@ class ParameterType:
     @staticmethod
     def readIn(paramStr):
         parameter = ParameterType()
-        reader = csv.reader(StringIO(paramStr) , delimiter=';') 
+        reader = csv.reader(StringIO(paramStr) , delimiter=';')
         try:
             parameter.ID, parameter.parent, parameter.name, parameter.description, requiredTags = [item.strip() for item in list(reader)[0]]
-            
+
             parameter.requiredTags = []
             for rootId, value in eval(requiredTags).items():
                 if "||" in rootId:
@@ -262,7 +262,7 @@ class ParameterType:
 
 class Values:
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
         if jsonString["type"] == "simple":
             return ValuesSimple.fromJSON(jsonString)
@@ -287,13 +287,13 @@ class Values:
 
     def __mul__(self, other):
         return self.__matOperator__(other, "__mul__")
-        
+
     def __truediv__(self, other):
         return self.__matOperator__(other, "__truediv__")
-        
+
     def __add__(self, other):
         return self.__matOperator__(other, "__add__")
-        
+
     def __sub__(self, other):
         return self.__matOperator__(other, "__sub__")
 
@@ -305,14 +305,14 @@ class ValuesSimple(Values):
 
     def __init__(self, values = [], unit= "dimensionless", statistic = "raw"):
         if not isinstance(values, list):
-            raise TypeError("Expected type for values field is list, received type: " + str(type(values)))            
+            raise TypeError("Expected type for values field is list, received type: " + str(type(values)))
         if not isinstance(unit, str):
             raise TypeError
         if not unitIsValid(unit):
             raise ValueError
         if not statistic in statisticList:
-            raise ValueError("Invalid statistic '" + statistic + 
-                             "'. Statistics should take one of the following values: ", 
+            raise ValueError("Invalid statistic '" + statistic +
+                             "'. Statistics should take one of the following values: ",
                              str(statisticList))
 
 
@@ -320,7 +320,7 @@ class ValuesSimple(Values):
         self.unit      = unit
         self.statistic = statistic
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
         return ValuesSimple(jsonString["values"], jsonString["unit"], jsonString["statistic"])
 
@@ -359,7 +359,7 @@ class ValuesSimple(Values):
 
 
     def rescale(self, unit):
-        retVal = deepcopy(self)        
+        retVal = deepcopy(self)
         if isinstance(unit, str):
             quant = pq.Quantity(self.values, self.unit).rescale(unit)
             retVal.values = quant.base
@@ -368,24 +368,24 @@ class ValuesSimple(Values):
 
 
     def __matOperator__(self, other, operatorFct):
-        
+
         if isinstance(other, (int, float)):
-            values = np.array(self.values)            
+            values = np.array(self.values)
         elif isinstance(other, (pq.Quantity, ParameterInstance)):
-            values = pq.Quantity(self.values, self.unit)        
+            values = pq.Quantity(self.values, self.unit)
         else:
-            raise TypeError        
-        
-        functionList = {'__mul__': values.__mul__, 
-                        '__truediv__': values.__truediv__, 
-                        '__add__': values.__add__, 
+            raise TypeError
+
+        functionList = {'__mul__': values.__mul__,
+                        '__truediv__': values.__truediv__,
+                        '__add__': values.__add__,
                         '__sub__': values.__sub__}
 
         retVal = deepcopy(self)
         if isinstance(other, (int, float)):
-            retVal.values = functionList[operatorFct](other)                       
+            retVal.values = functionList[operatorFct](other)
         elif isinstance(other, (pq.Quantity)):
-            quant = functionList[operatorFct](other)              
+            quant = functionList[operatorFct](other)
             retVal.values = quant.base
             retVal.unit   = str(quant.dimensionality)
 
@@ -402,10 +402,10 @@ class ValuesCompound(Values):
         for value in valueLst:
             if not isinstance(value, ValuesSimple):
                 raise TypeError
-        
+
         self.valueLst    = valueLst
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
         return ValuesCompound([Values.fromJSON(v) for v in jsonString["valueLst"]])
 
@@ -421,7 +421,7 @@ class ValuesCompound(Values):
 
 
     def __matOperator__(self, other, operatorFct):
-        
+
         retVal = deepcopy(self)
         for ind, value in enumerate(retVal.valueLst):
             if value.statistic != "N":
@@ -430,7 +430,7 @@ class ValuesCompound(Values):
 
 
     def rescale(self, unit):
-        retVal = deepcopy(self)    
+        retVal = deepcopy(self)
         for ind, value in enumerate(retVal.valueLst):
             if value.statistic != "N":
                 retVal.valueLst[ind] = value.rescale(unit)
@@ -438,7 +438,7 @@ class ValuesCompound(Values):
 
 
     def text(self, withUnit=False):
-        
+
         stats = [value.statistic for value in self.valueLst]
         if "raw" in stats :
             return self.valueLst[stats.index("raw")].text(withUnit)
@@ -454,7 +454,7 @@ class ValuesCompound(Values):
         else:
             dev = ""
 
-        if "min" in stats and "max" in stats :            
+        if "min" in stats and "max" in stats :
             inter = "[" + self.valueLst[stats.index("min")].text() + " - " + self.valueLst[stats.index("max")].text() + "]"
         elif "CI_01" in stats and  "CI_99" in stats :
             inter = "[" + self.valueLst[stats.index("CI_01")].text() + " - " + self.valueLst[stats.index("CI_99")].text() + "]"
@@ -488,12 +488,12 @@ class ValuesCompound(Values):
 
     def textUnit(self):
 
-        stats = [value.statistic for value in self.valueLst]        
+        stats = [value.statistic for value in self.valueLst]
         unit = ""
         if "raw" in stats :
             return self.valueLst[stats.index("raw")].textUnit()
 
-        if "min" in stats and "max" in stats :            
+        if "min" in stats and "max" in stats :
             unit = self.valueLst[stats.index("min")].unit
         elif "CI_01" in stats and  "CI_99" in stats :
             unit = self.valueLst[stats.index("CI_01")].unit
@@ -529,14 +529,14 @@ class ValuesCompound(Values):
                 return self.valueLst[stats.index(stat)].centralTendancy()
 
 
-        if "min" in stats and "max" in stats :            
-            return (self.valueLst[stats.index("min")].centralTendancy() + 
+        if "min" in stats and "max" in stats :
+            return (self.valueLst[stats.index("min")].centralTendancy() +
                     self.valueLst[stats.index("max")].centralTendancy())/2.0
         if "CI_01" in stats and  "CI_99" in stats :
-            return (self.valueLst[stats.index("CI_01")].centralTendancy() + 
+            return (self.valueLst[stats.index("CI_01")].centralTendancy() +
                     self.valueLst[stats.index("CI_99")].centralTendancy())/2.0
         if "CI_02.5" in stats and  "CI_97.5" in stats :
-            return (self.valueLst[stats.index("CI_02.5")].centralTendancy() + 
+            return (self.valueLst[stats.index("CI_02.5")].centralTendancy() +
                     self.valueLst[stats.index("CI_97.5")].centralTendancy())/2.0
 
         return np.nan
@@ -563,7 +563,7 @@ class NumericalVariable:
         self.typeId = typeId
         self.values = values
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
         return NumericalVariable(jsonString["typeId"], Values.fromJSON(jsonString["values"]))
 
@@ -588,7 +588,7 @@ class Variable:
         self.unit      = unit
         self.statistic = statistic
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
         if not jsonString["statistic"] in statisticList:
             raise ValueError("Invalid statistic (" + jsonString["statistic"] + "). Statistics should take one of the following values: ", str(statisticList))
@@ -612,14 +612,14 @@ class Variable:
 
 
 class ParamDesc:
-    @staticmethod    
+    @staticmethod
     @abstractmethod
     def fromJSON(jsonString):
-        if jsonString["type"] == "function": 
+        if jsonString["type"] == "function":
             return ParamDescFunction.fromJSON(jsonString)
-        elif jsonString["type"] == "numericalTrace": 
+        elif jsonString["type"] == "numericalTrace":
             return ParamDescTrace.fromJSON(jsonString)
-        elif jsonString["type"] == "pointValue": 
+        elif jsonString["type"] == "pointValue":
             return ParamDescPoint.fromJSON(jsonString)
         else:
             raise ValueError
@@ -629,7 +629,7 @@ class ParamDesc:
         raise NotImplementedError
 
 
-class ParamDescPoint(ParamDesc): 
+class ParamDescPoint(ParamDesc):
 
     def __init__(self, depVar):
         if not isinstance(depVar, NumericalVariable):
@@ -638,7 +638,7 @@ class ParamDescPoint(ParamDesc):
         self.depVar          = depVar
         self.type            = "pointValue"
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
         return ParamDescPoint(NumericalVariable.fromJSON(jsonString["depVar"]))
 
@@ -663,7 +663,7 @@ class InvalidEquation(ValueError):
 
 
 class ParamRef:
-    
+
     def __init__(self, instanceId, paramTypeId):
         if not isinstance(instanceId, str):
             raise TypeError
@@ -673,7 +673,7 @@ class ParamRef:
         self.instanceId  = instanceId
         self.paramTypeId = paramTypeId
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
         return ParamRef(jsonString["instanceId"], jsonString["paramTypeId"])
 
@@ -694,7 +694,7 @@ class ParamRef:
 
 
 from numpy import *  # To make sure that the exec call in checkEquation() has access to all numpy functions
-class ParamDescFunction(ParamDesc): 
+class ParamDescFunction(ParamDesc):
 
     def __init__(self, depVar, indepVars, parameterRefs, equation):
         if not isinstance(depVar, Variable):
@@ -717,7 +717,7 @@ class ParamDescFunction(ParamDesc):
         self.parameterRefs = parameterRefs
         self.equation      = equation
         self.type          = "function"
-    
+
         self.checkEquation()
 
 
@@ -728,26 +728,26 @@ class ParamDescFunction(ParamDesc):
             for ref in self.parameterRefs:
                 locals()[getParameterTypeNameFromID(ref.paramTypeId)] = 1.0
 
-            exec(self.equation, globals(), locals()) 
+            exec(self.equation, globals(), locals())
             return
 
         except Exception as e:
             errorMsg = "Invalid equation expression : '" + self.equation + "'. Original exception raised: " + str(e)
-        
+
         raise InvalidEquation(errorMsg)
 
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
-        return ParamDescFunction(Variable.fromJSON(jsonString["depVar"]), 
-                                [Variable.fromJSON(s) for s in jsonString["indepVars"]], 
-                                [ParamRef.fromJSON(s) for s in jsonString["parameterRefs"]], 
+        return ParamDescFunction(Variable.fromJSON(jsonString["depVar"]),
+                                [Variable.fromJSON(s) for s in jsonString["indepVars"]],
+                                [ParamRef.fromJSON(s) for s in jsonString["parameterRefs"]],
                                 jsonString["equation"])
-                                
+
     def toJSON(self):
-        return {"type":"function", "depVar": self.depVar.toJSON(), 
-                "indepVars"    : [var.toJSON() for var in self.indepVars], 
-                "parameterRefs": [par.toJSON() for par in self.parameterRefs], 
+        return {"type":"function", "depVar": self.depVar.toJSON(),
+                "indepVars"    : [var.toJSON() for var in self.indepVars],
+                "parameterRefs": [par.toJSON() for par in self.parameterRefs],
                 "equation":self.equation}
 
     def __str__(self):
@@ -761,7 +761,7 @@ class ParamDescFunction(ParamDesc):
 
 
 
-class ParamDescTrace(ParamDesc): 
+class ParamDescTrace(ParamDesc):
 
     def __init__(self, depVar, indepVars):
         if not isinstance(depVar, NumericalVariable):
@@ -776,13 +776,13 @@ class ParamDescTrace(ParamDesc):
         self.indepVars       = indepVars
         self.type            = "numericalTrace"
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonString):
-        return ParamDescTrace(NumericalVariable.fromJSON(jsonString["depVar"]), 
+        return ParamDescTrace(NumericalVariable.fromJSON(jsonString["depVar"]),
                              [NumericalVariable.fromJSON(s) for s in jsonString["indepVars"]])
 
     def toJSON(self):
-        return {"type":"numericalTrace", "depVar": self.depVar.toJSON(), 
+        return {"type":"numericalTrace", "depVar": self.depVar.toJSON(),
                 "indepVars": [var.toJSON() for var in self.indepVars]}
 
     def __str__(self):
@@ -795,51 +795,16 @@ class ParamDescTrace(ParamDesc):
 
 
 
-
-class AbstractParameterInstance:
-    # This class represent a parameter instance. It can be used to 
-    # represent 1) a parameter that is specified in a
-    # modeling file (e.g. .mm_py, .mm_hoc, .mm_mod) with the #|...|# 
-    # formalism or 2) a parameter specified by a given annotation.
-    # The objects encode the type of parameter, its numerical value,
-      # the units in which it is specified, and the annotation and publication
-    # ID it refers to. 
-
-    def __init__(self):
-        self.__unit         = None
-        self.__value        = None
-
-    def setValue(self, value, unit):
-        # A value must always be set along with its unit. Else, it is meaningless. 
-        self.__unit     = unit
-        self.__value    = value
-
-    def convertUnit(self, unit):
-        pass
-
-
-    @property
-    def unit(self):
-        # Make unit validation
-        return self.__unit
-
-    @property
-    def value(self):
-        return self.__value
-
-
-
-
 class ParameterInstance:
-    # This class represent a parameter instance. It can be used to 
+    # This class represent a parameter instance. It can be used to
     # represent 1) a parameter that is specified in a
-    # modeling file (e.g. .mm_py, .mm_hoc, .mm_mod) with the #|...|# 
+    # modeling file (e.g. .mm_py, .mm_hoc, .mm_mod) with the #|...|#
     # formalism or 2) a parameter specified by a given annotation.
     # The objects encode the type of parameter, its numerical value,
-      # the units in which it is specified, and the annotation and publication
-    # ID it refers to. 
-    def __init__(self, id, description, # experimentProperties,
-                  requiredTags, relationship=None, isExperimentProperty=False):
+    # the units in which it is specified, and the annotation and publication
+    # ID it refers to.
+    def __init__(self, id, description, requiredTags,
+                  relationship=None, isExperimentProperty=False):
         super(ParameterInstance, self).__init__()
 
 
@@ -873,8 +838,8 @@ class ParameterInstance:
         from .ontoManager import OntoManager
         ## TODO: remove this line once tag ids have been corrected in all annotatiuons
         ontoMng  = OntoManager()
-        dicData  = ontoMng.dics    
-        
+        dicData  = ontoMng.dics
+
         invDicData = {val:(nlx2ks[key] if key in nlx2ks else key) for key, val in dicData.items()}
         invDicData['Thalamus geniculate nucleus (lateral) principal neuron'] = 'NIFCELL:nlx_cell_20081203'
         invDicData["Young rat"] = "nlx_151691"
@@ -888,47 +853,32 @@ class ParameterInstance:
         invDicData['Morphology'] = 'PATO:0000051'
 
         for reqTag in self.requiredTags:
-    
+
             #id = nlx2ks[id] if id in nlx2ks else id
-            
-            ## TODO: remove this line once tag ids have been corrected in all annotations   
+
+            ## TODO: remove this line once tag ids have been corrected in all annotations
             if not dicData[reqTag.id] == reqTag.name:
                 try:
                     if not reqTag.name in invDicData:
                         curies = getCuriesFromLabel(reqTag.name)
                         invDicData[reqTag.name] = curies[0]
-                        
-                    print("Incompatibility between in " + str(reqTag.id) + ":" + str(reqTag.name) + ". Correcting to " + 
+
+                    print("Incompatibility between in " + str(reqTag.id) + ":" + str(reqTag.name) + ". Correcting to " +
                           str(invDicData[reqTag.name]) + ":" + str(dicData[invDicData[reqTag.name]]))
                     reqTag.id = invDicData[reqTag.name]
                     reqTag.name = dicData[reqTag.id]
                 except:
-                    raise                 
+                    raise
             ######
-                
-    
-        
-    
-    
-
-
-
-
-
-
-
-
-
-
 
 
 
     def toJSON(self):
-        json = {"id":self.id, 
-                "description":self.description.toJSON(), 
+        json = {"id":self.id,
+                "description":self.description.toJSON(),
                 "requiredTags": [reqTag.toJSON() for reqTag in self.requiredTags],
                 "isExperimentProperty":self.isExperimentProperty}
-                
+
         if not self.relationship is None:
             json["relationship"] = self.relationship.toJSON()
 
@@ -972,7 +922,7 @@ class ParameterInstance:
             elif isinstance(valuesObject, ValuesCompound):
                 for val in valuesObject.valueLst:
                     if val.statistic == "mean":
-                        return val.values 
+                        return val.values
                 return None
             else:
                 raise TypeError
@@ -1024,7 +974,7 @@ class ParameterInstance:
 
 
     def getInterp1dValues(self, indepValues, kind='linear', statsToReturn=None):
-        
+
         if isinstance(self.description.depVar, NumericalVariable):
             valuesObject = self.description.depVar.values
             if isinstance(valuesObject, ValuesSimple):
@@ -1033,7 +983,7 @@ class ParameterInstance:
                 f = interpolate.interp1d(x, y, kind=kind)
                 return f(indepValues)
 
-            elif isinstance(valuesObject, ValuesCompound):  
+            elif isinstance(valuesObject, ValuesCompound):
                 interVals = []
                 for val in valuesObject.valueLst:
                     if statsToReturn is None or val.statistic in statsToReturn:
@@ -1072,17 +1022,17 @@ class ParameterInstance:
         return self.description.type
 
 
-    @staticmethod    
+    @staticmethod
     def fromJSON(jsonParams):
         params = []
         for jsonParam in jsonParams:
-            
+
             if not "requiredTags" in jsonParam:
                 # To convert older format annotations
                 values = ValuesSimple([jsonParam["value"]], jsonParam["unit"])
                 if jsonParam["id"] in ["BBP-01104", "BBP-00008"]:
                     typeId = "BBP-011001"
-                    requiredTags    = [RequiredTag("nifext_8055", "Sodium current", "nifext_8054"), RequiredTag("sao1813327414", "Cell", "sao1813327414")]                
+                    requiredTags    = [RequiredTag("nifext_8055", "Sodium current", "nifext_8054"), RequiredTag("sao1813327414", "Cell", "sao1813327414")]
                 elif jsonParam["id"] in ["BBP-01103", "BBP-00007"]:
                     typeId = "BBP-011001"
                     requiredTags = [RequiredTag("nifext_8056", "Potassium current", "nifext_8054"), RequiredTag("sao1813327414", "Cell", "sao1813327414")]
@@ -1133,10 +1083,10 @@ class ParameterInstance:
                     isExpProp = bool(jsonParam["isExperimentProperty"])
                 else:
                     isExpProp = False
-                    
+
                 param = ParameterInstance(jsonParam["id"],
                                           ParamDesc.fromJSON(jsonParam["description"]),
-                                          [RequiredTag.fromJSON(s) for s in jsonParam["requiredTags"]], 
+                                          [RequiredTag.fromJSON(s) for s in jsonParam["requiredTags"]],
                                           relationship, isExpProp)
             params.append(param)
 
@@ -1217,29 +1167,6 @@ class ParameterInstance:
             else:
                 print("File content: ", fileObject.read())
                 raise
-
-
-
-
-
-
-class CustomParameterInstance (AbstractParameterInstance):
-
-    def __init__(self, name, justification = None):
-        super(CustomParameterInstance, self).__init__()
-        self.name            = name
-        self.justification     = justification
-
-    def isComplete(self):
-        # No need to check unit because value-units are always
-        # set in pairs.
-        if self.value is None:
-            return False
-
-        if self.justification is None:
-            return False
-
-        return True
 
 
 
