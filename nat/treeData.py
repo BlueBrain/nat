@@ -7,7 +7,7 @@ __email__  = 'christian.oreilly@epfl.ch'
 from .tagUtilities import nlx2ks
 from .tag import RequiredTag
 from .modelingParameter import ParameterTypeTree
-from .scigraph_client import Graph
+#from .scigraph_client import Graph
 from .ontoDic import OntoDic
 import requests
 
@@ -30,22 +30,35 @@ def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf"):
     #neighbors = graph.getNeighbors(root_id, depth=maxDepth, 
     #                               relationshipType=relationshipType, 
     #                               direction=direction)
-                                   
-                                   
-
+ 
     baseKS  = "http://matrix.neuinfo.org:9000"
     response = requests.get(baseKS + "/scigraph/graph/neighbors/" + 
                             root_id + "?direction=" + direction + 
                             "&depth=" + str(maxDepth) + 
                             "&project=%2A&blankNodes=false&relationshipType=" 
                             + relationshipType)
+
     neighbors = response.json()
 
     if neighbors is None:
         return {}
 
     nodes = neighbors["nodes"]
-    return OntoDic({node["id"]:node["lbl"] for node in np.array(nodes)})
+    #for node in np.array(nodes):
+    #    node["lbl"] = node["lbl"].encode('utf-8').decode('utf-8')
+        
+    #try:
+    #    assert(np.all([not node["lbl"] is None for node in np.array(nodes)]))
+    #except AssertionError: 
+    #    for node in np.array(nodes):
+    #        if node["lbl"] is None:
+    #            print(node["id"])
+    #    raise        
+    
+    # TODO: replace by the commented line below. This patch is only to 
+    #       accomodate for a current issue with the knowledge-space endpoint.          
+    #return OntoDic({node["id"]:node["lbl"] for node in np.array(nodes)})        
+    return OntoDic({node["id"]:node["lbl"] for node in np.array(nodes) if not node["lbl"] is None})
     
     
 
