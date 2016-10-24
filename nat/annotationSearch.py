@@ -215,17 +215,51 @@ class ConditionNOT(Condition):
                 
 
 
+import os.path
+import pickle
+class CompiledCorpus:
+    
+    def __init__(self, binPath="annotations.bin"):
+        self.binPath = binPath
+        
+        try:
+            if os.path.isfile(self.binPath):
+                self.loadBin()
+        except:
+            print("Warning: Failed to load the compiled corpus.")
+            self.annotations = []
+        
+    def loadBin(self):
+        with open(self.binPath, "rb") as binFile:
+            self.annotations = pickle.load(binFile)        
+        
+    def compileCorpus(self, pathDB=".", outPath=None):
+        if outPath is None:
+            outPath = self.binPath
+
+        for fileName in glob(pathDB + "/*.pcr"):
+            self.annotations.extend(Annotation.readIn(open(fileName, "r", encoding="utf-8", errors='ignore')))
+    
+        with open(outPath, "wb") as binFile:
+            pickle.dump(self.annotations, binFile)
+    
+    def getAllAnnotations(self):
+        return self.annotations
+
+
 class Search:
     
-    def __init__(self, pathDB=None):
+    def __init__(self, pathDB=None, compiledCorpus=None):
         if pathDB is None:
             pathDB = os.path.join(os.path.dirname(__file__), './curator_DB')
 
+        self.compiledCorpus = compiledCorpus
         ontoMng = OntoManager()
         self.treeData                  = ontoMng.trees 
         self.dicData                   = ontoMng.dics
         
         self.conditions = Condition()    
+
         
         self.pathDB     = pathDB 
         self.getAllAnnotations()
@@ -250,23 +284,20 @@ class Search:
 
 
     def getAllAnnotations(self):
+        if not self.compiledCorpus is None:
+            self.annotations = self.compiledCorpus.getAllAnnotations()
+            return
+ 
         self.annotations = []
         for fileName in glob(self.pathDB + "/*.pcr"):
-            #try:
             self.annotations.extend(Annotation.readIn(open(fileName, "r", encoding="utf-8", errors='ignore')))
-            #except:       
-            #    print("Skipping: ", fileName)    
-            #    raise
-            
-
-
 
 
 
 class AnnotationGetter(Search):
     
-    def __init__(self, pathDB=None):
-        super(AnnotationGetter, self).__init__(pathDB)
+    def __init__(self, pathDB=None, compiledCorpus=None):
+        super(AnnotationGetter, self).__init__(pathDB, compiledCorpus)
 
     def getAnnot(self, annotId):
         self.setSearchConditions(ConditionAtom("Annotation ID", annotId))
@@ -285,8 +316,8 @@ class AnnotationGetter(Search):
 
 class ParameterGetter(Search):
     
-    def __init__(self, pathDB=None):
-        super(ParameterGetter, self).__init__(pathDB)
+    def __init__(self, pathDB=None, compiledCorpus=None):
+        super(ParameterGetter, self).__init__(pathDB, compiledCorpus)
         self.parameters = flatten_list([[(param, annot) for param in annot.parameters] for annot in self.annotations])
         self.parameters = {param:annot for param, annot in self.parameters}
                 
@@ -308,8 +339,8 @@ class ParameterGetter(Search):
 
 class AnnotationSearch(Search):
     
-    def __init__(self, pathDB=None):
-        super(AnnotationSearch, self).__init__(pathDB)
+    def __init__(self, pathDB=None, compiledCorpus=None):
+        super(AnnotationSearch, self).__init__(pathDB, compiledCorpus)
         self.resultFields = annotationResultFields
 
     def search(self):
@@ -356,12 +387,10 @@ class AnnotationSearch(Search):
 
 
 
-
-
 class ParameterSearch(Search):
     
-    def __init__(self, pathDB=None):
-        super(ParameterSearch, self).__init__(pathDB)
+    def __init__(self, pathDB=None, compiledCorpus=None):
+        super(ParameterSearch, self).__init__(pathDB, compiledCorpus)
         self.resultFields = parameterResultFields
         self.getAllParameters()
         self.expandRequiredTags = False
