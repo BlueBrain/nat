@@ -13,7 +13,7 @@
 "BBP-002000";"BBP-000000";"experimental_properties";"Root for some experimental properties."; {}
 "BBP-002001";"BBP-002000";"age";"Age of subjects/animals."; {}
 "BBP-002002";"BBP-002000";"temperature";"Temperature used for the experiment."; {}
-"BBP-002003";"BBP-002000";"junction_potential";"Junction potential used for recording correction."; {}
+"BBP-002003";"BBP-002000";"liquid_junction_potential";"Estimated liquid junction potential for patch clamping recordings."; {}
 "BBP-002004";"BBP-002000";"slice_thickness";"Thickness of a slice of tissue."; {}
 
 "BBP-010000";"BBP-000000";"potential";"Potential."; {}
@@ -117,7 +117,7 @@
 "BBP-140001";"BBP-140000";"tonic_firing_rate";"Firing rate in tonic mode.";{"sao1813327414":"Cell"}
 "BBP-141002";"BBP-140000";"burst_firing_rate";"Firing rate in bursting mode. Equivalent to eFel burst_mean_freq feature.";{"sao1813327414":"Cell"}
 
-"BBP-960001";"BBP-000000";"spike_per_burst";"Number of spikes per burst for a bursting cell.";{"sao1813327414":"Cell"}
+"BBP-960001";"BBP-000000";"number_spikes_per_burst";"Number of spikes per burst for a bursting cell.";{"sao1813327414":"Cell"}
 
 "BBP-970000";"BBP-000000";"other_coefficients";"Categorie for various other coefficients that were not fitting in any other categorie.";{}
 "BBP-970001";"BBP-970000";"Q_10";"Temperature coefficient for taking into account the effect of recording temperature on channels kinetic.";{}
