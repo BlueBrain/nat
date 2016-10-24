@@ -6,28 +6,56 @@ Created on Wed Jul 13 14:25:57 2016
 """
 
 import requests
+import pickle
 
 bases = {"KS":"http://matrix.neuinfo.org:9000/scigraph",
          "NIP":"https://nip.humanbrainproject.eu/api/scigraph"}
 
 
-def getOntoCategory(curie):
+def getOntoCategory(curie, alwaysFetch=False):
+    """
+     Accessing web-based ontology service is too long, so we cache the 
+     information in a pickle file and query the services only if the info
+     has not already been cached. 
+    """
 
+    if not alwaysFetch:
+        try:
+            with open("ontoCategories.bin", "rb") as catFile:
+                ontoCat = pickle.load(catFile)
+                
+            if curie in ontoCat:
+                return ontoCat[curie]                
+        except:
+            ontoCat = {}
+    
     base = bases["KS"] 
     query = base + "/vocabulary/id/" + curie
     response = requests.get(query)
     if not response.ok:
-        return []
+        ontoCat[curie] = []
+    else:
+
+        try:
+            concepts = response.json()
+        except ValueError:
+            print(query)
+            print(response)
+            raise
+        
+        if len(concepts["categories"]):
+            ontoCat[curie] = concepts["categories"]
+        else:
+            ontoCat[curie] = []
+
+
     try:
-        concepts = response.json()
-    except ValueError:
-        print(query)
-        print(response)
-        raise
-    
-    if len(concepts["categories"]):
-        return concepts["categories"]
-    return []
+        with open("ontoCategories.bin", "wb") as catFile:
+            pickle.dump(ontoCat, catFile)
+    except:
+        pass        
+
+    return ontoCat[curie] 
 
 
 
