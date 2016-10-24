@@ -303,9 +303,7 @@ class Values:
 
 class ValuesSimple(Values):
 
-    def __init__(self, values = [], unit= "dimensionless", statistic = "raw"):
-        if not isinstance(values, list):
-            raise TypeError("Expected type for values field is list, received type: " + str(type(values)))
+    def __init__(self, values = None, unit= "dimensionless", statistic = "raw"):
         if not isinstance(unit, str):
             raise TypeError
         if not unitIsValid(unit):
@@ -315,10 +313,26 @@ class ValuesSimple(Values):
                              "'. Statistics should take one of the following values: ",
                              str(statisticList))
 
+        self.__values  = []
 
-        self.values    = values
+        if not values is None:
+            self.values    = values
+            
         self.unit      = unit
         self.statistic = statistic
+
+
+    @property
+    def values(self):
+        return self.__values
+       
+    @values.setter
+    def values(self, values):
+        if not isinstance(values, (list, np.ndarray)):
+            raise TypeError("Expected type for values is list, received type: " + str(type(values)))              
+        self.__values = [float(val) for val in values]
+        
+        
 
     @staticmethod
     def fromJSON(jsonString):
@@ -361,9 +375,10 @@ class ValuesSimple(Values):
     def rescale(self, unit):
         retVal = deepcopy(self)
         if isinstance(unit, str):
-            quant = pq.Quantity(self.values, self.unit).rescale(unit)
-            retVal.values = quant.base
-            retVal.unit   = str(quant.dimensionality)
+            if self.unit != unit:
+                quant = pq.Quantity(self.values, self.unit).rescale(unit)
+                retVal.values = quant.base
+                retVal.unit   = str(quant.dimensionality)
         return retVal
 
 
@@ -842,7 +857,7 @@ class ParameterInstance:
 
         invDicData = {val:(nlx2ks[key] if key in nlx2ks else key) for key, val in dicData.items()}
         invDicData['Thalamus geniculate nucleus (lateral) principal neuron'] = 'NIFCELL:nlx_cell_20081203'
-        invDicData["Young rat"] = "nlx_151691"
+        invDicData["Young rat"] = "nlx_organ_109041"
         invDicData["Thalamus geniculate nucleus (lateral) interneuron"] = "NIFCELL:nifext_46"
         invDicData["Temperature"] = "PATO:0000146"
         invDicData["Sleep"] = "GO:0030431"
@@ -909,6 +924,19 @@ class ParameterInstance:
             return None
         else:
             raise TypeError
+
+
+
+    def centralTendancy(self):
+        if isinstance(self.description.depVar, NumericalVariable):
+            valuesObject = self.description.depVar.values
+            return valuesObject.centralTendancy()
+        elif isinstance(self.description.depVar, Variable):
+            return None
+        else:
+            raise TypeError
+
+
 
     @property
     def means(self):
