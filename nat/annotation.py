@@ -352,7 +352,8 @@ class Annotation:
         return [tag.id for tag in self.tags]
 
     def addTag(self, id, name):
-        self.tags.append(Tag(id, name))
+        if not id in self.tagIds():
+            self.tags.append(Tag(id, name))
 
     def removeTag(self, id):
         ids = self.tagIds
