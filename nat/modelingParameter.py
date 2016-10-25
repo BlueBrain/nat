@@ -18,7 +18,10 @@ from .tagUtilities import nlx2ks
 
 
 
-statisticList  = ["raw", "mean", "median", "mode", "sem", "sd",  "var", "CI_01", "CI_02.5", "CI_90", "CI_95", "CI_97.5", "CI_99", "N", "min", "max", "other", "deviation", "average"]
+statisticList  = ["raw", "mean", "median", "mode", "sem", "sd",  "var",
+                  "CI_01", "CI_02.5", "CI_5", "CI_10", "CI_90", "CI_95",
+                  "CI_97.5", "CI_99", "N", "min", "max", "other",
+                  "deviation", "average"]
 
 
 def unitIsValid(unit):
