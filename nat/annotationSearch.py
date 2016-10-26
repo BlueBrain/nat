@@ -237,6 +237,7 @@ class CompiledCorpus:
         if outPath is None:
             outPath = self.binPath
 
+        self.annotations = []
         for fileName in glob(pathDB + "/*.pcr"):
             self.annotations.extend(Annotation.readIn(open(fileName, "r", encoding="utf-8", errors='ignore')))
     
@@ -425,11 +426,13 @@ class ParameterSearch(Search):
                         
             elif field == "Required tag names":
                 if self.expandRequiredTags:
+                    # Get all root_ids the required tags of the parameters
                     tagCats = np.unique(flatten_list([[tag.rootId for tag in param.requiredTags] 
                                                                   if len(param.requiredTags) 
                                                                   else "" 
                                                                   for param in parameters]))
-                                                                   
+                                                                      
+                    # Remove duplicates and normalize IDs                              
                     tagCats = np.unique([nlx2ks[id] if id in nlx2ks else id for id in tagCats])                                                                  
 
                     for tagCatId in tagCats:
@@ -437,7 +440,8 @@ class ParameterSearch(Search):
                         for param in parameters:
                             tagName = ""
                             for tag in param.requiredTags:
-                                if tag.rootId == tagCatId:
+                                tagRoot = nlx2ks[tag.rootId] if tag.rootId in nlx2ks else tag.rootId                                     
+                                if tagRoot == tagCatId:
                                     tagName = tag.name
                                     break
                             tagNames.append(tagName)
