@@ -112,9 +112,10 @@ def getInfoFromDOI(DOI):
     retData = {"authors":authors,
                "journal":soup["container-title"][0],
                "year":year,    
-               "issue":soup["issue"], 
-               "volume":soup["volume"],
                "title":soup["title"][0]}     
+    
+    retData["issue"]  = soup["issue"] if "issue" in soup else ""
+    retData["volume"] = soup["volume"] if "volume" in soup else ""
 
     return retData 
  
