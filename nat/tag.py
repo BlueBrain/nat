@@ -16,7 +16,7 @@ class Tag:
     #
     #invDicData = {val:(nlx2ks[key] if key in nlx2ks else key) for key, val in dicData.items()}
     #invDicData['Thalamus geniculate nucleus (lateral) principal neuron'] = 'NIFCELL:nlx_cell_20081203'
-    #invDicData["Young rat"] = "nlx_151691"
+    #invDicData["Young rat"] = "nlx_organ_109041"
     #invDicData["Thalamus geniculate nucleus (lateral) interneuron"] = "NIFCELL:nifext_46"
     #invDicData["Temperature"] = "PATO:0000146"
     #invDicData["Sleep"] = "GO:0030431"

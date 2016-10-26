@@ -14,17 +14,33 @@ import requests
 import os
 import pandas as pd
 import numpy as np
-
+import pickle
 
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
 
-def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf"):
-    #graph = Graph()            
+def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf", 
+                 alwaysFetch=False):
+    """
+     Accessing web-based ontology service is too long, so we cache the 
+     information in a pickle file and query the services only if the info
+     has not already been cached. 
+    """
 
     if root_id in nlx2ks:
         root_id = nlx2ks[root_id]
+
+
+    if not alwaysFetch:
+        try:
+            with open("childrens.bin", "rb") as childrenFile:
+                childrenDic = pickle.load(childrenFile)
+                
+            if root_id in childrenDic:
+                return childrenDic[root_id]                
+        except:
+            childrenDic = {}
 
     direction="INCOMING"
     #neighbors = graph.getNeighbors(root_id, depth=maxDepth, 
@@ -57,8 +73,18 @@ def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf"):
     
     # TODO: replace by the commented line below. This patch is only to 
     #       accomodate for a current issue with the knowledge-space endpoint.          
-    #return OntoDic({node["id"]:node["lbl"] for node in np.array(nodes)})        
-    return OntoDic({node["id"]:node["lbl"] for node in np.array(nodes) if not node["lbl"] is None})
+    #childrenDic[root_id]  = OntoDic({node["id"]:node["lbl"] for node in np.array(nodes)})        
+    childrenDic[root_id]  = OntoDic({node["id"]:node["lbl"] for node in np.array(nodes) if not node["lbl"] is None})
+    
+    try:
+        with open("childrens.bin", "wb") as childrenFile:
+            pickle.dump(childrenDic, childrenFile)
+    except:
+        pass        
+
+    return childrenDic[root_id] 
+    
+    
     
     
 
@@ -105,8 +131,14 @@ def appendReqTagTrees(treeData, dicData):
     
     reqTagRoots = np.unique(np.concatenate([list(eval(reqTags).keys()) for reqTags in df["requiredTags"] if len(eval(reqTags))]))
     reqTagRoots = np.unique([RequiredTag.processTagRoot(rootId)[0] for rootId in reqTagRoots])
+    
+    # Adding the Eumetazoa which includes almost all animals. 
+    # It is not an annotation required tag but it is useful to define project 
+    # wide properties.
+    reqTagRoots.append("NIFORG:birnlex_569")
 
     for root_id in reqTagRoots:
+        print("Building ontological tree for ", root_id, "...")
         childrenDic = getChildrens(root_id)    
         dicData.update(childrenDic)
         treeData[root_id] = childrenDic
