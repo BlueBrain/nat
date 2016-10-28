@@ -6,6 +6,7 @@ Created on Wed Jul 13 14:25:57 2016
 """
 
 import requests
+import os
 import pickle
 
 bases = {"KS":"http://matrix.neuinfo.org:9000/scigraph",
@@ -18,10 +19,11 @@ def getOntoCategory(curie, alwaysFetch=False):
      information in a pickle file and query the services only if the info
      has not already been cached. 
     """
-
+    
+    fileName = os.path.join(os.path.dirname(__file__), "ontoCategories.bin") 
     if not alwaysFetch:
         try:
-            with open("ontoCategories.bin", "rb") as catFile:
+            with open(fileName, "rb") as catFile:
                 ontoCat = pickle.load(catFile)
                 
             if curie in ontoCat:
@@ -50,7 +52,7 @@ def getOntoCategory(curie, alwaysFetch=False):
 
 
     try:
-        with open("ontoCategories.bin", "wb") as catFile:
+        with open(fileName, "wb") as catFile:
             pickle.dump(ontoCat, catFile)
     except:
         pass        

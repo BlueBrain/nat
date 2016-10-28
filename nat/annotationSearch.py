@@ -220,7 +220,11 @@ import pickle
 class CompiledCorpus:
     
     def __init__(self, binPath="annotations.bin"):
-        self.binPath = binPath
+               
+        if os.path.isabs(binPath):
+            self.binPath = binPath
+        else:
+            self.binPath = os.path.join(os.path.dirname(__file__), binPath)  
         
         try:
             if os.path.isfile(self.binPath):
@@ -252,7 +256,7 @@ class Search:
     
     def __init__(self, pathDB=None, compiledCorpus=None):
         if pathDB is None:
-            pathDB = os.path.join(os.path.dirname(__file__), './curator_DB')
+            pathDB = os.path.join(os.path.dirname(__file__), 'curator_DB')
 
         self.compiledCorpus = compiledCorpus
         ontoMng = OntoManager()

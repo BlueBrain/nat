@@ -17,10 +17,12 @@ class OntoManager:
     __ontoTrees__ = {}
     __ontoDics__  = {}
     
+    fileNameTrees = os.path.join(os.path.dirname(__file__), "ontoTrees.pkl") 
+    fileNameDics = os.path.join(os.path.dirname(__file__), "ontoDics.pkl") 
     try:
-        with open('ontoDics.pickle', 'rb') as f:
+        with open(fileNameDics, 'rb') as f:
             __ontoDics__ = pickle.load(f)
-        with open('ontoTrees.pickle', 'rb') as f:
+        with open(fileNameTrees, 'rb') as f:
             __ontoTrees__ = pickle.load(f)
     except:
         pass
@@ -65,9 +67,9 @@ class OntoManager:
         return OntoManager.__ontoTrees__[self.fileNamePattern]
 
     def savePickle(self):
-        with open('ontoDics.pickle', 'wb') as f:
+        with open(OntoManager.fileNameDics, 'wb') as f:
             pickle.dump(OntoManager.__ontoDics__, f, pickle.HIGHEST_PROTOCOL)
-        with open('ontoTrees.pickle', 'wb') as f:
+        with open(OntoManager.fileNameTrees, 'wb') as f:
             pickle.dump(OntoManager.__ontoTrees__, f, pickle.HIGHEST_PROTOCOL)
 
 
