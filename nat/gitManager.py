@@ -23,17 +23,16 @@ class GitManager:
             g = cmd.Git(gitPath)
             urlInUse = ":".join(g.execute(["git", "remote", "show", "origin"]).split("\n")[1].split(":")[1:]).strip()
             urlToUse = gitSettings["protocol"] + "://" + gitSettings["user"] + "@" + gitSettings["remote"]
-            #print(urlInUse)
-            #print(urlToUse)
             if urlInUse != urlToUse:
                 #print("Changing URL in use...")
                 g.execute(["git", "remote", "set-url", "origin", urlToUse])
                 urlInUse = ":".join(g.execute(["git", "remote", "show", "origin"]).split("\n")[1].split(":")[1:]).strip()
-                #print(urlInUse)
-                #print(urlToUse)                
-                
+
+        except exc.GitCommandError:
+            # Generally, get here when the repo has not been created yet. It is 
+            # ok, it will be created below.
+            pass                
         except:
-            #print("show remote failed")
             raise
         
         #if not os.path.isdir(self.localRepoDir):
