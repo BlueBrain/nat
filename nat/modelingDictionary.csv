@@ -74,6 +74,9 @@
 "BBP-080002";"BBP-080000";"time_const_inact_ion";"";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-080003";"BBP-080000";"time_const_recov_ion";"";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-080004";"BBP-080000";"time_const_membrane";"Time constant for a cell to reach its equilibrium potential when an input step function is applied. This correspond to the eFel 'time_constant' parameter.";{"sao1813327414":"Cell"}
+"BBP-080100";"BBP-080000";"time_const_concentration_decay";"Time constant for the rate of decay in the concentration of some substance.";{}
+"BBP-080110";"BBP-080100";"time_const_calcium_decay";"Time constant of the rate of decay for the concentration in calcium ions.";{}
+"BBP-080111";"BBP-080100";"time_const_calcium_decay_cell";"Time constant of the rate of decay for the concentration in calcium ions within the intra-cellular cytoplasm.";{"sao1813327414":"Cell"}
 
 "BBP-090000";"BBP-000000";"mid_amp";"Mid amplitude of some phenomenon. It is often used as a shape parameter for sigmoidal functions, such as the Boltzmann function.";{}
 "BBP-090001";"BBP-090000";"mid_amp_activ";"Mid amplitude of an ion channel activation function.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
