@@ -20,6 +20,26 @@ def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
 
+
+def getBBPChildren(root_id, df=None, childrenDic=None):
+    if df is None:
+        csvFileName = os.path.join(os.path.dirname(__file__), './additionsToOntologies.csv')
+    
+        df = pd.read_csv(csvFileName, skip_blank_lines=True, comment="#", 
+                         delimiter=";", names=["id", "label", "definition", "superCategory", "synonyms"])    
+
+        childrenDic = OntoDic()
+    
+        selected = df[df["superCategory"] == root_id]
+    
+    for key in selected["id"]:
+        childrenDic = getBBPChildren(key, df, childrenDic)
+        
+    childrenDic.update({key:value for key, value in zip(selected["id"], selected["label"])})
+    return childrenDic
+
+
+
 def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf", 
                  alwaysFetch=False):
     """
@@ -27,20 +47,47 @@ def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf",
      information in a pickle file and query the services only if the info
      has not already been cached. 
     """
+    childrenDic = {}
+    fileName = os.path.join(os.path.dirname(__file__), "childrens.bin") 
+
+    #### CHECK FOR CASE OF BBP TAGS
+    if root_id[:4] == "BBP_":
+
+        if not alwaysFetch:
+            try:
+                with open(fileName, "rb") as childrenFile:
+                    childrenDic = pickle.load(childrenFile)
+                    
+                if root_id in childrenDic:
+                    return childrenDic[root_id]                
+            except:
+                pass        
+
+        childrenDic[root_id] = getBBPChildren(root_id)        
+        
+        if not alwaysFetch:
+            try:
+                with open(fileName, "wb") as childrenFile:
+                    pickle.dump(childrenDic, childrenFile)
+            except:
+                pass      
+            
+        return childrenDic[root_id]
+
+    ## TODO: should also check for BBP children of online onto terms
 
     if root_id in nlx2ks:
         root_id = nlx2ks[root_id]
 
-
     if not alwaysFetch:
         try:
-            with open("childrens.bin", "rb") as childrenFile:
+            with open(fileName, "rb") as childrenFile:
                 childrenDic = pickle.load(childrenFile)
                 
             if root_id in childrenDic:
                 return childrenDic[root_id]                
         except:
-            childrenDic = {}
+            pass
 
     direction="INCOMING"
     #neighbors = graph.getNeighbors(root_id, depth=maxDepth, 
@@ -54,6 +101,9 @@ def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf",
                             "&project=%2A&blankNodes=false&relationshipType=" 
                             + relationshipType)
 
+    if not response.ok:
+        return {}
+        
     neighbors = response.json()
 
     if neighbors is None:
@@ -76,11 +126,12 @@ def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf",
     #childrenDic[root_id]  = OntoDic({node["id"]:node["lbl"] for node in np.array(nodes)})        
     childrenDic[root_id]  = OntoDic({node["id"]:node["lbl"] for node in np.array(nodes) if not node["lbl"] is None})
     
-    try:
-        with open("childrens.bin", "wb") as childrenFile:
-            pickle.dump(childrenDic, childrenFile)
-    except:
-        pass        
+    if not alwaysFetch:    
+        try:
+            with open(fileName, "wb") as childrenFile:
+                pickle.dump(childrenDic, childrenFile)
+        except:
+            pass        
 
     return childrenDic[root_id] 
     
@@ -135,7 +186,7 @@ def appendReqTagTrees(treeData, dicData):
     # Adding the Eumetazoa which includes almost all animals. 
     # It is not an annotation required tag but it is useful to define project 
     # wide properties.
-    reqTagRoots.append("NIFORG:birnlex_569")
+    reqTagRoots = np.concatenate((["NIFORG:birnlex_569"], reqTagRoots))
 
     for root_id in reqTagRoots:
         print("Building ontological tree for ", root_id, "...")
