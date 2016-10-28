@@ -3,14 +3,12 @@ import os
 
 PACKAGE = "nat"
 NAME = "nat"
-DESCRIPTION = "This is the repository for the NeuroAnnotation Toolbox (NAT)" +\
-              " project. This project is a sprout from the NeuroCurator "    +\
-              "project which has been divided in a front-end (NeuroCurator)" +\
-              " and a back-end (NAT) to provide more flexibility for "       +\
-              "programmatic interaction with created annotation corpora. "
+DESCRIPTION = open("README.md").read()
 AUTHOR = "Christian O'Reilly"
 AUTHOR_EMAIL = "christian.oreilly@epfl.ch"
-VERSION = "0.2.0"
+VERSION = "0.3.5"
+REQUIRED = ["numpy", "parse", "metapub", "pyzotero", "GitPython", "pandas",
+            "biopython", "beautifulsoup4", "quantities", "wand", "scipy"]
 
 def is_package(path):
     return (
@@ -41,15 +39,15 @@ setup(
     package_data={PACKAGE: ["additionsToOntologies.csv", "modelingDictionary.csv"]},
     version=VERSION,
     description=DESCRIPTION,
-    long_description=DESCRIPTION, #open("README.txt").read(),
+    long_description=DESCRIPTION,
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
-    install_requires=["numpy", "parse", "metapub", "pyzotero", "GitPython",
-                      "biopython", "beautifulsoup4", "quantities", "wand"],
     maintainer=AUTHOR,
     maintainer_email=AUTHOR_EMAIL,  
     license='LICENSE.txt',
-    requires=['numpy'],
+    requires=REQUIRED,
+	install_requires=REQUIRED,
+	url="https://github.com/christian-oreilly/nat",
     classifiers=["Development Status :: 3 - Alpha",
 			"Environment :: MacOS X", #"Environment :: Win32 (MS Windows)",
 			"Environment :: X11 Applications",
