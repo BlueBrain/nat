@@ -15,6 +15,7 @@
 "BBP-002002";"BBP-002000";"temperature";"Temperature used for the experiment."; {}
 "BBP-002003";"BBP-002000";"liquid_junction_potential";"Estimated liquid junction potential for patch clamping recordings."; {}
 "BBP-002004";"BBP-002000";"slice_thickness";"Thickness of a slice of tissue."; {}
+"BBP-002005";"BBP-002000";"shrinkage_factor";"Numerical factor (> 1.0) that is applied to slice measurements to account for shrinkage in slice condition compared to in vivo condition."; {}
 
 "BBP-010000";"BBP-000000";"potential";"Potential."; {}
 "BBP-010001";"BBP-010000";"potential_membrane";"Potential of a cell membrane."; {"sao1813327414":"Cell"}
