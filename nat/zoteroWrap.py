@@ -8,7 +8,7 @@ import os
 
 class ZoteroWrap:
 
-    def __init__(self, checkIdFct):
+    def __init__(self, checkIdFct=None):
 
         self.refList = []
 
