@@ -87,7 +87,7 @@
 "BBP-090000";"BBP-000000";"mid_amp";"Mid amplitude of some phenomenon. It is often used as a shape parameter for sigmoidal functions, such as the Boltzmann function.";{}
 "BBP-090001";"BBP-090000";"mid_amp_activ";"Mid amplitude of an ion channel activation function.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-090002";"BBP-090000";"mid_amp_inact";"Mid amplitude of an ion channel inactivation function.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
-"BBP-090003”;”BBP-090000”;”mid_amp_ion_curr”;”Membrane potential at half the maximum amplitude of an ion channel current.”;{“NIFMOL:nifext_2506":"Multimeric Voltage-gated ion channel", "sao1813327414":"Cell"}
+"BBP-090003";"BBP-090000";"mid_amp_ion_curr";"Membrane potential at half the maximum amplitude of an ion channel current.";{"NIFMOL:nifext_2506":"Multimeric Voltage-gated ion channel", "sao1813327414":"Cell"}
 
 "BBP-100000";"BBP-000000";"slope";"Variable specifying the slope of a relationship between two variables.";{}
 "BBP-101000";"BBP-100000";"slope_factor";"Factor specifying the slope of a relationship between two variables. It is often used as a shape parameter for sigmoidal functions, such as the Boltzmann function.";{}
