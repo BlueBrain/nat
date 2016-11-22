@@ -16,6 +16,11 @@
 "BBP-002003";"BBP-002000";"liquid_junction_potential";"Estimated liquid junction potential for patch clamping recordings."; {}
 "BBP-002004";"BBP-002000";"slice_thickness";"Thickness of a slice of tissue."; {}
 "BBP-002005";"BBP-002000";"shrinkage_factor";"Numerical factor (> 1.0) that is applied to slice measurements to account for shrinkage in slice condition compared to in vivo condition."; {}
+"BBP-002006";"BBP-002005";"shrinkage_factor_vert";"Shrinkage factor in the vertical axis (i.e., the z-axis; the axis of the thickness of the slice)."; {}
+"BBP-002007";"BBP-002005";"shrinkage_factor_horiz";"Shrinkage factor in the horizontal plane (i.e., the x and y axes; the slicing plane)."; {}
+"BBP-002008";"BBP-002000";"shrinkage_proportion";"Proportion of shrinking (< 1.0) of a processed slice compared to in vivo condition. This parameter relate to BBP-002005:shrinkage_factor following shrinkage_factor = 1/shrinkage_proportion."; {}
+"BBP-002009";"BBP-002008";"shrinkage_proportion_vert";"Proporition of shrinking in the vertical axis (i.e., the z-axis; the axis of the thickness of the slice). This parameter relate to BBP-002006:shrinkage_factor_vert following shrinkage_factor_vert = 1/shrinkage_proportion_vert."; {}
+"BBP-0020010";"BBP-002008";"shrinkage_proportion_horiz";"Proportion of shrinking in the horizontal plane (i.e., the x and y axes; the slicing plane). This parameter relate to BBP-002007:shrinkage_factor_horiz following shrinkage_factor_horiz = 1/shrinkage_proportion_horiz."; {}
 
 "BBP-010000";"BBP-000000";"potential";"Potential."; {}
 "BBP-010001";"BBP-010000";"potential_membrane";"Potential of a cell membrane."; {"sao1813327414":"Cell"}

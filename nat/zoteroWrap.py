@@ -8,8 +8,7 @@ import os
 
 class ZoteroWrap:
 
-    def __init__(self, checkIdFct):
-
+    def __init__(self):
         self.refList = []
 
     def loadCachedDB(self, libraryId, libraryrType, apiKey):

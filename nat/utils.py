@@ -52,7 +52,8 @@ def Id2FileName(ID):
         ID = ID.replace('%', '%25')    
     
     for key, (symbol, replacement) in encoders.items():
-        assert(not replacement in ID)
+        #if 
+        #assert(not replacement in ID)
         ID = ID.replace(symbol, replacement)
     return ID
 
