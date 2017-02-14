@@ -21,8 +21,19 @@ BBP_nlx_0017;Cyclic-nucleotide gated nonspecific cation current;"Cyclic-Nucleoti
 BBP_nlx_0018;Inward rectifier (h-type) current;"Inward rectifier ('Queer'), activated by hyperpolarization, cyclic-nucleotide gated mixed cation current. Prevents strong hyperpolarization; increases membrane resistance during membrane depolarization [NeuronDB: I h]. See (Luthi and McCormick, 1998, Neuron, pp.9-12)";"BBP_nlx_0017";""
 BBP_nlx_0019;Potassium inward rectifier (Kir) current;"Potassium inward rectifier activated by hyperpolarization. [included in I h in NeuronDB]. See (Lee and Ishida, 2007, J Neurophysiol, pp.3790-9)";"NIFMOL:nifext_8056";""
 BBP_nlx_0020;Fast voltage-gated potassium (Kf) current;"Fast voltage-gated potassium current. See (Kang, Huguenard and Prince, 2000, J Neurophysiol, pp.70-80)";"NIFMOL:nifext_8056";""
+BBP_nlx_0024;Medium calcium-dependent AHP potassium (SK) current;"Apamin-sensitive SK (Small-K+ conductance) current causing medium (vs. slow or fast) AHP.";"NIFMOL:nifext_8060";""
+
 BBP_nlx_0021;Thalamic reticular nucleus cell - non-GABAergic;;"NIFCELL:nifext_45";""
 BBP_nlx_0022;Thalamic reticular nucleus cell - GABAergic;;"NIFCELL:nifext_45";""
+
+BBP_nlx_0025;Sleep spindle;;;
+BBP_nlx_0026;Cav3.3;;;
+
+
+
+
+
+
 
 # Various terms used in the past through Neurolex that are not available anymore in Knowledge-space
 BBP_nlx_0021;Sleep spindle;"Burst of 11-16 Hz transient (0.5-2.0 s duration) activity typically observed on EEG during non-rapid eye movement sleep stage (NREM) 2.";"";""
