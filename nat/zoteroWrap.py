@@ -10,25 +10,57 @@ class ZoteroWrap:
 
     def __init__(self):
         self.refList = []
+        self.__zotLib = None
 
-    def loadCachedDB(self, libraryId, libraryrType, apiKey):
+    def loadCachedDB(self, libraryId, libraryType, apiKey):        
         try:
             fileName = os.path.join(os.path.dirname(__file__), libraryId + 
-                                    "-" + libraryrType + "-" + apiKey + ".pkl")            
+                                    "-" + libraryType + "-" + apiKey + ".pkl")            
             with open(fileName, 'rb') as f:
-                self.refList = pickle.load(f)
+                pickleObj = pickle.load(f)
+                self.refList       = pickleObj["refList"]
+                self.__zotLib      = pickleObj["zotLib"] 
+                self.itemTypes     = pickleObj["itemTypes"]  
+                self.itemTemplates = pickleObj["itemTemplates"]  
+
+            self.libraryId    = libraryId
+            self.libraryType  = libraryType
+            self.apiKey       = apiKey                
         except:
-            self.refreshDB(libraryId, libraryrType, apiKey)
+            self.refreshDB(libraryId, libraryType, apiKey)
 
 
-    def refreshDB(self, libraryId, libraryrType, apiKey):
-        zotLib = zotero.Zotero(libraryId, libraryrType, apiKey)
-        self.refList = [i['data'] for i in zotLib.everything(zotLib.top())]
+    @property 
+    def zotLib(self):
+        if self.__zotLib is None:
+            self.refreshDB(self.libraryId, self.libraryType, self.apiKey)
+        return self.__zotLib
 
-        fileName = os.path.join(os.path.dirname(__file__), libraryId + 
-                                "-" + libraryrType + "-" + apiKey + ".pkl")   
+
+
+    def refreshDB(self, libraryId, libraryType, apiKey):
+        self.libraryId    = libraryId
+        self.libraryType  = libraryType
+        self.apiKey       = apiKey
+        
+        self.__zotLib = zotero.Zotero(libraryId, libraryType, apiKey)
+        self.refList = [i['data'] for i in self.__zotLib.everything(self.__zotLib.top())]
+        self.itemTypes = self.__zotLib.item_types()
+        self.itemTemplates = {t["itemType"]:self.__zotLib.item_template(t["itemType"]) for t in self.itemTypes}       
+  
+        self.savePickle()
+                
+
+    def savePickle(self):        
+        fileName = os.path.join(os.path.dirname(__file__), self.libraryId + 
+                                "-" + self.libraryType + "-" + self.apiKey + ".pkl") 
+                        
         with open(fileName, 'wb') as f:
-            pickle.dump(self.refList, f)
+            pickle.dump({"refList":self.refList, 
+                         "zotLib":self.__zotLib,
+                         "itemTypes":self.itemTypes, 
+                         "itemTemplates":self.itemTemplates}, f)
+                         
 
     def getID(self, index):
         return self.getID_fromRef(self.refList[index])
