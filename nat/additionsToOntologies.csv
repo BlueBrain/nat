@@ -25,6 +25,9 @@ BBP_nlx_0024;Medium calcium-dependent AHP potassium (SK) current;"Apamin-sensiti
 
 BBP_nlx_0021;Thalamic reticular nucleus cell - non-GABAergic;;"NIFCELL:nifext_45";""
 BBP_nlx_0022;Thalamic reticular nucleus cell - GABAergic;;"NIFCELL:nifext_45";""
+BBP_nlx_0023;Chinese hamster ovary cell;Also known as CHO cell.;"NIFMOL:nifext_2506";""
+
+
 
 BBP_nlx_0025;Sleep spindle;;;
 BBP_nlx_0026;Cav3.3;;;
