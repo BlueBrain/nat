@@ -238,8 +238,7 @@
 
 "BBP-990222";"BBP-990213";"AP_max_fall_rate";"Maximal rate of voltage change during the falling phase of the action potential.";{"sao1813327414":"Cell"}
 "BBP-990223";"BBP-990219";"AP_max_rise_rate";"Maximal rate of voltage change during the rising phase of the action potential.";{"sao1813327414":"Cell"}
-"BBP-990224";"BBP-990205";"AP_amplitude_from_though";"The height of the action potential measured from AHP though.";{"sao1813327414":"Cell"}
-"
+"BBP-990224";"BBP-990205";"AP_amplitude_from_trough";"The height of the action potential measured from AHP trough.";{"sao1813327414":"Cell"}
 
 "BBP-990300";"BBP-990000";"inter_spike_interval";"";{"sao1813327414":"Cell"}
 "BBP-990301";"BBP-990300";"ISI_CV";"eFEL: The coefficient of variation of the ISIs";{"sao1813327414":"Cell"}
@@ -257,16 +256,4 @@
 
 "BBP-991006";"BBP-000000";"adaptation_ratio";"Generic adaptation ratio.";{"sao1813327414":"Cell"}
 "BBP-991007";"BBP-000000";"adaptation_percent";"Generic relative (i.e., in percentage) adaptation index.";{"sao1813327414":"Cell"}
-
-
-
-
-
-
-
-
-
-
-
-
 
