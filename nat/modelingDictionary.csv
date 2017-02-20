@@ -172,7 +172,6 @@
 "BBP-990017";"BBP-990000";"number_initial_spikes";"eFEL: ";{"sao1813327414":"Cell"}
 "BBP-990018";"BBP-990000";"ohmic_input_resistance";"eFEL: The ohmic input resistance Rin of the cell. This should be a steady-state value. Peak of transient response can be specified using the term ohmic_input_resistance_peak.";{"sao1813327414":"Cell"}
 
-"BBP-990019";"BBP-990000";"peak_voltage";"eFEL: The voltages at the maxima of the peaks.";{"sao1813327414":"Cell"}
 "BBP-990020";"BBP-990000";"single_burst_ratio";"eFEL: ";{"sao1813327414":"Cell"}
 "BBP-990021";"BBP-990000";"spike_half_width";"eFEL: The FWHM of each peak";{"sao1813327414":"Cell"}
 "BBP-990022";"BBP-990000";"steady_state_hyper";"eFEL: Steady state voltage during hyperpolarization.";{"sao1813327414":"Cell"}
@@ -216,7 +215,6 @@
 "BBP-990200";"BBP-990000";"action_potential";"";{"sao1813327414":"Cell"}
 "BBP-990201";"BBP-990200";"AP_begin_voltage";"eFEL: Voltage values at the onset of each action potential.";{"sao1813327414":"Cell"}
 "BBP-990202";"BBP-990200";"AP_begin_width";"eFEL: ";{"sao1813327414":"Cell"}
-"BBP-990203";"BBP-990200";"AP_peak";"eFEL: Maximum voltage reached during AP.";{"sao1813327414":"Cell"}
 "BBP-990204";"BBP-990200";"AP_width";"eFEL: Width of each peak at the value of Threshold.";{"sao1813327414":"Cell"}
 "BBP-990205";"BBP-990200";"AP_amplitude";"eFEL: The relative height of the action potential from spike onset.";{"sao1813327414":"Cell"}
 "BBP-990206";"BBP-990205";"AP_amplitude_change";"eFEL: Difference of the amplitudes of the second and the first action potential divided by the amplitude of the first action potential.";{"sao1813327414":"Cell"}
