@@ -291,7 +291,7 @@ def getDbTxt(paperId):
     return open(join(dbPath, paperId) + ".txt", 'r')
 
 
-# copy this script at /usr/local/neurocurator and run with "curl -i bbpca063.epfl.ch:5000/neurocurator/api/v1.0/tasks"
+# copy this script at /usr/local/neurocurator and run with "curl -i bbpca063.bbp.epfl.ch:5000/neurocurator/api/v1.0/tasks"
 
 
 

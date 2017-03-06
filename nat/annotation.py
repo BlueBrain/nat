@@ -294,7 +294,7 @@ class Annotation:
             raise AttributeError
 
 
-    def getContext(self, contextLength=100, dbPath="./curator_DB", restServerURL="http://bbpca063.epfl.ch:5000/neurocurator/api/v1.0/"):
+    def getContext(self, contextLength=100, dbPath="./curator_DB", restServerURL="http://bbpca063.bbp.epfl.ch:5000/neurocurator/api/v1.0/"):
         
         if not isinstance(self.localizer, TextLocalizer):
             return ""        
