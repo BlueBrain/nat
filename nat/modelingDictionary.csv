@@ -28,7 +28,7 @@
 "BBP-010001";"BBP-010000";"potential_membrane";"Potential of a cell membrane."; {"sao1813327414":"Cell"}
 "BBP-010002";"BBP-010000";"resting_membrane_potential";"Potential of a cell membrane, at rest."; {"sao1813327414":"Cell"}
 "BBP-011000";"BBP-010000";"eq_potential";"Equilibrium potential of a biochemical process."; {"sao1813327414":"Cell"}
-"BBP-011001";"BBP-011000";"eq_potential_ion_curr";"Equilibrium potential (a.k.a. reversal potential, voltage) of a channel current.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
+"BBP-011001";"BBP-011000";"eq_potential_ion_curr";"Equilibrium potential (a.k.a. reversal potential, voltage) of an ionic current accross a cell membrane (normally through channels).";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-012000";"BBP-010000";"AP_threshold";"Votage threshold that will cause a cell de fire an action potential."; {"sao1813327414":"Cell"}
 
 "BBP-013000";"BBP-010000";"peak_potential";"Peak potential of a transient biochemical process."; {"sao1813327414":"Cell"}
@@ -89,9 +89,16 @@
 "BBP-080002";"BBP-080000";"time_const_inact_ion";"";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-080003";"BBP-080000";"time_const_recov_ion";"";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-080004";"BBP-080000";"time_const_membrane";"Time constant for a cell to reach its equilibrium potential when an input step function is applied. This correspond to the eFel 'time_constant' parameter.";{"sao1813327414":"Cell"}
-"BBP-080100";"BBP-080000";"time_const_concentration_decay";"Time constant for the rate of decay in the concentration of some substance.";{}
+"BBP-080100";"BBP-080000";"time_const_concentration_decay";"Time constant for the rate of decay in the concentration of some substance.";{"CHEBI:23367:"molecular entity"}
+"BBP-080101";"BBP-080100";"time_const_concentration_decay_cell";"Time constant for the rate of decay in the concentration of some substance within the intra-cellular cytoplasm.";{"CHEBI:23367:"molecular entity", "sao1813327414":"Cell"}
 "BBP-080110";"BBP-080100";"time_const_calcium_decay";"Time constant of the rate of decay for the concentration in calcium ions.";{}
 "BBP-080111";"BBP-080100";"time_const_calcium_decay_cell";"Time constant of the rate of decay for the concentration in calcium ions within the intra-cellular cytoplasm.";{"sao1813327414":"Cell"}
+
+
+
+
+
+
 
 "BBP-090000";"BBP-000000";"mid_amp";"Mid amplitude of some phenomenon. It is often used as a shape parameter for sigmoidal functions, such as the Boltzmann function.";{}
 "BBP-090001";"BBP-090000";"mid_amp_activ";"Mid amplitude of an ion channel activation function.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
@@ -145,6 +152,17 @@
 "BBP-141002";"BBP-140000";"burst_firing_rate";"Firing rate in bursting mode. Equivalent to eFel burst_mean_freq feature.";{"sao1813327414":"Cell"}
 "BBP-140003";"BBP-140001";"maximum_tonic_firing_rate";"Maximal tonic firing rate of a neuron.";{"sao1813327414":"Cell"}
 "BBP-140004";"BBP-140001";"spontaneous_tonic_firing_rate";"Spontaneous tonic firing rate of a neuron, in absence of any current injection or stimulation.";{"sao1813327414":"Cell"}
+
+"BBP-142000";"BBP-140000";"activate_transport_rate";"Rate of active transport accross the membrane of a cell.";{"sao1813327414":"Cell"}
+"BBP-142001";"BBP-142000";"extrusion_rate";;{"sao1813327414":"Cell", "CHEBI:23367:"molecular entity"}
+"BBP-142002";"BBP-142000";"extrusion_rate_prop_const";;{"sao1813327414":"Cell", "CHEBI:23367:"molecular entity"}
+
+ 
+
+
+
+"BBP-150000";"BBP-000000";"concentration";"Concentration of some substance.";{"CHEBI:23367:"molecular entity"}
+"BBP-150001";"BBP-000000";"concentration_cell";"Intra-cellular concentration of some substance.";{"CHEBI:23367:"molecular entity"}
 
 
 "BBP-960001";"BBP-000000";"number_spikes_per_burst";"Number of spikes per burst for a bursting cell.";{"sao1813327414":"Cell"}
