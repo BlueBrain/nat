@@ -5,6 +5,7 @@ __author__ = "Christian O'Reilly"
 import pickle
 from pyzotero import zotero
 import os
+from collections import OrderedDict
 
 class ZoteroWrap:
 
@@ -18,8 +19,8 @@ class ZoteroWrap:
                                     "-" + libraryType + "-" + apiKey + ".pkl")            
             with open(fileName, 'rb') as f:
                 pickleObj = pickle.load(f)
-                self.refList       = pickleObj["refList"]
                 self.__zotLib      = pickleObj["zotLib"] 
+                self.refList       = pickleObj["refList"]
                 self.itemTypes     = pickleObj["itemTypes"]  
                 self.itemTemplates = pickleObj["itemTemplates"]  
 
@@ -42,11 +43,11 @@ class ZoteroWrap:
         self.libraryId    = libraryId
         self.libraryType  = libraryType
         self.apiKey       = apiKey
-        
-        self.__zotLib = zotero.Zotero(libraryId, libraryType, apiKey)
+
+        self.__zotLib = zotero.Zotero(libraryId, libraryType, apiKey)        
         self.refList = [i['data'] for i in self.__zotLib.everything(self.__zotLib.top())]
         self.itemTypes = self.__zotLib.item_types()
-        self.itemTemplates = {t["itemType"]:self.__zotLib.item_template(t["itemType"]) for t in self.itemTypes}       
+        self.itemTemplates = OrderedDict([(t["itemType"], self.__zotLib.item_template(t["itemType"])) for t in self.itemTypes])
   
         self.savePickle()
                 
@@ -66,15 +67,18 @@ class ZoteroWrap:
         return self.getID_fromRef(self.refList[index])
 
 
-    def getID_fromRef(self, ref):
-        DOI = self.getDOI_fromRef(ref)
-        PMID = self.getPMID_fromRef(ref)
+    def getID_fromRef(self, ref):               
+        DOI             = self.getDOI_fromRef(ref)
+        PMID            = self.getPMID_fromRef(ref)
+        UNPUBLISHEDID   = self.getUNPUBLISHEDID_fromRef(ref)
         if DOI != "":
             return DOI
-        elif PMID != "":
+        if PMID != "":
             return "PMID_" + PMID
-        else:
-            return ""    
+        if UNPUBLISHEDID != "":
+            return "UNPUBLISHED_" + UNPUBLISHEDID            
+        return ""          
+        
 
 
     def getDOI(self, index):
@@ -97,7 +101,6 @@ class ZoteroWrap:
 
         return ""
 
-
     def getPMID(self, index):
         return self.getPMID_fromRef(self.refList[index])
 
@@ -110,5 +113,14 @@ class ZoteroWrap:
         except KeyError:
             return ""
 
+    def getUNPUBLISHEDID(self, index):
+        return self.geUNPUBLISHEDMID_fromRef(self.refList[index])
 
-
+    def getUNPUBLISHEDID_fromRef(self, ref):
+        try:
+            for line in ref["extra"].split("\n"):
+                if "UNPUBLISHED" in line:
+                    return line.split("UNPUBLISHED:")[1].strip()
+            return ""
+        except KeyError:
+            return ""
