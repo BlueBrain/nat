@@ -40,6 +40,24 @@ class Localizer:
     def toJSON(self):
         raise NotImplementedError
 
+
+
+
+class NullLocalizer(Localizer):
+
+    def __init__(self):
+        pass
+
+    @staticmethod    
+    def fromJSON():
+        return NullLocalizer()
+
+    def toJSON(self):
+        return {"type":"null"}
+
+    def __str__(self):
+        return str({})
+
     
 
 
@@ -227,6 +245,10 @@ class Annotation:
                     annot.localizer  = EquationLocalizer.fromJSON(jsonAnnot["localizer"])
                 elif jsonAnnot["localizer"]["type"] == "position":
                     annot.localizer  = PositionLocalizer.fromJSON(jsonAnnot["localizer"])
+                elif jsonAnnot["localizer"]["type"] == "null":
+                    annot.localizer  = NullLocalizer.fromJSON()                
+                else:
+                    raise ValueError("Unrecognized localizer type.")
 
                 returnedAnnots.append(annot)
             else:
@@ -247,6 +269,10 @@ class Annotation:
             return "equation"
         elif isinstance(self.localizer, PositionLocalizer):
             return "position"        
+        elif isinstance(self.localizer, NullLocalizer):
+            return "null"        
+        else:
+            raise ValueError("Unrecognized localizer type.")
 
 
     @staticmethod    
@@ -283,6 +309,8 @@ class Annotation:
             return "Equation " + str(self.localizer.no)
         elif isinstance(self.localizer, PositionLocalizer):
             return "Bounding box position"        
+        elif isinstance(self.localizer, NullLocalizer):
+            return ""        
         else:
             raise AttributeError("Localizer type unknown: ", str(type(self.localizer)))
 
