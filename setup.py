@@ -3,7 +3,7 @@ import os
 
 PACKAGE = "nat"
 NAME = "nat"
-DESCRIPTION = open("README.md").read()
+DESCRIPTION = open(os.path.join(os.path.dirname(__file__), "README.md")).read()
 AUTHOR = "Christian O'Reilly"
 AUTHOR_EMAIL = "christian.oreilly@epfl.ch"
 VERSION = "0.3.5"
