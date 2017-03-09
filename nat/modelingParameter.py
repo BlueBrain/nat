@@ -12,6 +12,7 @@ import pandas as pd
 from scipy import interpolate
 from copy import deepcopy
 import numpy as np
+import warnings
 
 from .tag import Tag, RequiredTag
 from .tagUtilities import nlx2ks
@@ -672,7 +673,7 @@ class ParamDescPoint(ParamDesc):
 
 
 
-class InvalidEquation(ValueError):
+class InvalidEquation(Warning, ValueError):
     def __init__(self, message="Invalid equation expression.", *args):
         self.message = message
         super(InvalidEquation, self).__init__(message, *args)
@@ -750,9 +751,11 @@ class ParamDescFunction(ParamDesc):
             return
 
         except Exception as e:
-            errorMsg = "Invalid equation expression : '" + self.equation + "'. Original exception raised: " + str(e)
-
-        raise InvalidEquation(errorMsg)
+            errorMsg = "Invalid equation expression : '" + self.equation + \
+                       "'.\nConcern parameter ID:" + \
+                       str(self.parameterRefs.instanceId) + \
+                       "\n Original exception raised: " + str(e)
+            warnings.warn(errorMsg)
 
 
     @staticmethod
@@ -850,6 +853,13 @@ class ParameterInstance:
         self.isExperimentProperty   = isExperimentProperty
 
         #self.checkRequiredTag()
+
+
+    def duplicate(self):
+        param = ParameterInstance(None, self.description, self.requiredTags,
+                                  self.relationship, self.isExperimentProperty)  
+        return param
+        
 
 
     def checkRequiredTag(self):

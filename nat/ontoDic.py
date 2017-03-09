@@ -8,7 +8,7 @@ Created on Tue Sep  6 11:19:26 2016
 from .tagUtilities import nlx2ks
 from .ontoServ import getLabelFromCurie
 import collections
-
+import warnings
 
 # From http://stackoverflow.com/a/3387975/1825043
 class TransformedDict(collections.MutableMapping):
@@ -65,7 +65,13 @@ class OntoDic(TransformedDict):
         if not id in self.store:                
             label = getLabelFromCurie(id)
             if label is None:
-                raise KeyError("The id '" + id + "' is not known locally and is not available in the registered ontology services.")    
+                # We don't want to raise an error for unfound ID in ontologies
+                # because they can be just a downtime of the ontology service
+                # so we want to avoid to crash the whole system for this.
+                # We nevertheless need to warn the user that this ID was not
+                # found.
+                warnings.warn("The id '" + id + "' is not known locally and is not available in the registered ontology services.")    
+                label=id + "[not found]"
             
             self.store[id] = label
             #print("Adding label " + label + " for the id " + id + " to the local tag id dict.")    

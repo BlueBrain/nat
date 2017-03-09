@@ -178,16 +178,26 @@ class Annotation:
             if not isinstance(expProp, ParamRef):
                 raise ValueError        
         
+
+        self.ID                     = str(uuid1())
         
         self.comment                = comment
-        self.ID                     = str(uuid1())
-        self.pubId                  = pubId
         self.users                  = users
-        self.parameters             = []
-        self.tags                   = []
+        self.pubId                  = pubId
         self.localizer              = localizer
         self.experimentProperties   = experimentProperties
 
+        self.parameters             = []
+        self.tags                   = []
+
+
+    def duplicate(self):
+        annot = Annotation(self.comment, self.users, self.pubId, 
+                           self.localizer, self.experimentProperties)
+
+        annot.parameters = [param.duplicate() for param in self.parameters]
+        annot.tags = self.tags
+        return annot
 
     @property
     def tags(self):
