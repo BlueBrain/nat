@@ -22,6 +22,7 @@ BBP_nlx_0018;Inward rectifier (h-type) current;"Inward rectifier ('Queer'), acti
 BBP_nlx_0019;Potassium inward rectifier (Kir) current;"Potassium inward rectifier activated by hyperpolarization. [included in I h in NeuronDB]. See (Lee and Ishida, 2007, J Neurophysiol, pp.3790-9)";"NIFMOL:nifext_8056";""
 BBP_nlx_0020;Fast voltage-gated potassium (Kf) current;"Fast voltage-gated potassium current. See (Kang, Huguenard and Prince, 2000, J Neurophysiol, pp.70-80)";"NIFMOL:nifext_8056";""
 BBP_nlx_0024;Medium calcium-dependent AHP potassium (SK) current;"Apamin-sensitive SK (Small-K+ conductance) current causing medium (vs. slow or fast) AHP.";"NIFMOL:nifext_8060";""
+BBP_nlx_0027;GABA-related cloride current;;"NIFMOL:nifext_8058";""
 
 BBP_nlx_0021;Thalamic reticular nucleus cell - non-GABAergic;;"NIFCELL:nifext_45";""
 BBP_nlx_0022;Thalamic reticular nucleus cell - GABAergic;;"NIFCELL:nifext_45";""
