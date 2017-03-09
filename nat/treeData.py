@@ -40,7 +40,7 @@ def getBBPChildren(root_id, df=None, childrenDic=None):
 
 
 
-def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf", 
+def getChildren(root_id, maxDepth=100, relationshipType="subClassOf", 
                  alwaysFetch=False):
     """
      Accessing web-based ontology service is too long, so we cache the 
@@ -48,7 +48,7 @@ def getChildrens(root_id, maxDepth=100, relationshipType="subClassOf",
      has not already been cached. 
     """
     childrenDic = {}
-    fileName = os.path.join(os.path.dirname(__file__), "childrens.bin") 
+    fileName = os.path.join(os.path.dirname(__file__), "children.bin") 
 
     #### CHECK FOR CASE OF BBP TAGS
     if root_id[:4] == "BBP_":
@@ -171,13 +171,13 @@ def appendAdditions(treeData, dicData):
             dicData[row["id"]] = row["label"]
 
         if isinstance(row["superCategory"], str):         
-            for rootId, childrens in treeData.items():
-                if row["superCategory"] == rootId or row["superCategory"] in childrens:
-                    childrens[row["id"]] = row["label"]
+            for rootId, children in treeData.items():
+                if row["superCategory"] == rootId or row["superCategory"] in children:
+                    children[row["id"]] = row["label"]
     return treeData, dicData
 
 
-def appendReqTagTrees(treeData, dicData):
+def appendReqTagTrees(treeData, dicData, alwaysFetch=False):
     df = ParameterTypeTree.getParamTypeDF()
     
     reqTagRoots = np.unique(np.concatenate([list(eval(reqTags).keys()) for reqTags in df["requiredTags"] if len(eval(reqTags))]))
@@ -189,11 +189,10 @@ def appendReqTagTrees(treeData, dicData):
     reqTagRoots = np.concatenate((["NIFORG:birnlex_569"], reqTagRoots))
 
     for root_id in reqTagRoots:
-        print("Building ontological tree for ", root_id, "...")
-        childrenDic = getChildrens(root_id)    
+        print("Building ontological tree for ", root_id, "... ")
+        childrenDic = getChildren(root_id, alwaysFetch=alwaysFetch)    
         dicData.update(childrenDic)
         treeData[root_id] = childrenDic
-
     return treeData, dicData
 
 

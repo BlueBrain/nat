@@ -41,7 +41,7 @@ class OntoManager:
     
             OntoManager.__ontoTrees__[self.fileNamePattern], \
             OntoManager.__ontoDics__[self.fileNamePattern] = appendReqTagTrees(OntoManager.__ontoTrees__[self.fileNamePattern], 
-                                                                               OntoManager.__ontoDics__[self.fileNamePattern])                        
+                                                                               OntoManager.__ontoDics__[self.fileNamePattern], alwaysFetch=True)                        
             
             OntoManager.__ontoTrees__[self.fileNamePattern], \
             OntoManager.__ontoDics__[self.fileNamePattern] = appendAdditions(OntoManager.__ontoTrees__[self.fileNamePattern], 
