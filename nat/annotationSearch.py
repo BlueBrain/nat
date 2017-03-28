@@ -399,7 +399,8 @@ class ParameterSearch(Search):
         self.resultFields = parameterResultFields
         self.getAllParameters()
         self.expandRequiredTags = False
-        self.onlyCentralTendancy = False    
+        self.onlyCentralTendancy = False   
+        self.contextLength       = 100
 
 
     def search(self):
@@ -423,7 +424,7 @@ class ParameterSearch(Search):
                 results[field] = [annot.text for annot in annotations]                
             
             elif field == "Context":
-                results[field] = [annot.getContext(dbPath=self.pathDB) for annot in annotations]
+                results[field] = [annot.getContext(self.contextLength, dbPath=self.pathDB) for annot in annotations]
 
             elif field == "Result type":
                 results[field] = [param.description.type for param in parameters]               
