@@ -9,7 +9,7 @@ import requests
 import os
 import pickle
 
-bases = {"KS":"http://matrix.neuinfo.org:9000/scigraph",
+bases = {"KS":"http://trinity.neuinfo.org:9000/scigraph",
          "NIP":"https://nip.humanbrainproject.eu/api/scigraph"}
 
 

@@ -4,12 +4,17 @@ __author__ = "Christian O'Reilly"
 from git import Repo, exc, cmd
 import os
 
-from PySide import QtGui
+#from PySide import QtGui
+
+class GitMngError(Exception):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super(GitMngError, self).__init__(message)
 
 
 class GitManager:
 
-    def __init__(self, gitSettings):
+    def __init__(self, gitSettings, cleanDirty=False):
 
         self.localRepoDir = gitSettings["local"]
         
@@ -56,7 +61,7 @@ class GitManager:
         except:
             pass
 
-        self.pull()
+        self.pull(cleanDirty)
 
 
 
@@ -67,15 +72,19 @@ class GitManager:
             self.repo.remotes.origin.fetch()
         except:
             if not self.offline:
+                errMsg = "An error occured while trying to access the GIT" + \
+                                     " server. Going in offline mode. Check Internet"  + \
+                                     " connectivity. If connectivity is OK, Running"   + \
+                                     " 'git pull' in the curator_DB folder may provide"+ \
+                                     " more detailed information about the issue."
+                """
                 msgBox = QtGui.QMessageBox()
                 msgBox.setWindowTitle("Error pulling from GIT")
-                msgBox.setText("An error occured while trying to access the GIT" +
-                                     " server. Going in offline mode. Check Internet"  +
-                                     " connectivity. If connectivity is OK, Running"   +
-                                     " 'git pull' in the curator_DB folder may provide"+
-                                     " more detailed information about the issue.")
+                msgBox.setText(errMsg)
                 msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
                 msgBox.exec_()            
+                """
+                raise ValueError(errMsg)
                 self.offline = True
             return
     
@@ -85,24 +94,17 @@ class GitManager:
 
 
 
-    def canRunRemoteCmd(self):        
+    def canRunRemoteCmd(self, cleanDirty=True):        
 
         if self.repo.is_dirty():
             #modifiedFiles = [os.path.join(self.repo.working_tree_dir, diff.a_path) for diff in self.repo.index.diff(None)]
             modifiedFiles = [diff.a_path for diff in self.repo.index.diff(None)]
-            msgBox = QtGui.QMessageBox()
-            msgBox.setStandardButtons(QtGui.QMessageBox.Cancel)
-            msgBox.setWindowTitle("GIT repository is dirty")
-            msgBox.setText("GIT database of annotations is dirty. Do you want to commit uncommited changes" + 
-                           " or to cancel the operation? Here is a list of modified files: \n\n" + "\n".join(modifiedFiles))
-            button = msgBox.addButton("commit", QtGui.QMessageBox.YesRole)
-            msgBox.setDefaultButton(button)
-            msgBox.exec_()
-            if msgBox.clickedButton() == button:
-                self.addFiles(modifiedFiles)            
+            if cleanDirty:
+                self.addFiles(modifiedFiles)
             else:
-                return False
-
+                errMsg = "GIT database of annotations is dirty. Do you want to commit uncommited changes" + \
+                         " or to cancel the operation? Here is a list of modified files: \n\n" + "\n".join(modifiedFiles)
+                raise GitMngError(errMsg)
 
         if self.offline:
             self.tryToFetch()
@@ -114,9 +116,9 @@ class GitManager:
 
 
 
-    def pull(self):
+    def pull(self, cleanDirty=False):
 
-        if not self.canRunRemoteCmd(): 
+        if not self.canRunRemoteCmd(cleanDirty): 
             return None
 
         try:
