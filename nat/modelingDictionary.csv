@@ -129,7 +129,7 @@
 "BBP-120000";"BBP-000000";"morphology";"";{}
 "BBP-121000";"BBP-120000";"morphology_neuron";"";{"sao1813327414":"Cell"}
 "BBP-121001";"BBP-121000";"soma_length";"Length of the soma of a neuron [should probably be merged with soma_diameter].";{"sao1813327414":"Cell"}
-"BBP-131002";"BBP-121000";"soma_diameter";"Diameter of the soma of a neuron.";{"sao1813327414":"Cell"}	
+"BBP-121002";"BBP-121000";"soma_diameter";"Diameter of the soma of a neuron.";{"sao1813327414":"Cell"}	
 "BBP-121003";"BBP-121000";"cell_area";"Area of a neuronal cell.";{"sao1813327414":"Cell"}
 "BBP-121004";"BBP-121000";"soma_area";"Area of the membrane of the soma of a neuron.";{"sao1813327414":"Cell"}
 "BBP-121005";"BBP-121000";"dendrite_length";"Length of the dendrites of a neuron.";{"sao1813327414":"Cell"}  
