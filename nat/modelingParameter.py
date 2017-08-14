@@ -381,7 +381,7 @@ class ValuesSimple(Values):
         if isinstance(unit, str):
             if self.unit != unit:
                 quant = pq.Quantity(self.values, self.unit).rescale(unit)
-                retVal.values = quant.base
+                retVal.values = np.array(quant).tolist() #quant.base
                 retVal.unit   = str(quant.dimensionality)
         return retVal
 
