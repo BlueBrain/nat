@@ -28,10 +28,14 @@ BBP_nlx_0021;Thalamic reticular nucleus cell - non-GABAergic;;"NIFCELL:nifext_45
 BBP_nlx_0022;Thalamic reticular nucleus cell - GABAergic;;"NIFCELL:nifext_45";""
 BBP_nlx_0023;Chinese hamster ovary cell;Also known as CHO cell.;"NIFMOL:nifext_2506";""
 
-
-
 BBP_nlx_0025;Sleep spindle;;;
 BBP_nlx_0026;Cav3.3;;;
+
+BBP_nlx_0028;Thalamic reticular nucleus - medial tier;;"NIFGA:birnlex_1721";""
+BBP_nlx_0029;Thalamic reticular nucleus - central tier;;"NIFGA:birnlex_1721";""
+BBP_nlx_0030;Thalamic reticular nucleus - lateral tier;;"NIFGA:birnlex_1721";""
+BBP_nlx_0031;Thalamic reticular nucleus cell - PV+;;"NIFCELL:nifext_45";""
+
 
 
 
