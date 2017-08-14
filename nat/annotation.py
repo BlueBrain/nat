@@ -12,6 +12,8 @@ from .tag import Tag
 from . import utils
 from .restClient import RESTClient
 from .ontoServ import getOntoCategory
+from .treeData import getChildren, rootIDs
+
 
 
 def getParametersForPub(dbPath, pubId):
@@ -407,7 +409,8 @@ class Annotation:
         
 
     def getAge(self): 
-        return [tag for tag in self.tags if "maturity" in getOntoCategory(tag.id)]        
+        ageIds = getChildren(rootIDs["ageCategories"])
+        return [tag for tag in self.tags if tag.id in ageIds]        
         
     def getBrainRegion(self):
         #TODO
