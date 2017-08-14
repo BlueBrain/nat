@@ -16,6 +16,16 @@ import pandas as pd
 import numpy as np
 import pickle
 
+rootIDs = {}
+
+# "Eumetazoa" includes almost all animals. 
+rootIDs["species"] = "NIFORG:birnlex_569"
+
+# "maturity" includes many qualifier for age categories.
+rootIDs["ageCategories"] = "PATO:0000261"
+
+
+
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
@@ -37,7 +47,6 @@ def getBBPChildren(root_id, df=None, childrenDic=None):
         
     childrenDic.update({key:value for key, value in zip(selected["id"], selected["label"])})
     return childrenDic
-
 
 
 def getChildren(root_id, maxDepth=100, relationshipType="subClassOf", 
@@ -136,6 +145,8 @@ def getChildren(root_id, maxDepth=100, relationshipType="subClassOf",
     return childrenDic[root_id] 
     
     
+
+#http://matrix.neuinfo.org:9000/scigraph/graph/neighbors/UBERON:0000955?blankNodes=False&depth=1&direction=INCOMING&project=*&relationshipType=subClassOf
     
     
 
@@ -183,15 +194,10 @@ def appendReqTagTrees(treeData, dicData, alwaysFetch=False):
     reqTagRoots = np.unique(np.concatenate([list(eval(reqTags).keys()) for reqTags in df["requiredTags"] if len(eval(reqTags))]))
     reqTagRoots = np.unique([RequiredTag.processTagRoot(rootId)[0] for rootId in reqTagRoots])
     
-    # Adding "Eumetazoa" which includes almost all animals. 
-    # It is not an annotation required tag but it is useful to define project 
-    # wide properties.
-    reqTagRoots = np.concatenate((["NIFORG:birnlex_569"], reqTagRoots))
+    # Adding supplementary category roots that are not required tags but that  
+    # are useful to define project-wide properties.
+    reqTagRoots = np.concatenate((list(rootIDs.values()), reqTagRoots))        
     
-    # Adding "maturity" which includes many qualifier for age categories.
-    reqTagRoots = np.concatenate((["PATO:0000261"], reqTagRoots))
-    
-
     for root_id in reqTagRoots:
         print("Building ontological tree for ", root_id, "... ")
         childrenDic = getChildren(root_id, alwaysFetch=alwaysFetch)    
