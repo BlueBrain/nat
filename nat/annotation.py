@@ -405,6 +405,10 @@ class Annotation:
     def getSpecies(self): 
         return [tag for tag in self.tags if "organism" in getOntoCategory(tag.id)]
         
+
+    def getAge(self): 
+        return [tag for tag in self.tags if "maturity" in getOntoCategory(tag.id)]        
+        
     def getBrainRegion(self):
         #TODO
         return None

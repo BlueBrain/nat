@@ -183,10 +183,14 @@ def appendReqTagTrees(treeData, dicData, alwaysFetch=False):
     reqTagRoots = np.unique(np.concatenate([list(eval(reqTags).keys()) for reqTags in df["requiredTags"] if len(eval(reqTags))]))
     reqTagRoots = np.unique([RequiredTag.processTagRoot(rootId)[0] for rootId in reqTagRoots])
     
-    # Adding the Eumetazoa which includes almost all animals. 
+    # Adding "Eumetazoa" which includes almost all animals. 
     # It is not an annotation required tag but it is useful to define project 
     # wide properties.
     reqTagRoots = np.concatenate((["NIFORG:birnlex_569"], reqTagRoots))
+    
+    # Adding "maturity" which includes many qualifier for age categories.
+    reqTagRoots = np.concatenate((["PATO:0000261"], reqTagRoots))
+    
 
     for root_id in reqTagRoots:
         print("Building ontological tree for ", root_id, "... ")
