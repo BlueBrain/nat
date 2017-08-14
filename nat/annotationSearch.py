@@ -23,7 +23,7 @@ parameterKeys          = ["Parameter name", "Result type", "Parameter instance I
                           "Publication ID", "Tag name"]
 parameterResultFields  = ["Required tag names", "Result type", "Values", "Parameter name", 
                           "Parameter type ID", "Parameter instance ID", "Unit", 
-                          "Text", "Context", "Species"] 
+                          "Text", "Context", "Species", "AgeCategory"] 
 
 
 class Condition:
@@ -480,7 +480,10 @@ class ParameterSearch(Search):
 
         
             elif field == "Species":
-                results[field] = [annot.getSpecies() for annot in annotations]     
+                results[field] = [annot.getSpecies() for annot in annotations]  
+                
+            elif field == "AgeCategory":
+                results[field] = [annot.getAge() for annot in annotations]     
 
             elif field == "Values":
                 if self.onlyCentralTendancy:
