@@ -8,8 +8,8 @@ Created on Fri Jun 10 17:16:54 2016
 
 import json
 
-from neurocurator.scigraph_client import Vocabulary
-from neurocurator.treeData import buildTreeFromRoot
+from .scigraph_client import Vocabulary
+from .treeData import buildTreeFromRoot
 
 
 def rebuildTreeFromKS(maxDepth=100, verbose=False, fileName="onto", recompute=True, start=0):
