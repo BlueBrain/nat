@@ -958,6 +958,8 @@ class ParameterInstance:
             if isinstance(valuesObject, ValuesSimple):
                 if valuesObject.statistic == "mean":
                     return valuesObject.values
+                elif valuesObject.statistic == "raw": 
+                    return [np.mean(valuesObject.values)]
                 else:
                     return None
             elif isinstance(valuesObject, ValuesCompound):
