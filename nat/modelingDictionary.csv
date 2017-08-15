@@ -145,7 +145,8 @@
 "BBP-131002";"BBP-131000";"neuron_number";"Total number of neurons (of a specific class if a type of neuron has been tagged) in a defined region.";{"sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
 "BBP-131003";"BBP-131000";"neuron_type_proportion";"Proportion of a given type of neurons in a specific structure.";{"sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
 "BBP-131004";"BBP-131000";"layer_thickness";"Thickness of a layer of neurons (in layered structures such as human cortex).";{}
-"BBP-131005";"BBP-131000";"volume_brain_region";"Volume of a brain region.";{"NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-131005";"BBP-131000";"volume_brain_region";"Volume of a brain region. If the structure is a bilateral one, this is the volume of the sum of the structure in both sides";{"NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-131006";"BBP-131000";"volume_unilateral_brain_region";"Volume of a brain region in a single hemisphere.";{"NIFGA:birnlex_1167":"Regional part of brain"}
 
 "BBP-140000";"BBP-000000";"rate";"Rate or frequency.";{}
 "BBP-140001";"BBP-140000";"tonic_firing_rate";"Firing rate in tonic mode.";{"sao1813327414":"Cell"}
