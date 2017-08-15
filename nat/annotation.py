@@ -408,7 +408,7 @@ class Annotation:
         return [tag for tag in self.tags if "organism" in getOntoCategory(tag.id)]
         
 
-    def getAge(self): 
+    def getAgeCategories(self): 
         ageIds = getChildren(rootIDs["ageCategories"])
         return [tag for tag in self.tags if tag.id in ageIds]        
         
