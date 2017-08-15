@@ -326,6 +326,10 @@ class ValuesSimple(Values):
         self.statistic = statistic
 
 
+    def applyTransform(self, rule):
+        self.__values = [rule(value) for value in self.__values]
+
+
     @property
     def values(self):
         return self.__values
@@ -423,6 +427,13 @@ class ValuesCompound(Values):
                 raise TypeError
 
         self.valueLst    = valueLst
+
+
+    def applyTransform(self, rule):
+        for value in self.valueLst:
+            value.applyTransform(rule)
+
+
 
     @staticmethod
     def fromJSON(jsonString):
@@ -595,10 +606,13 @@ class NumericalVariable:
     def __repr__(self):
         return str(self.toJSON())
 
-
-
-
-
+    def transformTypeId(self, valueFrom, valueTo, rule):
+        if self.typeId != valueFrom:
+            raise ValueError("Cannot transform this value since it is not of the right type.")
+        
+        self.typeId = valueTo
+        self.values.applyTransform(rule)
+        
 
 class Variable:
 
@@ -624,7 +638,8 @@ class Variable:
         return str(self.toJSON())
 
 
-
+    def transformTypeId(self, valueFrom, valueTo, rule):
+        raise NotImplementedError("Transforms have not been implemented for analytical variables.")
 
 
 
@@ -646,6 +661,22 @@ class ParamDesc:
     @abstractmethod
     def toJSON(self):
         raise NotImplementedError
+        
+        
+    def applyTransform(self, key, valueFrom, valueTo, rule):
+        description.applyTransform(key, valueFrom, valueTo, rule)
+        if key == "Parameter name":
+            key = "Parameter type ID"   
+            valueFrom = getParameterTypeIDFromName(valueFrom)
+            valueTo   = getParameterTypeIDFromName(valueTo)
+
+        if key == "Parameter type ID":
+            self.depVar.transformTypeId(valueFrom, valueTo, rule)
+        else:
+            raise ValueError("The key '"+ key +"' is not supported by ParameterInstance.applyTransform().")
+        
+        
+        
 
 
 class ParamDescPoint(ParamDesc):
@@ -911,6 +942,16 @@ class ParameterInstance:
             json["relationship"] = self.relationship.toJSON()
 
         return json
+
+
+
+
+
+    def applyTransform(self, key, valueFrom, valueTo, rule):
+        param = self.duplicate()
+        param.description.applyTransform(key, valueFrom, valueTo, rule)
+        return param
+
 
 
     @property
