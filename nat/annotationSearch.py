@@ -165,7 +165,7 @@ class AnnotationSearch(Search):
 
     def search(self):
         if self.findEquivalences:
-            self.conditions = EquivalenceFinder(self.conditions)
+            self.conditions = EquivalenceFinder(self.conditions).run()
         self.selectedItems = self.conditions.apply_annot(self.annotations)
         resultDF           = self.formatOutput(self.selectedItems)
         return resultDF
@@ -222,7 +222,7 @@ class ParameterSearch(Search):
 
     def search(self):
         if self.findEquivalences:
-            self.conditions = EquivalenceFinder(self.conditions)        
+            self.conditions = EquivalenceFinder(self.conditions).run()
         self.selectedItems = self.conditions.apply_param(self.parameters)
         resultDF           = self.formatOutput(self.selectedItems)
         return resultDF

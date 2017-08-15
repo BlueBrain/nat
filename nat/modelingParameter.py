@@ -664,7 +664,7 @@ class ParamDesc:
         
         
     def applyTransform(self, key, valueFrom, valueTo, rule):
-        description.applyTransform(key, valueFrom, valueTo, rule)
+
         if key == "Parameter name":
             key = "Parameter type ID"   
             valueFrom = getParameterTypeIDFromName(valueFrom)

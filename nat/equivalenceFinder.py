@@ -5,7 +5,7 @@ Created on Tue Aug 15 15:33:25 2017
 @author: oreilly
 """
 
-from modelingParameter import getParameterTypeNameFromID
+from .modelingParameter import getParameterTypeNameFromID
 
 # Equivalence rules. These are define such that
 # parameterEquivalenceRules[idFrom][idTo] is giving a rule to convert
@@ -24,13 +24,13 @@ parameterEquivalenceRules["BBP-131006"] = {"BBP-131005":lambda x: x*2}
 class EquivalenceFinder:
     
     def __init__(self, condition):
-        
+        self.condition = condition
+
+
+    def run(self):
         # Apply rules for parameter equivalences
-        condition = self.applyParameterEquivalence(condition)
+        return self.applyParameterEquivalence(self.condition)
         
-        # Eventually, apply rules for other type of equivalences        
-        
-        return condition
     
     def applyParameterEquivalence(self, condition):
         

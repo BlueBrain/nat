@@ -124,7 +124,7 @@ class ConditionAtom(Condition):
     
     def addEquivalences(self, key, valueFrom, valueTo, rule):
 
-        if self.key == key and self.value == valueFrom:
+        if self.key == key and self.value == valueTo:
             # The equivalence applies
             self.equivalences.append((valueFrom, valueTo, rule))            
 
@@ -137,10 +137,10 @@ class ConditionAtom(Condition):
                             
         # Add the results matching the conditions after the application of the 
         # equivalence rules.
-        for valueFrom, valueTo, rule in self.equivalences():
+        for valueFrom, valueTo, rule in self.equivalences:
             additionnalResults = {param.applyTransform(self.key, valueFrom, valueTo, rule):annot 
                                     for param, annot in parameters.items() 
-                                    if checkParameter(param, annot, self.key, self.valueTo)}
+                                    if checkParameter(param, annot, self.key, valueFrom)}
             
             results.update(additionnalResults)
         return results
