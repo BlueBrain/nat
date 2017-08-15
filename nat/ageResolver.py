@@ -7,8 +7,10 @@ Created on Mon Aug 14 12:28:29 2017
 
 from quantities import Quantity
 #from ontoManager import OntoManager
-from treeData import getChildren
+from .treeData import getChildren
 
+
+    
 class AgeResolver:
     
     ageEquivalence = {}
@@ -25,7 +27,7 @@ class AgeResolver:
 
     
     @staticmethod
-    def resolve_fromIDs(speciesId, ageCategoryId):
+    def resolve_fromIDs(speciesId, ageCategoryId, unit=None, typeValue=""):
         
         def resolve_age(ageCatDict, ageCategoryId):  
             for ageCategoryId2 in ageCatDict:
@@ -34,16 +36,36 @@ class AgeResolver:
                     return ageCatDict[ageCategoryId]
                     
             return None
-        
-        for speciesId2 in AgeResolver.ageEquivalence:
-            #ontoMng.
-            if speciesId2 == speciesId:
-                return resolve_age(AgeResolver.ageEquivalence[speciesId2], ageCategoryId)
-                
-            if speciesId in getChildren.getChildren(speciesId2):
-                return resolve_age(AgeResolver.ageEquivalence[speciesId2], ageCategoryId)
 
-        return None    
+        def resolve_species_age(speciesId, ageCategoryId):
+            for speciesId2 in AgeResolver.ageEquivalence:
+                #ontoMng.
+                if speciesId2 == speciesId:
+                    return resolve_age(AgeResolver.ageEquivalence[speciesId2], ageCategoryId)
+                    
+                if speciesId in getChildren(speciesId2):
+                    return resolve_age(AgeResolver.ageEquivalence[speciesId2], ageCategoryId)
+    
+            return None    
+
+        age = resolve_species_age(speciesId, ageCategoryId)
+        if age is None:
+            return None
+        
+        if typeValue == "min":
+            age = age[0]
+        elif typeValue == "max":
+            age = age[1]
+        elif typeValue == "median":
+            age = (age[1]+age[0])/2.0
+    
+        if not unit is None:
+            if isinstance(age, list):
+                return [a.rescale(unit) for a in age]
+            else:
+                return age.rescale(unit)
+        return age
+
 
     #def resolve_fromLabels(species, ageCategory)    
 
