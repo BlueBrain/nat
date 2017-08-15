@@ -4,8 +4,19 @@ __author__ = "Christian O'Reilly"
 
 import pickle
 from pyzotero import zotero
-import os
+import os, re
 from collections import OrderedDict
+from dateutil.parser import parse
+
+
+def getYear(ref):
+    if ref["date"] == "":
+        return ""
+    else:
+        try:
+            return str(parse(ref["date"]).year)
+        except ValueError:
+            return re.search(r'[12]\d{3}', ref["date"]).group(0)
 
 class ZoteroWrap:
 
@@ -61,7 +72,34 @@ class ZoteroWrap:
                          "zotLib":self.__zotLib,
                          "itemTypes":self.itemTypes, 
                          "itemTemplates":self.itemTemplates}, f)
-                         
+
+
+
+    def getRecordFromID(self, refId):
+        for index in range(len(self.refList)):
+            if refId == self.getID(index):
+                return self.refList[index]
+        return None
+
+
+    def getInTextCitationFromID(self, refId): #, style="APA"):
+        record = self.getRecordFromID(refId)
+        if record is None:
+            return None
+        
+        year = getYear(record)
+        creators = [creator["lastName"] for creator in record["creators"] 
+                                        if creator["creatorType"] == "author"]
+                                            
+        if len(creators) > 2:
+            return creators[0] + " et al., (" + year + ")"
+        if len(creators) == 1:
+            return creators[0] + ", (" + year + ")"
+           
+        return creators[0] + " and " + creators[1] + ", (" + year + ")"
+
+
+
 
     def getID(self, index):
         return self.getID_fromRef(self.refList[index])
