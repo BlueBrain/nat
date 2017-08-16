@@ -85,7 +85,10 @@ class ZoteroWrap:
     def getInTextCitationFromID(self, refId): #, style="APA"):
         record = self.getRecordFromID(refId)
         if record is None:
-            return None
+            self.refreshDB(self.libraryId, self.libraryType, self.apiKey)
+            record = self.getRecordFromID(refId)
+            if record is None:           
+                raise ValueError("No reccord could be found for the paper with ID " + refId)
         
         year = getYear(record)
         creators = [creator["lastName"] for creator in record["creators"] 
