@@ -50,7 +50,7 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2):
         axes.set_xlabel(param.indepNames[0] + " (" + param.indepUnits[0] + ")")
         axes.set_title(title)
         axes.legend()
-        return fig    
+        return fig, axes    
 
 
     minX = {}
@@ -75,3 +75,5 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2):
 
         getFigTrace(paramTrace, xlim=[minX[panel], maxX[panel]], 
                           title=panel, context=context, index=no, label=ref)
+                          
+    return context
