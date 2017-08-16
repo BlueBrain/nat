@@ -10,8 +10,10 @@ from warnings import warn
 from .modelingParameter import NumericalVariable, ParamDescTrace, ValuesSimple, \
     getParameterTypeIDFromName, getParameterTypeNameFromID
 
+from .annotationSearch import ParameterGetter
 from .zoteroWrap import ZoteroWrap
 from .ageResolver import AgeResolver
+from quantities import Quantity
 
 class ParamSample:
     
@@ -39,18 +41,55 @@ class ParamSample:
         self.zotWrap.loadCachedDB(libraryId, libraryType, apiKey)    
 
 
-    def rescaleUnit(self, unit):
+
+    def rescaleUnit(self, unit, rescaleStereo=True):
+        
+        def rescale2DStereo(paramID, thicknessValue, thicknessUnit, desiredUnit):
+            density = paramGetter.getParam(paramID)
+            thickness = Quantity(thicknessValue, thicknessUnit)
+            return (density/thickness).rescale(desiredUnit)        
+        
+        
+        paramGetter = ParameterGetter(pathDB=self.searcher.pathDB)
         for param, annot, (index, row) in zip(self.sampleDF["obj_parameter"], 
                                               self.sampleDF["obj_annotation"], 
                                               self.sampleDF.iterrows()):
-            param = param.rescale(unit)
-            if param.unit != unit:
+                                                  
+            if param.unit == unit:
+                continue
+                                                  
+            try:
+                param = param.rescale(unit)
+            except ValueError:
+            
+                if rescaleStereo:
+                    thicknessInstanceId = [param.instanceId for param in annot.experimentProperties 
+                                            if getParameterTypeNameFromID(param.paramTypeId) == "slice_thickness"]
+         
+                    if len(thicknessInstanceId) == 1:
+                        thicknessParameter = paramGetter.getParam(thicknessInstanceId[0])
+                        if len(thicknessParameter.values) == 1:
+                            param = rescale2DStereo(param.id, thicknessValue=thicknessParameter.values[0], 
+                                                    thicknessUnit=thicknessParameter.unit, 
+                                                    desiredUnit=unit)
+                            self.sampleDF.loc[index, "obj_parameter"] = param   
+                            self.sampleDF.loc[index, "Values"]        = param.valuesText()   
+                            self.sampleDF.loc[index, "Unit"]          = param.unit                   
+                            continue
+                
                 warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
                      " cannot be rescaled from unit " + 
                      str(param.unit) + " to unit " + str(unit) + ". Dropping this record.")
                 del row
                 continue                
 
+            if Quantity(1, param.unit) != Quantity(1, unit):
+                warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
+                     " cannot be rescaled from unit " + 
+                     str(param.unit) + " to unit " + str(unit) + ". Dropping this record.")
+                del row
+                continue                            
+                
             self.sampleDF.loc[index, "obj_parameter"] = param   
             self.sampleDF.loc[index, "Values"]        = param.valuesText()   
             self.sampleDF.loc[index, "Unit"]          = param.unit   
@@ -119,27 +158,49 @@ class ParamSample:
         ageCategories  = []
         numericalAges  = []
         for noRow, row in self.sampleDF.iterrows():
-            tags = row["AgeCategories"]
-            if len(tags) > 1 :
+            
+            # First check if an experimental property with age as been attributed to the record            
+            ageExpProp = [expProp.instanceId for expProp in row["obj_annotation"].experimentProperties if expProp.paramTypeId == 'BBP-002001']
+            if len(ageExpProp) > 1 :
                 warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
-                     " is associated with more than one age categories (" + 
-                     str([tag.name for tag in tags]) 
-                     + "). The age cannot be automatically attributed unambiguously. " +
+                     " is associated with more than one species age experimental properties." + 
+                     +" The age cannot be automatically attributed unambiguously. " +
                      "Skipping this record.")
                 del row
-                continue  
-                
-            if len(tags) == 0:
-                ageCategoryIds.append(None)
-                ageCategories.append(None)
-                numericalAges.append(None)
-                continue
+                continue   
             
-            ageCategoryIds.append(tags[0].id)
-            ageCategories.append(tags[0].name)
-            age = AgeResolver.resolve_fromIDs(row["SpeciesId"], tags[0].id, unit=self.ageUnit, 
-                                              typeValue=self.ageTypeValue) 
-            numericalAges.append(age)
+            if len(ageExpProp) == 1 :
+                getter = ParameterGetter(pathDB=self.searcher.pathDB)
+                
+                ageParam = getter.getParam(ageExpProp[0])
+                
+                ageCategoryIds.append(None)
+                ageCategories.append(None)        
+                numericalAges.append(Quantity(ageParam.means[0], ageParam.unit).rescale(self.ageUnit))
+
+            # No experimental property attributed. Check to use a age category if one has been attributed.
+            else:
+                tags = row["AgeCategories"]
+                if len(tags) > 1 :
+                    warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
+                         " is associated with more than one age categories (" + 
+                         str([tag.name for tag in tags]) 
+                         + "). The age cannot be automatically attributed unambiguously. " +
+                         "Skipping this record.")
+                    del row
+                    continue  
+                    
+                if len(tags) == 0:
+                    ageCategoryIds.append(None)
+                    ageCategories.append(None)
+                    numericalAges.append(None)
+                    continue
+                
+                ageCategoryIds.append(tags[0].id)
+                ageCategories.append(tags[0].name)
+                age = AgeResolver.resolve_fromIDs(row["SpeciesId"], tags[0].id, unit=self.ageUnit, 
+                                                  typeValue=self.ageTypeValue) 
+                numericalAges.append(age)
 
         self.sampleDF["AgeCategoryId"] = ageCategoryIds
         self.sampleDF["AgeCategory"]   = ageCategories
