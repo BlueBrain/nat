@@ -6,7 +6,12 @@ Created on Tue Aug 15 17:14:30 2017
 """
 
 from warnings import warn
+
+from .modelingParameter import NumericalVariable, ParamDescTrace, ValuesSimple, \
+    getParameterTypeIDFromName, getParameterTypeNameFromID
+
 from .zoteroWrap import ZoteroWrap
+from .ageResolver import AgeResolver
 
 class ParamSample:
     
@@ -33,13 +38,57 @@ class ParamSample:
         self.zotWrap = ZoteroWrap()
         self.zotWrap.loadCachedDB(libraryId, libraryType, apiKey)    
 
+
+    def rescaleUnit(self, unit):
+        for param, annot, (index, row) in zip(self.sampleDF["obj_parameter"], 
+                                              self.sampleDF["obj_annotation"], 
+                                              self.sampleDF.iterrows()):
+            param = param.rescale(unit)
+            if param.unit != unit:
+                warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
+                     " cannot be rescaled from unit " + 
+                     str(param.unit) + " to unit " + str(unit) + ". Dropping this record.")
+                del row
+                continue                
+
+            self.sampleDF.loc[index, "obj_parameter"] = param   
+            self.sampleDF.loc[index, "Values"]        = param.valuesText()   
+            self.sampleDF.loc[index, "Unit"]          = param.unit   
+
+
+
+
+    def reformatAsNumericalTraces(self, indepVarName = None, indepVarId = None):
+        if not indepVarName is None:
+            if not indepVarId is None:
+                if getParameterTypeNameFromID(indepVarId) != indepVarName:
+                    raise ValueError("Parameters indepVarName and indepVarId "
+                                    + "passed to ParamSample.reformatAsNumericalTraces() are incompatible.")
+            else:
+                indepVarId = getParameterTypeIDFromName(indepVarName)
+        else:
+            if indepVarId is None:
+                raise ValueError("At least one of the attribute indepVarName and indepVarId "
+                                    + "passed to ParamSample.reformatAsNumericalTraces() most not be None.")
+            indepVarName = getParameterTypeNameFromID(indepVarId)
+                
+
+        for noRow, row in self.sampleDF.iterrows():
         
+            if row["Result type"] == "pointValue":
+                indepVar = row[indepVarName]
+                depVar   = row["obj_parameter"].description.depVar
+                indepVar = NumericalVariable(typeId = indepVarId, 
+                                             values = ValuesSimple([float(indepVar)], unit=str(indepVar.dimensionality)))
+                row["obj_parameter"].description = ParamDescTrace(depVar, [indepVar])
+                row["Result type"] = "numericalTrace"
+
+
         
     def preprocess(self, steps):
         for step in steps:
             getattr(self, "preprocess_" + step)()
-    
-    
+        
     
     def preprocess_species(self):
         speciesId = []
