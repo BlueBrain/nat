@@ -99,7 +99,9 @@ class Condition:
 
     def apply_annot(self, annotations):
         return annotations
-        
+                
+    def addEquivalences(self, key, valueFrom, valueTo, rule):
+        pass
 
 #addEquivalences("Parameter type ID", idFrom, idTo, parameterEquivalenceRules[idFrom][idTo])
 
