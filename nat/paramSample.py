@@ -6,7 +6,14 @@ Created on Tue Aug 15 17:14:30 2017
 """
 
 from warnings import warn
+
+from .modelingParameter import NumericalVariable, ParamDescTrace, ValuesSimple, \
+    getParameterTypeIDFromName, getParameterTypeNameFromID
+
+from .annotationSearch import ParameterGetter
 from .zoteroWrap import ZoteroWrap
+from .ageResolver import AgeResolver
+from quantities import Quantity
 
 class ParamSample:
     
@@ -33,18 +40,112 @@ class ParamSample:
         self.zotWrap = ZoteroWrap()
         self.zotWrap.loadCachedDB(libraryId, libraryType, apiKey)    
 
+
+
+    def rescaleUnit(self, unit, rescaleStereo=True):
         
+        def rescale2DStereo(paramID, thicknessValue, thicknessUnit, desiredUnit):
+            density = paramGetter.getParam(paramID)
+            thickness = Quantity(thicknessValue, thicknessUnit)
+            return (density/thickness).rescale(desiredUnit)        
+        
+        
+        paramGetter = ParameterGetter(pathDB=self.searcher.pathDB)
+        rowsToDrop = []
+        for param, annot, (index, row) in zip(self.sampleDF["obj_parameter"], 
+                                              self.sampleDF["obj_annotation"], 
+                                              self.sampleDF.iterrows()):
+                                                  
+            if param.unit == unit:
+                continue
+                                                  
+            try:
+                param = param.rescale(unit)
+            except ValueError:
+            
+                if rescaleStereo:
+                    thicknessInstanceId = [param.instanceId for param in annot.experimentProperties 
+                                            if getParameterTypeNameFromID(param.paramTypeId) == "slice_thickness"]
+         
+                    if len(thicknessInstanceId) == 1:
+                        thicknessParameter = paramGetter.getParam(thicknessInstanceId[0])
+                        if len(thicknessParameter.values) == 1:
+                            param = rescale2DStereo(param.id, thicknessValue=thicknessParameter.values[0], 
+                                                    thicknessUnit=thicknessParameter.unit, 
+                                                    desiredUnit=unit)
+                            self.sampleDF.loc[index, "obj_parameter"] = param   
+                            self.sampleDF.loc[index, "Values"]        = param.valuesText()   
+                            self.sampleDF.loc[index, "Unit"]          = param.unit                   
+                            continue
+                
+                warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
+                     " cannot be rescaled from unit " + 
+                     str(param.unit) + " to unit " + str(unit) + ". Dropping this record.")
+                rowsToDrop.append(index)
+                continue                
+
+            if Quantity(1, param.unit) != Quantity(1, unit):
+                warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
+                     " cannot be rescaled from unit " + 
+                     str(param.unit) + " to unit " + str(unit) + ". Dropping this record.")
+                rowsToDrop.append(index)
+                continue                            
+                
+            self.sampleDF.loc[index, "obj_parameter"] = param   
+            self.sampleDF.loc[index, "Values"]        = param.valuesText()   
+            self.sampleDF.loc[index, "Unit"]          = param.unit   
+
+        self.sampleDF.drop(rowsToDrop, inplace=True)
+
+
+
+
+    def reformatAsNumericalTraces(self, indepVarName = None, indepVarId = None):
+        if not indepVarName is None:
+            if not indepVarId is None:
+                if getParameterTypeNameFromID(indepVarId) != indepVarName:
+                    raise ValueError("Parameters indepVarName and indepVarId "
+                                    + "passed to ParamSample.reformatAsNumericalTraces() are incompatible.")
+            else:
+                indepVarId = getParameterTypeIDFromName(indepVarName)
+        else:
+            if indepVarId is None:
+                raise ValueError("At least one of the attribute indepVarName and indepVarId "
+                                    + "passed to ParamSample.reformatAsNumericalTraces() most not be None.")
+            indepVarName = getParameterTypeNameFromID(indepVarId)
+                
+
+        rowsToDrop = []
+        for index, row in self.sampleDF.iterrows():
+        
+            if row["Result type"] == "pointValue":
+                indepVar = row[indepVarName]
+                if indepVar is None:
+                    warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
+                         " cannot be transformed to a numerical trace because no value has been attributed"+ 
+                         " ot the corresponding independant variable. Dropping this record.")
+                    rowsToDrop.append(index)
+                    continue                   
+                
+                depVar   = row["obj_parameter"].description.depVar
+                indepVar = NumericalVariable(typeId = indepVarId, 
+                                             values = ValuesSimple([float(indepVar)], unit=str(indepVar.dimensionality)))
+                row["obj_parameter"].description = ParamDescTrace(depVar, [indepVar])
+                row["Result type"] = "numericalTrace"
+        self.sampleDF.drop(rowsToDrop, inplace=True)
+
+
         
     def preprocess(self, steps):
         for step in steps:
             getattr(self, "preprocess_" + step)()
-    
-    
+        
     
     def preprocess_species(self):
         speciesId = []
         species   = []
-        for noRow, row in self.sampleDF.iterrows():
+        rowsToDrop = []
+        for index, row in self.sampleDF.iterrows():
             tags =row["Species"]
             if len(tags) > 1 :
                 warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
@@ -52,7 +153,7 @@ class ParamSample:
                      str([tag.name for tag in tags]) 
                      + "). The species cannot be automatically attributed unambiguously. " +
                      "Skipping this record.")
-                del row
+                rowsToDrop.append(index)
                 continue
                 
             speciesId.append(tags[0].id)
@@ -60,6 +161,7 @@ class ParamSample:
             
         self.sampleDF["SpeciesId"] = speciesId
         self.sampleDF["Species"]   = species
+        self.sampleDF.drop(rowsToDrop, inplace=True)
 
 
     def preprocess_age(self):    
@@ -69,32 +171,56 @@ class ParamSample:
         ageCategoryIds = []
         ageCategories  = []
         numericalAges  = []
-        for noRow, row in self.sampleDF.iterrows():
-            tags = row["AgeCategories"]
-            if len(tags) > 1 :
-                warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
-                     " is associated with more than one age categories (" + 
-                     str([tag.name for tag in tags]) 
-                     + "). The age cannot be automatically attributed unambiguously. " +
-                     "Skipping this record.")
-                del row
-                continue  
-                
-            if len(tags) == 0:
-                ageCategoryIds.append(None)
-                ageCategories.append(None)
-                numericalAges.append(None)
-                continue
+        rowsToDrop = []
+        for index, row in self.sampleDF.iterrows():
             
-            ageCategoryIds.append(tags[0].id)
-            ageCategories.append(tags[0].name)
-            age = AgeResolver.resolve_fromIDs(row["SpeciesId"], tags[0].id, unit=self.ageUnit, 
-                                              typeValue=self.ageTypeValue) 
-            numericalAges.append(age)
+            # First check if an experimental property with age as been attributed to the record            
+            ageExpProp = [expProp.instanceId for expProp in row["obj_annotation"].experimentProperties if expProp.paramTypeId == 'BBP-002001']
+            if len(ageExpProp) > 1 :
+                warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
+                     " is associated with more than one species age experimental properties." + 
+                     +" The age cannot be automatically attributed unambiguously. " +
+                     "Skipping this record.")
+                rowsToDrop.append(index)
+                continue   
+            
+            if len(ageExpProp) == 1 :
+                getter = ParameterGetter(pathDB=self.searcher.pathDB)
+                
+                ageParam = getter.getParam(ageExpProp[0])
+                
+                ageCategoryIds.append(None)
+                ageCategories.append(None)        
+                numericalAges.append(Quantity(ageParam.centralTendancy(), ageParam.unit).rescale(self.ageUnit))
+
+            # No experimental property attributed. Check to use a age category if one has been attributed.
+            else:
+                tags = row["AgeCategories"]
+                if len(tags) > 1 :
+                    warn("The annotation with the parameter ID " + row["Parameter instance ID"] + 
+                         " is associated with more than one age categories (" + 
+                         str([tag.name for tag in tags]) 
+                         + "). The age cannot be automatically attributed unambiguously. " +
+                         "Skipping this record.")
+                    rowsToDrop.append(index)
+                    continue  
+                    
+                if len(tags) == 0:
+                    ageCategoryIds.append(None)
+                    ageCategories.append(None)
+                    numericalAges.append(None)
+                    continue
+                
+                ageCategoryIds.append(tags[0].id)
+                ageCategories.append(tags[0].name)
+                age = AgeResolver.resolve_fromIDs(row["SpeciesId"], tags[0].id, unit=self.ageUnit, 
+                                                  typeValue=self.ageTypeValue) 
+                numericalAges.append(age)
 
         self.sampleDF["AgeCategoryId"] = ageCategoryIds
         self.sampleDF["AgeCategory"]   = ageCategories
         self.sampleDF["age"]           = numericalAges
+        self.sampleDF.drop(rowsToDrop, inplace=True)
 
     
     def preprocess_ref(self):    

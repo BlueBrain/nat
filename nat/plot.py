@@ -37,20 +37,23 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2):
                 axes = axarr
 
         if label == "":
-            axes.plot(param.indepValues[0], param.means, '-o')
+            axes.plot(param.indepCentralTendancies(paramName=x), 
+                      param.centralTendancy(), '-o')
         else:
-            axes.plot(param.indepValues[0], param.means, '-o', color=colors[label], label=label)        
+            axes.plot(param.indepCentralTendancies(paramName=x), 
+                      param.centralTendancy(), '-o', color=colors[label], label=label)        
 
         if not xlim is None:
             axes.set_xlim(xlim)
         else:
-            axes.set_xlim([min(param.indepValues[0]) -2.5, max(param.indepValues[0])+2.5])
+            axes.set_xlim([min(param.indepCentralTendancies(paramName=x)) - 2.5, 
+                           max(param.indepCentralTendancies(paramName=x)) + 2.5])
 
         axes.set_ylabel(param.name + " (" + param.unit + ")")
-        axes.set_xlabel(param.indepNames[0] + " (" + param.indepUnits[0] + ")")
+        axes.set_xlabel(x          + " (" + param.indepUnits[param.indepNames == x] + ")")
         axes.set_title(title)
         axes.legend()
-        return fig    
+        return fig, axes    
 
 
     minX = {}
@@ -64,14 +67,16 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2):
         no = uniquePanels.index(panel)
 
         if panel in minX:
-            minX[panel] = min(minX[panel], min(paramTrace.indepValues[0]))
-            maxX[panel] = max(maxX[panel], max(paramTrace.indepValues[0]))        
+            minX[panel] = min(minX[panel], min(paramTrace.indepCentralTendancies(paramName=x)))
+            maxX[panel] = max(maxX[panel], max(paramTrace.indepCentralTendancies(paramName=x)))        
         else:
-            minX[panel] = min(paramTrace.indepValues[0])
-            maxX[panel] = max(paramTrace.indepValues[0])
+            minX[panel] = min(paramTrace.indepCentralTendancies(paramName=x))
+            maxX[panel] = max(paramTrace.indepCentralTendancies(paramName=x))
 
         minX[panel] -= (maxX[panel] - minX[panel])*0.03
         maxX[panel] += (maxX[panel] - minX[panel])*0.03 
 
         getFigTrace(paramTrace, xlim=[minX[panel], maxX[panel]], 
                           title=panel, context=context, index=no, label=ref)
+                          
+    return context
