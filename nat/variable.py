@@ -38,7 +38,18 @@ class NumericalVariable:
         
         self.typeId = valueTo
         self.values.applyTransform(rule)
+ 
+
+    def centralTendancy(self, type, returnStat=False):
+        return self.values.centralTendancy(type=type, returnStat=returnStat)      
         
+    def size(self, type, returnStat=False):
+        return self.values.size(type=type, returnStat=returnStat) 
+        
+    def deviation(self, type, returnStat=False):
+        return self.values.deviation(type=type, returnStat=returnStat)       
+
+     
 
 class Variable:
 
@@ -67,4 +78,12 @@ class Variable:
     def transformTypeId(self, valueFrom, valueTo, rule):
         raise NotImplementedError("Transforms have not been implemented for analytical variables.")
 
-
+    def centralTendancy(self, type, returnStat=False):
+        return None
+        
+    def size(self, type, returnStat=False):
+        return None
+        
+    def deviation(self, type, returnStat=False):
+        return None
+        

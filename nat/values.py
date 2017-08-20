@@ -10,8 +10,9 @@ from abc import abstractmethod
 from copy import deepcopy
 import numpy as np
 
-
-statisticList  = ["raw", "mean", "median", "mode", "sem", "sd",  "var",
+statisticList  = ["raw", 
+                  "mean", "median", "mode", "mid-range",
+                  "sem", "sd",  "var", "range_width", "CI_98_width", "CI_95_width",
                   "CI_01", "CI_02.5", "CI_5", "CI_10", "CI_90", "CI_95",
                   "CI_97.5", "CI_99", "N", "min", "max", "other",
                   "deviation", "average"]
@@ -87,6 +88,13 @@ class ValuesSimple(Values):
         self.unit      = unit
         self.statistic = statistic
 
+    def __len__(self):
+        if isinstance(self.__values, list):
+            return len(self.__values)
+        if isinstance(self.__values, np.ndarray):
+            return len(self.__values.tolist())
+        raise TypeError("ValuesSimple.__values should be of type list or numpy.ndarray.")
+
 
     def applyTransform(self, rule):
         self.__values = [rule(value) for value in self.__values]
@@ -100,7 +108,7 @@ class ValuesSimple(Values):
     def values(self, values):
         if not isinstance(values, (list, np.ndarray)):
             raise TypeError("Expected type for values is list, received type: " + str(type(values)))              
-        self.__values = [float(val) for val in values]
+        self.__values = np.array([float(val) for val in values])
         
         
 
@@ -109,7 +117,7 @@ class ValuesSimple(Values):
         return ValuesSimple(jsonString["values"], jsonString["unit"], jsonString["statistic"])
 
     def toJSON(self):
-        return {"type": "simple", "values": self.values, "unit": self.unit, "statistic":self.statistic}
+        return {"type": "simple", "values": self.values.tolist(), "unit": self.unit, "statistic":self.statistic}
 
     def __str__(self):
         return str(self.toJSON())
@@ -135,12 +143,51 @@ class ValuesSimple(Values):
 
 
 
-    def centralTendancy(self):
-        if len(self.values) == 1:
-            return self.values[0]
+    def centralTendancy(self, type, returnStat=False):
+        if type == "across":
+            if returnStat:
+                return np.mean(self.values), "mean"
+            else:
+                return np.mean(self.values)
+                
+        elif type == "within":
+            if returnStat:
+                return self.values, self.statistic
+            else:
+                return self.values
+                
         else:
-            return np.mean(self.values)
+            raise ValueError("Only types 'across' and 'within' are acceptable.")
+                    
+    def deviation(self, type, returnStat=False):
+        if type == "across":
+            if returnStat:
+                return np.std(self.values), "sd"
+            else:
+                return np.std(self.values)
+                
+        elif type == "within":
+            if returnStat:
+                return np.zeros_like(self.values), "sd"   
+            else:
+                return np.zeros_like(self.values)
+                
+        else:
+            raise ValueError("Only types 'across' and 'within' are acceptable.")
+
             
+    def size(self, type, returnStat=False):
+        if type == "across":        
+            if returnStat:
+                return len(self.values), "N"
+            else:
+                return len(self.values)
+
+        elif type == "within":
+            if returnStat:
+                return np.ones_like(self.values), "N"   
+            else:
+                return np.ones_like(self.values)
             
             
 
@@ -159,7 +206,7 @@ class ValuesSimple(Values):
 
         if isinstance(other, (int, float)):
             values = np.array(self.values)
-        elif isinstance(other, (pq.Quantity, ParameterInstance)):
+        elif isinstance(other, pq.Quantity): # (pq.Quantity, ParameterInstance)):
             values = pq.Quantity(self.values, self.unit)
         else:
             raise TypeError
@@ -192,6 +239,10 @@ class ValuesCompound(Values):
                 raise TypeError
 
         self.valueLst    = valueLst
+
+
+    def __len__(self):
+        return len(self.valueLst[0])
 
 
     def applyTransform(self, rule):
@@ -307,28 +358,130 @@ class ValuesCompound(Values):
         return unit
 
 
-    def centralTendancy(self):
-
-        stats = [value.statistic for value in self.valueLst]
-        if "raw" in stats :
-            return self.valueLst[stats.index("raw")].centralTendancy()
-
-        for stat in ["mean", "median", "mode"]:
-            if stat in stats :
-                return self.valueLst[stats.index(stat)].centralTendancy()
 
 
-        if "min" in stats and "max" in stats :
-            return (self.valueLst[stats.index("min")].centralTendancy() +
-                    self.valueLst[stats.index("max")].centralTendancy())/2.0
-        if "CI_01" in stats and  "CI_99" in stats :
-            return (self.valueLst[stats.index("CI_01")].centralTendancy() +
-                    self.valueLst[stats.index("CI_99")].centralTendancy())/2.0
-        if "CI_02.5" in stats and  "CI_97.5" in stats :
-            return (self.valueLst[stats.index("CI_02.5")].centralTendancy() +
-                    self.valueLst[stats.index("CI_97.5")].centralTendancy())/2.0
 
-        return np.nan
+    def centralTendancy(self, type, returnStat=False):
+        if type == "across":
+            if returnStat:
+                return np.mean(self.centralTendancy(type="within")), "mean"
+            else:
+                return np.mean(self.centralTendancy(type="within"))
+                
+        elif type == "within":
+            """
+            This methods compute central tendancy within each sample. Each sample
+            being a compound values, it determines the central tendancy out of
+            the different statistics available.
+            """
+
+            def getReturnVals():
+                stats = [value.statistic for value in self.valueLst]
+                for stat in ["mean", "median", "mode", "average"]:
+                    if stat in stats :
+                        return self.valueLst[stats.index(stat)].values, stat
+        
+                if "min" in stats and "max" in stats :
+                    return (self.valueLst[stats.index("min")].values +
+                            self.valueLst[stats.index("max")].values)/2.0, "mid-range"
+                if "CI_01" in stats and  "CI_99" in stats :
+                    return (self.valueLst[stats.index("CI_01")].values +
+                            self.valueLst[stats.index("CI_99")].values)/2.0, "mid-range"
+                if "CI_02.5" in stats and  "CI_97.5" in stats :
+                    return (self.valueLst[stats.index("CI_02.5")].values +
+                            self.valueLst[stats.index("CI_97.5")].values)/2.0, "mid-range"
+        
+                if "raw" in stats :
+                    return self.valueLst[stats.index("raw")].values, "raw"
+        
+                return np.nan, "N/A"
+
+            if returnStat:
+                return getReturnVals()
+            else:
+                return getReturnVals()[0]
+                
+        else:
+            raise ValueError("Only types 'across' and 'within' are acceptable.")
+                    
+                    
+                    
+                    
+    def deviation(self, type, returnStat=False):
+        if type == "across":
+            if returnStat:
+                return np.std(self.centralTendancy(type="within")), "sd"
+            else:
+                return np.std(self.centralTendancy(type="within"))                
+       
+        elif type == "within":
+            def getReturnVals():
+                stats = [value.statistic for value in self.valueLst]
+                for stat in ["sd", "sem", "var", "deviation"]:
+                    if stat in stats :
+                        return self.valueLst[stats.index(stat)].values, stat
+        
+                if "min" in stats and "max" in stats :
+                    return (self.valueLst[stats.index("max")].values -
+                            self.valueLst[stats.index("min")].values), "range_width"
+                if "CI_01" in stats and  "CI_99" in stats :
+                    return (self.valueLst[stats.index("CI_99")].values -
+                            self.valueLst[stats.index("CI_01")].values), "CI_98_width"
+                if "CI_02.5" in stats and  "CI_97.5" in stats :
+                    return (self.valueLst[stats.index("CI_97.5")].values -
+                            self.valueLst[stats.index("CI_02.5")].values), "CI_95_width"
+        
+                if "raw" in stats :
+                    return np.zeros_like(self.valueLst[stats.index("raw")].values), "sd"            
+                    
+            if returnStat:
+                return getReturnVals() 
+            else:
+                return getReturnVals()[0]
+                
+        else:
+            raise ValueError("Only types 'across' and 'within' are acceptable.")
+
+            
+             
+    def size(self, type, returnStat=False):
+        if type == "across":        
+            def getReturnVals():            
+                stats = [value.statistic for value in self.valueLst]
+                for stat in ["mean", "median", "mode", "mid-range"]:
+                    if stat in stats :
+                        return len(self.valueLst[stats.index(stat)].values)
+        
+                if "min" in stats and "max" in stats :
+                    return len(self.valueLst[stats.index("min")].values)
+                if "CI_01" in stats and  "CI_99" in stats :
+                    return len(self.valueLst[stats.index("CI_01")].values)
+                if "CI_02.5" in stats and  "CI_97.5" in stats :
+                    return len(self.valueLst[stats.index("CI_02.5")].values)
+        
+                if "raw" in stats :
+                    return len(self.valueLst[stats.index("raw")].values)
+        
+                return np.nan            
+
+            if returnStat:
+                return getReturnVals(), "N"
+            else:
+                return getReturnVals()
+                
+
+        elif type == "within":
+            stats = [value.statistic for value in self.valueLst]
+            if "N" in stats:
+                if returnStat:
+                    return self.valueLst[stats.index("N")].values, "N"   
+                else:
+                    return self.valueLst[stats.index("N")].values
+            else:
+                if returnStat:
+                    return np.ones_like(self.centralTendancy(type="within")), "N"   
+                else:
+                    return np.ones_like(self.centralTendancy(type="within"))              
 
 
     @property

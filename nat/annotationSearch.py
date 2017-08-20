@@ -12,7 +12,8 @@ import os.path
 import pickle
 
 from .annotation import Annotation
-from .modelingParameter import NumericalVariable, getParameterTypeNameFromID, Variable
+from .modelingParameter import getParameterTypeNameFromID
+from .variable import NumericalVariable, Variable
 from .treeData import flatten_list
 from .ontoManager import OntoManager
 from .tagUtilities import nlx2ks    
@@ -306,12 +307,12 @@ class ParameterSearch(Search):
 
             elif field == "Values":
                 if self.onlyCentralTendancy:
-                    results[field] =  [param.description.depVar.values.centralTendancy() 
+                    results[field] =  [param.centralTendancy() 
                                         if isinstance(param.description.depVar, NumericalVariable)
                                         else np.nan 
                                         for param in parameters]                                            
                 else:
-                    results[field] =  [param.description.depVar.values.text() 
+                    results[field] =  [param.valuesText() 
                                         if isinstance(param.description.depVar, NumericalVariable)
                                         else np.nan 
                                         for param in parameters]            

@@ -154,9 +154,16 @@ class ParameterInstance:
 
 
 
-    def centralTendancy(self):  
-        return self.description.centralTendancy()
+    def centralTendancy(self, returnStat=False):  
+        return self.description.centralTendancy(returnStat)
 
+    def size(self, returnStat=False):
+        return self.description.size(returnStat)
+
+    def deviation(self, returnStat=False):        
+        return self.description.deviation(returnStat)
+        
+        
 
 
     def indepCentralTendancies(self, paramName=None, paramId=None):
@@ -176,8 +183,6 @@ class ParameterInstance:
         return centralTendancies[self.indepNames == paramName]
         
         
-
-
 
     @property
     def means(self):
