@@ -42,7 +42,17 @@ class ParamDesc:
         else:
             raise ValueError("The key '"+ key +"' is not supported by ParameterInstance.applyTransform().")
         
-        
+    
+    def size(self, returnStat=False):
+        return self.depVar.size(type=self.aggregationDefaultType, returnStat=returnStat)
+
+    def deviation(self, returnStat=False):        
+        return self.depVar.deviation(type=self.aggregationDefaultType, returnStat=returnStat)
+
+    def centralTendancy(self, returnStat=False):   
+        return self.depVar.centralTendancy(type=self.aggregationDefaultType, returnStat=returnStat)
+
+
         
 
 
@@ -52,8 +62,14 @@ class ParamDescPoint(ParamDesc):
         if not isinstance(depVar, NumericalVariable):
             raise ValueError
 
-        self.depVar          = depVar
-        self.type            = "pointValue"
+        self.depVar                 = depVar
+        self.type                   = "pointValue"
+        
+        # For point variables, it does not make much sense to aggregate 
+        # within a given sample point since they are single values. The variable may
+        # have many sample points (repetitions) and it is generally accross them
+        # that we will want to aggregate.
+        self.aggregationDefaultType = "across"
 
     @staticmethod
     def fromJSON(jsonString):
@@ -68,15 +84,6 @@ class ParamDescPoint(ParamDesc):
     def __repr__(self):
         return str(self.toJSON())
 
-    def centralTendancy(self):
-        if isinstance(self.depVar, NumericalVariable):
-            valuesObject = self.description.depVar.values
-            return valuesObject.centralTendancy()
-        elif isinstance(self.depVar, Variable):
-            return None
-        else:
-            raise TypeError("Only NumericalVariable and Variable are valid types.")  
-
 
     def indepCentralTendancies(self):
         centralTendancies = []
@@ -88,6 +95,76 @@ class ParamDescPoint(ParamDesc):
             else:
                 raise TypeError("Only NumericalVariable and Variable are valid types.")             
         return centralTendancies
+
+
+
+
+
+class ParamDescTrace(ParamDesc):
+
+    def __init__(self, depVar, indepVars):
+        if not isinstance(depVar, NumericalVariable):
+            raise TypeError
+        if not isinstance(indepVars, list):
+            raise TypeError
+        for item in indepVars:
+            if not isinstance(item, NumericalVariable):
+                raise TypeError
+
+        self.depVar          = depVar
+        self.indepVars       = indepVars
+        self.type            = "numericalTrace"
+
+        # For numerical traces, we generally don't want to aggregate accross
+        # values of the independant variable bu within each of these 
+        # points.
+        self.aggregationDefaultType = "within"
+
+
+    @staticmethod
+    def fromJSON(jsonString):
+        return ParamDescTrace(NumericalVariable.fromJSON(jsonString["depVar"]),
+                             [NumericalVariable.fromJSON(s) for s in jsonString["indepVars"]])
+
+    def toJSON(self):
+        return {"type":"numericalTrace", "depVar": self.depVar.toJSON(),
+                "indepVars": [var.toJSON() for var in self.indepVars]}
+
+    def __str__(self):
+        return str(self.toJSON())
+
+    def __repr__(self):
+        return str(self.toJSON())
+
+
+    def indepCentralTendancies(self):
+        centralTendancies = []
+        for indepVar in self.indepVars:
+            if isinstance(indepVar, NumericalVariable):
+                if isinstance(indepVar.values, ValuesSimple):
+                    # In this case, we DO NOT call centralTendancy
+                    # because every point will be associated with 
+                    # a different value of independant variable 
+                    # and we don't want to average ACCROSS the
+                    # different values of the x-axis. We want to
+                    # take the central tendancy WITHIN each 
+                    # value of the x-axis. Doing so can only be done
+                    # when using ValuesCompound.
+                    centralTendancies.append(indepVar.values.values)
+                    
+                elif isinstance(indepVar.values, ValuesCompound):
+                    centralTendancies.append(indepVar.values.centralTendancy_within())
+                    
+                else:
+                    raise TypeError("Only ValuesSimple and ValuesCompound are valid types.")  
+                    
+            elif isinstance(indepVar, Variable):
+                centralTendancies.append(None)
+            else:
+                raise TypeError("Only NumericalVariable and Variable are valid types.")             
+        return centralTendancies
+
+
 
 
 
@@ -199,98 +276,14 @@ class ParamDescFunction(ParamDesc):
     def centralTendancy(self):   
         raise NotImplemented("centralTendancy() is not implemented for the class ParamDescFunction.")
 
+    def size(self, returnStat=False):
+        raise NotImplemented("size() is not implemented for the class ParamDescFunction.")
+        
+    def deviation(self, returnStat=False):        
+        raise NotImplemented("deviation() is not implemented for the class ParamDescFunction.")
+
+
     def indepCentralTendancies(self):   
         raise NotImplemented("indepCentralTendancies() is not implemented for the class ParamDescFunction.")
-
-
-
-class ParamDescTrace(ParamDesc):
-
-    def __init__(self, depVar, indepVars):
-        if not isinstance(depVar, NumericalVariable):
-            raise TypeError
-        if not isinstance(indepVars, list):
-            raise TypeError
-        for item in indepVars:
-            if not isinstance(item, NumericalVariable):
-                raise TypeError
-
-        self.depVar          = depVar
-        self.indepVars       = indepVars
-        self.type            = "numericalTrace"
-
-    @staticmethod
-    def fromJSON(jsonString):
-        return ParamDescTrace(NumericalVariable.fromJSON(jsonString["depVar"]),
-                             [NumericalVariable.fromJSON(s) for s in jsonString["indepVars"]])
-
-    def toJSON(self):
-        return {"type":"numericalTrace", "depVar": self.depVar.toJSON(),
-                "indepVars": [var.toJSON() for var in self.indepVars]}
-
-    def __str__(self):
-        return str(self.toJSON())
-
-    def __repr__(self):
-        return str(self.toJSON())
-
-        
-    def centralTendancy(self):   
-        """
-        Compute a measure of central tendency for the parameter. In case of
-        variables composed of ValuesSimple, the averaging operation is computed
-        accross the list of values regardless of the statistic property. In case
-        of compound variables, it is computed accross the list stored in each 
-        item of the valueLst attribute.
-        """            
-        if isinstance(self.depVar, NumericalVariable):
-            if isinstance(self.depVar.values, ValuesSimple):
-                # In this case, we DO NOT call centralTendancy
-                # because every point will be associated with 
-                # a different value of independant variable 
-                # and we don't want to average ACCROSS the
-                # different values of the x-axis. We want to
-                # take the central tendancy WITHIN each 
-                # value of the x-axis. Doing so can only be done
-                # when using ValuesCompound.
-                return self.depVar.values.values
-                
-            elif isinstance(self.depVar.values, ValuesCompound):
-                return [self.depVar.values.centralTendancy()]
-                
-            else:
-                raise TypeError("Only ValuesSimple and ValuesCompound are valid types.")                  
-        elif isinstance(self.depVar, Variable):
-            return None
-        else:
-            raise TypeError("Only NumericalVariable and Variable are valid types.")          
-
-
-    def indepCentralTendancies(self):
-        centralTendancies = []
-        for indepVar in self.indepVars:
-            if isinstance(indepVar, NumericalVariable):
-                if isinstance(indepVar.values, ValuesSimple):
-                    # In this case, we DO NOT call centralTendancy
-                    # because every point will be associated with 
-                    # a different value of independant variable 
-                    # and we don't want to average ACCROSS the
-                    # different values of the x-axis. We want to
-                    # take the central tendancy WITHIN each 
-                    # value of the x-axis. Doing so can only be done
-                    # when using ValuesCompound.
-                    centralTendancies.append(indepVar.values.values)
-                    
-                elif isinstance(indepVar.values, ValuesCompound):
-                    centralTendancies.append([indepVar.values.centralTendancy()])
-                    
-                else:
-                    raise TypeError("Only ValuesSimple and ValuesCompound are valid types.")  
-                    
-            elif isinstance(indepVar, Variable):
-                centralTendancies.append(None)
-            else:
-                raise TypeError("Only NumericalVariable and Variable are valid types.")             
-        return centralTendancies
 
 

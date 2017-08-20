@@ -6,14 +6,17 @@ Created on Tue Aug 15 17:14:30 2017
 """
 
 from warnings import warn
+from quantities import Quantity
+import numpy as np
 
-from .modelingParameter import NumericalVariable, ParamDescTrace, ValuesSimple, \
-    getParameterTypeIDFromName, getParameterTypeNameFromID
-
+from .variable import NumericalVariable
+from .values import ValuesSimple, ValuesCompound
+from .paramDesc import ParamDescTrace
+from .modelingParameter import getParameterTypeIDFromName, getParameterTypeNameFromID
 from .annotationSearch import ParameterGetter
 from .zoteroWrap import ZoteroWrap
 from .ageResolver import AgeResolver
-from quantities import Quantity
+
 
 class ParamSample:
     
@@ -127,11 +130,46 @@ class ParamSample:
                     rowsToDrop.append(index)
                     continue                   
                 
-                depVar   = row["obj_parameter"].description.depVar
+                # Building the independant variables                
+                if isinstance(indepVar.base.tolist(), list):
+                    indepValueLst = indepVar.base.tolist()
+                else:
+                    indepValueLst = [float(indepVar)]
+                
+                indepValues = ValuesSimple(indepValueLst, unit=str(indepVar.dimensionality))
+
                 indepVar = NumericalVariable(typeId = indepVarId, 
-                                             values = ValuesSimple([float(indepVar)], unit=str(indepVar.dimensionality)))
+                                             values = indepValues)
+
+                # Building the dependant variable 
+                depVar   = row["obj_parameter"].description.depVar   
+                if len(depVar.values) != len(indepValueLst): 
+                    if len(indepValueLst) == 1:
+                        centralTendancy, statCT = row["obj_parameter"].centralTendancy(returnStat=True)  
+                        deviation, statDev      = row["obj_parameter"].deviation(returnStat=True)  
+                        size                    = row["obj_parameter"].size()  
+                        depUnit  = row["obj_parameter"].unit                        
+                        
+                        depValueLst = [ValuesSimple([centralTendancy],
+                                                     unit=depUnit, 
+                                                     statistic=statCT),
+                                       ValuesSimple([deviation],
+                                                     unit=depUnit, 
+                                                     statistic=statDev),
+                                       ValuesSimple([size],
+                                                     unit="dimensionless", 
+                                                     statistic="N")]
+
+                        depVar = NumericalVariable(typeId = depVar.typeId, 
+                                                   values = ValuesCompound(depValueLst))
+                        
+                    else:
+                        raise ValueError("Ambiguous attemps to transform a parameter into a numerical trace.")
+                        
+                # Building the numerical trace parameter
                 row["obj_parameter"].description = ParamDescTrace(depVar, [indepVar])
                 row["Result type"] = "numericalTrace"
+                
         self.sampleDF.drop(rowsToDrop, inplace=True)
 
 
