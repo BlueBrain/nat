@@ -10,13 +10,13 @@ from dateutil.parser import parse
 
 
 def getYear(ref):
-    if ref["date"] == "":
+    if ref["data"]["date"] == "":
         return ""
     else:
         try:
-            return str(parse(ref["date"]).year)
+            return str(parse(ref["data"]["date"]).year)
         except ValueError:
-            return re.search(r'[12]\d{3}', ref["date"]).group(0)
+            return re.search(r'[12]\d{3}', ref["data"]["date"]).group(0)
 
 class ZoteroWrap:
 
@@ -56,7 +56,7 @@ class ZoteroWrap:
         self.apiKey       = apiKey
 
         self.__zotLib = zotero.Zotero(libraryId, libraryType, apiKey)        
-        self.refList = [i['data'] for i in self.__zotLib.everything(self.__zotLib.top())]
+        self.refList = [i for i in self.__zotLib.everything(self.__zotLib.top())]
         self.itemTypes = self.__zotLib.item_types()
         self.itemTemplates = OrderedDict([(t["itemType"], self.__zotLib.item_template(t["itemType"])) for t in self.itemTypes])
   
@@ -91,7 +91,7 @@ class ZoteroWrap:
                 raise ValueError("No reccord could be found for the paper with ID " + refId)
         
         year = getYear(record)
-        creators = [creator["lastName"] for creator in record["creators"] 
+        creators = [creator["lastName"] for creator in record["data"]["creators"] 
                                         if creator["creatorType"] == "author"]
                                             
         if len(creators) > 2:
@@ -129,14 +129,14 @@ class ZoteroWrap:
 
         # Standard way
         if "DOI" in ref:
-            if ref["DOI"] != "":
-                return ref["DOI"]
+            if ref["data"]["DOI"] != "":
+                return ref["data"]["DOI"]
 
         # Some book chapter as a DOI but Zotero does not have DOI field
         # for book chapter type of publication. In these case, the DOI
         # can be added to the extra field as done for the PMID in pubmed.
         if "extra" in ref:
-            for line in ref["extra"].split("\n"):
+            for line in ref["data"]["extra"].split("\n"):
                 if "DOI" in line:
                     return line.split("DOI:")[1].strip()
 
@@ -147,7 +147,7 @@ class ZoteroWrap:
 
     def getPMID_fromRef(self, ref):
         try:
-            for line in ref["extra"].split("\n"):
+            for line in ref["data"]["extra"].split("\n"):
                 if "PMID" in line:
                     return line.split("PMID:")[1].strip()
             return ""
@@ -159,7 +159,7 @@ class ZoteroWrap:
 
     def getUNPUBLISHEDID_fromRef(self, ref):
         try:
-            for line in ref["extra"].split("\n"):
+            for line in ref["data"]["extra"].split("\n"):
                 if "UNPUBLISHED" in line:
                     return line.split("UNPUBLISHED:")[1].strip()
             return ""
