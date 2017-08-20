@@ -32,6 +32,11 @@ class ZoteroWrap:
                 pickleObj = pickle.load(f)
                 self.__zotLib      = pickleObj["zotLib"] 
                 self.refList       = pickleObj["refList"]
+
+                # To trigger an exception and a refresh of the Zotero database
+                # following modification of 20 Aug 2017
+                if len(self.refList): assert("data" in self.refList[0])
+                    
                 self.itemTypes     = pickleObj["itemTypes"]  
                 self.itemTemplates = pickleObj["itemTemplates"]  
 
@@ -128,14 +133,14 @@ class ZoteroWrap:
     def getDOI_fromRef(self, ref):
 
         # Standard way
-        if "DOI" in ref:
+        if "DOI" in ref["data"]:
             if ref["data"]["DOI"] != "":
                 return ref["data"]["DOI"]
 
         # Some book chapter as a DOI but Zotero does not have DOI field
         # for book chapter type of publication. In these case, the DOI
         # can be added to the extra field as done for the PMID in pubmed.
-        if "extra" in ref:
+        if "extra" in ref["data"]:
             for line in ref["data"]["extra"].split("\n"):
                 if "DOI" in line:
                     return line.split("DOI:")[1].strip()
