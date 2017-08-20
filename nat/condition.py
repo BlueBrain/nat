@@ -5,7 +5,8 @@ Created on Tue Aug 15 15:27:37 2017
 @author: oreilly
 """
 
-from .modelingParameter import NumericalVariable, getParameterTypeNameFromID, Variable
+from .modelingParameter import getParameterTypeNameFromID
+from .variable import NumericalVariable, Variable
 
 
 def checkAnnotation(annotation, key, value):

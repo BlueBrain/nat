@@ -7,7 +7,8 @@ from os.path import join, isfile
 from abc import abstractmethod
 import json
 
-from .modelingParameter import ParameterInstance, ParamRef
+from .parameterInstance import ParameterInstance
+from .paramDesc import ParamRef
 from .tag import Tag
 from . import utils
 from .restClient import RESTClient
