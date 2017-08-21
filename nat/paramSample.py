@@ -129,10 +129,10 @@ class ParamSample:
                          " ot the corresponding independant variable. Dropping this record.")
                     rowsToDrop.append(index)
                     continue                   
-                
-                # Building the independant variables                
-                if isinstance(indepVar.base.tolist(), list):
-                    indepValueLst = indepVar.base.tolist()
+                                
+                # Building the independant variables   
+                if isinstance(indepVar.magnitude.tolist(), list):
+                    indepValueLst = indepVar.magnitude.tolist()
                 else:
                     indepValueLst = [float(indepVar)]
                 
