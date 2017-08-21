@@ -6,25 +6,32 @@ Created on Wed Aug 16 09:29:00 2017
 """
 
 import matplotlib.pyplot as plt
+from collections import OrderedDict
+import matplotlib
 import collections
 import numpy as np
 
 
-def plotTraces(sample, x, panels=None, labels=None, nbCols=2):
+def plotTraces(sample, x, panels=None, labels=None, nbCols=2, 
+               figsize=None, **kwargs):
     
     # Get all the records as numerical traces so that they can all be plotted
     # using the same logic. 
     sample.reformatAsNumericalTraces(x)
 
     paramTraces = sample.sampleDF["obj_parameter"].values
-    panels      = sample.sampleDF[panels].values
+    if not panels is None:
+        panels      = sample.sampleDF[panels].values
+    else:
+        panels      = [""]*len(paramTraces)
     
     if not labels is None:
         labels = sample.sampleDF[labels].values
     else:
-        labels = ["" for i in len(paramTraces)]
+        labels = [""]*len(paramTraces)
 
-    colors = {label:"C" + str(no) for no, label in enumerate(np.unique(labels))}
+    nbColors = len(matplotlib.rcParams['axes.color_cycle'])
+    colors = {label:"C" + str(np.mod(no, nbColors)) for no, label in enumerate(np.unique(labels))}
 
     def getFigTrace(param, title="", xlim=None, context=None, index=0, label=""):
         if context is None:
@@ -37,11 +44,11 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2):
                 axes = axarr
 
         if label == "":
-            axes.plot(param.indepCentralTendancies(paramName=x), 
+            axes.plot(param.indepCentralTendancies(paramName=x, **kwargs), 
                       param.centralTendancy(), '-o')
         else:
             axes.plot(param.indepCentralTendancies(paramName=x), 
-                      param.centralTendancy(), '-o', color=colors[label], label=label)        
+                      param.centralTendancy(), '-o', color=colors[label], label=label, **kwargs)        
 
         if not xlim is None:
             axes.set_xlim(xlim)
@@ -52,7 +59,12 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2):
         axes.set_ylabel(param.name + " (" + param.unit + ")")
         axes.set_xlabel(x          + " (" + param.indepUnits[param.indepNames == x] + ")")
         axes.set_title(title)
-        axes.legend()
+
+        # Avoid repeating labels in the legend
+        handles, labels = axes.get_legend_handles_labels()
+        by_label = OrderedDict(zip(labels, handles))
+        axes.legend(by_label.values(), by_label.keys())        
+        
         return fig, axes    
 
 
@@ -60,8 +72,15 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2):
     maxX = {}
 
     uniquePanels = np.unique(panels).tolist()
-    context = plt.subplots(int(np.ceil(len(uniquePanels)/nbCols)), nbCols, 
-                           figsize=(20, 6*int(np.ceil(len(paramTraces)/nbCols))))
+    
+    if figsize is None:
+        figsize = (20, 6*int(np.ceil(len(uniquePanels)/nbCols)))
+        
+    if len(uniquePanels) > 1:
+        context = plt.subplots(int(np.ceil(len(uniquePanels)/nbCols)), nbCols, 
+                               figsize=figsize)
+    else:
+        context = plt.subplots(figsize=figsize)
     
     for paramTrace, panel, ref in zip(paramTraces, panels, labels):
         no = uniquePanels.index(panel)
