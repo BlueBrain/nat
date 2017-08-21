@@ -9,6 +9,10 @@
 
 "BBP-001000";"BBP-000000";"fundamental_variables";"Root for some fundamental variables such as time."; {}
 "BBP-001001";"BBP-001000";"time";"Time."; {}
+"BBP-001010";"BBP-001000";"distance";"Distance."; {}
+"BBP-001011";"BBP-001010";"distance_rostrocaudal";"Distance along the rostrocaudal axis."; {}
+
+
 
 "BBP-002000";"BBP-000000";"experimental_properties";"Root for some experimental properties."; {}
 "BBP-002001";"BBP-002000";"age";"Age of subjects/animals."; {}
