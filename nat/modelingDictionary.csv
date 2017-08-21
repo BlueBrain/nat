@@ -151,6 +151,9 @@
 "BBP-131004";"BBP-131000";"layer_thickness";"Thickness of a layer of neurons (in layered structures such as human cortex).";{}
 "BBP-131005";"BBP-131000";"volume_brain_region";"Volume of a brain region. If the structure is a bilateral one, this is the volume of the sum of the structure in both sides";{"NIFGA:birnlex_1167":"Regional part of brain"}
 "BBP-131006";"BBP-131000";"volume_unilateral_brain_region";"Volume of a brain region in a single hemisphere.";{"NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-131007";"BBP-131000";"section_area_brain_region";"Area of a section of a brain region.";{"NIFGA:birnlex_1167":"Regional part of brain"}
+
+
 
 "BBP-140000";"BBP-000000";"rate";"Rate or frequency.";{}
 "BBP-140001";"BBP-140000";"tonic_firing_rate";"Firing rate in tonic mode.";{"sao1813327414":"Cell"}
