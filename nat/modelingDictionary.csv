@@ -27,6 +27,12 @@
 "BBP-002010";"BBP-002008";"shrinkage_proportion_horiz";"Proportion of shrinking in the horizontal plane (i.e., the x and y axes; the slicing plane). This parameter relate to BBP-002007:shrinkage_factor_horiz following shrinkage_factor_horiz = 1/shrinkage_proportion_horiz."; {}
 "BBP-002011";"BBP-002000";"weight";"Weight of subjects/animals."; {}
 
+"BBP-002100";"BBP-002000";"stereology_parameters";"Stereology parameters."; {}
+"BBP-002101";"BBP-002100";"stereology_asf_factor";"The area sampling fraction used in stereology to count cells. It correspond to the area of the counting frame (BBP-002102) divided by the area of sampling grid (BBP-002103)."; {}
+"BBP-002102";"BBP-002100";"stereology_area_counting_frame";"The area of counting frame used in stereology."; {}
+"BBP-002103";"BBP-002100";"stereology_area_sampling_grid";"The area of the sampling grid used in stereology."; {}
+
+
 
 "BBP-010000";"BBP-000000";"potential";"Potential."; {}
 "BBP-010001";"BBP-010000";"potential_membrane";"Potential of a cell membrane."; {"sao1813327414":"Cell"}
@@ -152,8 +158,7 @@
 "BBP-131005";"BBP-131000";"volume_brain_region";"Volume of a brain region. If the structure is a bilateral one, this is the volume of the sum of the structure in both sides";{"NIFGA:birnlex_1167":"Regional part of brain"}
 "BBP-131006";"BBP-131000";"volume_unilateral_brain_region";"Volume of a brain region in a single hemisphere.";{"NIFGA:birnlex_1167":"Regional part of brain"}
 "BBP-131007";"BBP-131000";"section_area_brain_region";"Area of a section of a brain region.";{"NIFGA:birnlex_1167":"Regional part of brain"}
-
-
+"BBP-131002";"BBP-131000";"neuron_number_within_counting_frame";"Total number of neurons (of a specific class if a type of neuron has been tagged) within a counting frame. The area of counting frames can be specified using the term BBP-002102.";{"sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
 
 "BBP-140000";"BBP-000000";"rate";"Rate or frequency.";{}
 "BBP-140001";"BBP-140000";"tonic_firing_rate";"Firing rate in tonic mode.";{"sao1813327414":"Cell"}
@@ -164,10 +169,6 @@
 "BBP-142000";"BBP-140000";"activate_transport_rate";"Rate of active transport accross the membrane of a cell.";{"sao1813327414":"Cell"}
 "BBP-142001";"BBP-142000";"extrusion_rate";;{"sao1813327414":"Cell", "CHEBI:23367":"molecular entity"}
 "BBP-142002";"BBP-142000";"extrusion_rate_prop_const";;{"sao1813327414":"Cell", "CHEBI:23367":"molecular entity"}
-
- 
-
-
 
 "BBP-150000";"BBP-000000";"concentration";"Concentration of some substance.";{"CHEBI:23367":"molecular entity"}
 "BBP-150001";"BBP-000000";"concentration_cell";"Intra-cellular concentration of some substance.";{"CHEBI:23367":"molecular entity"}
