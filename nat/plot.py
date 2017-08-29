@@ -11,22 +11,26 @@ import matplotlib
 import collections
 import numpy as np
 
-
 def plotTraces(sample, x, panels=None, labels=None, nbCols=2, 
-               figsize=None, **kwargs):
+               figsize=None, useOnlyValid=True, **kwargs):
     
     # Get all the records as numerical traces so that they can all be plotted
     # using the same logic. 
+    sample = sample.copy()
     sample.reformatAsNumericalTraces(x)
+    if useOnlyValid:
+        sampleDF = sample.validSample
+    else:
+        sampleDF = sample.sampleDF
 
-    paramTraces = sample.sampleDF["obj_parameter"].values
+    paramTraces = sampleDF["obj_parameter"].values
     if not panels is None:
-        panels      = sample.sampleDF[panels].values
+        panels      = sampleDF[panels].values
     else:
         panels      = [""]*len(paramTraces)
     
     if not labels is None:
-        labels = sample.sampleDF[labels].values
+        labels = sampleDF[labels].values
     else:
         labels = [""]*len(paramTraces)
 
