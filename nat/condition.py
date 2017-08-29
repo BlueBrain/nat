@@ -124,7 +124,21 @@ class ConditionAtom(Condition):
         # of (key, value)
         self.equivalences = []
         
-    
+    def __str__(self):
+
+        values = [self.value]
+
+        # Add the results matching the conditions after the application of the 
+        # equivalence rules.
+        values.extend([valueFrom for valueFrom, valueTo, rule in self.equivalences])
+
+        if len(values) == 1:
+            return "'" + self.key + "'=='" + self.value + "'"
+        else:
+            return "'" + self.key + "' in " + str(values)
+
+
+
     def addEquivalences(self, key, valueFrom, valueTo, rule):
 
         if self.key == key and self.value == valueTo:
@@ -175,6 +189,10 @@ class ConditionAND(Condition):
             parameters = condition.apply_param(parameters)
         return parameters      
         
+        
+    def __str__(self):
+        return "(" + " AND ".join([str(condition) for condition in self.conditions]) + ")"
+
 
     def apply_annot(self, annotations):
         for condition in self.conditions:
@@ -192,6 +210,10 @@ class ConditionOR(Condition):
             if not isinstance(condition, Condition):
                 raise TypeError
         self.conditions = conditions
+
+        
+    def __str__(self):
+        return "(" + " OR ".join([str(condition) for condition in self.conditions]) + ")"
 
 
     def addEquivalences(self, key, valueFrom, valueTo, rule):
@@ -223,6 +245,11 @@ class ConditionNOT(Condition):
         if not isinstance(condition, Condition):
             raise TypeError
         self.condition = condition
+
+        
+    def __str__(self):
+        return "NOT (" + str(self.condition) + ")"
+
 
     def addEquivalences(self, key, valueFrom, valueTo, rule):
         self.condition.addEquivalences(key, valueFrom, valueTo, rule)
