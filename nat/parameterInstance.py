@@ -247,22 +247,31 @@ class ParameterInstance:
         return indepVarValues
 
 
-    def getInterp1dValues(self, indepValues, kind='linear', statsToReturn=None):
+    def getInterp1dValues(self, indepValues, indepName, kind='linear', statsToReturn=None):
 
         if isinstance(self.description.depVar, NumericalVariable):
             valuesObject = self.description.depVar.values
+            
+            if not indepName in self.indepNames:
+                # No independant variables correspond to the one 
+                # proposed for interpolating. We return the values
+                # with no interpolation
+                return self.values            
+            
             if isinstance(valuesObject, ValuesSimple):
                 y = self.values
-                x = self.indepValues[0]
+                print(self.indepNames)
+                x = self.indepValues[self.indepNames.index(indepName)]
                 f = interpolate.interp1d(x, y, kind=kind)
                 return f(indepValues)
+
 
             elif isinstance(valuesObject, ValuesCompound):
                 interVals = []
                 for val in valuesObject.valueLst:
                     if statsToReturn is None or val.statistic in statsToReturn:
                         y = val.values
-                        x = self.indepValues[0]
+                        x = self.indepValues[self.indepNames.index(indepName)]
                         f = interpolate.interp1d(x, y, kind=kind)
                         interVals.append(f(indepValues))
                 return interVals
