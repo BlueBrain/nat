@@ -8,6 +8,8 @@ Created on Sun Jun  5 13:08:43 2016
 import requests   
 import json
 import os
+import webbrowser
+from bs4 import BeautifulSoup as bs
 import io
 from zipfile import ZipFile
 
@@ -43,7 +45,19 @@ class RESTClient:
             zipDoc = ZipFile(io.BytesIO(response.content)) 
             zipDoc.extractall(pathDB)
         else:
-            raise AttributeError("REST server returned an error number " + str(response.status_code))
+            path = os.path.abspath("error_log.html")
+            url = 'file://' + path            
+            soup=bs(response.content)                #make BeautifulSoup
+            prettyHTML=soup.prettify()   #prettify the html
+            with open(path, 'w') as f:
+                f.write(prettyHTML)
+            webbrowser.open(url)            
+
+            raise AttributeError("REST server returned an error number " + 
+                                 str(response.status_code) +
+                                 "\Response content: " + str(response.content) +
+                                 "\nRequest sent to the URL: " + self.serverURL + "import_pdf" +
+                                 "\nContent of it 'files' argument: " + str(files))
 
 
 
