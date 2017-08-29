@@ -158,7 +158,7 @@
 "BBP-131005";"BBP-131000";"volume_brain_region";"Volume of a brain region. If the structure is a bilateral one, this is the volume of the sum of the structure in both sides";{"NIFGA:birnlex_1167":"Regional part of brain"}
 "BBP-131006";"BBP-131000";"volume_unilateral_brain_region";"Volume of a brain region in a single hemisphere.";{"NIFGA:birnlex_1167":"Regional part of brain"}
 "BBP-131007";"BBP-131000";"section_area_brain_region";"Area of a section of a brain region.";{"NIFGA:birnlex_1167":"Regional part of brain"}
-"BBP-131002";"BBP-131000";"neuron_number_within_counting_frame";"Total number of neurons (of a specific class if a type of neuron has been tagged) within a counting frame. The area of counting frames can be specified using the term BBP-002102.";{"sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-131008";"BBP-131000";"neuron_number_within_counting_frame";"Total number of neurons (of a specific class if a type of neuron has been tagged) within a counting frame. The area of counting frames can be specified using the term BBP-002102.";{"sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
 
 "BBP-140000";"BBP-000000";"rate";"Rate or frequency.";{}
 "BBP-140001";"BBP-140000";"tonic_firing_rate";"Firing rate in tonic mode.";{"sao1813327414":"Cell"}
