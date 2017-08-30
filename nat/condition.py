@@ -7,7 +7,7 @@ Created on Tue Aug 15 15:27:37 2017
 
 from .modelingParameter import getParameterTypeNameFromID
 from .variable import NumericalVariable, Variable
-
+from .equivalenceFinder import parameterEquivalenceRules
 
 def checkAnnotation(annotation, key, value):
 
@@ -24,7 +24,6 @@ def checkAnnotation(annotation, key, value):
         return (len(annotation.parameters) > 0) == bool(value)   
         
     elif key == "Tag name":        
-        print(value, annotation.tags)
         for tag in annotation.tags:
             if tag.name == value:
                 return True
@@ -104,7 +103,11 @@ class Condition:
     def addEquivalences(self, key, valueFrom, valueTo, rule):
         pass
 
-#addEquivalences("Parameter type ID", idFrom, idTo, parameterEquivalenceRules[idFrom][idTo])
+    @staticmethod
+    def fromJSON(jsonParams):
+        return globals()[jsonParams["type"]].fromJSON(jsonParams)
+
+
 
 class ConditionAtom(Condition):
     def __init__(self, key, value):
@@ -167,6 +170,38 @@ class ConditionAtom(Condition):
         return [annot for annot in annotations 
                             if checkAnnotation(annot, self.key, self.value)]
 
+    @staticmethod
+    def fromJSON(jsonParams):
+        if jsonParams["type"] != "ConditionAtom":
+            raise TypeError("Invalid object type.")
+        obj = ConditionAtom(jsonParams["key"], jsonParams["value"])
+        for equivalence in jsonParams["equivalences"]:
+            rule = parameterEquivalenceRules[equivalence["valueFrom"]][equivalence["valueTo"]]
+            obj.addEquivalences(jsonParams["key"], 
+                                equivalence["valueFrom"], 
+                                equivalence["valueTo"], 
+                                rule)
+        return obj
+
+
+    def toJSON(self):
+        def jsonEquivalence(equiv):
+            # We don't put in the JSON the rule because to import it, it would
+            # requires running eval() on JSON string containing code, which
+            # cause security issues.
+            return {"valueFrom":equiv[0], "valueTo":equiv[1]}
+        
+        json = {"type"        : "ConditionAtom",
+                "key"         : self.key,
+                "value"       : self.value,
+                "equivalences": [jsonEquivalence(equiv) for equiv in self.equivalences]}
+
+        return json
+
+
+
+
+
 
 class ConditionAND(Condition):
 
@@ -199,6 +234,24 @@ class ConditionAND(Condition):
             annotations = condition.apply_annot(annotations)
         return annotations      
         
+        
+    @staticmethod
+    def fromJSON(jsonParams):
+        if jsonParams["type"] != "ConditionAND":
+            raise TypeError("Invalid object type.")
+        return ConditionAND([Condition.fromJSON(cond) for cond in jsonParams["conditions"]])
+
+
+    def toJSON(self):
+        json = {"type"        : "ConditionAND",
+                "conditions"  : [cond.toJSON() for cond in self.conditions]}
+        return json
+
+
+
+
+
+
             
     
 class ConditionOR(Condition):
@@ -239,6 +292,20 @@ class ConditionOR(Condition):
         return annotOut       
                 
         
+    @staticmethod
+    def fromJSON(jsonParams):
+        if jsonParams["type"] != "ConditionOR":
+            raise TypeError("Invalid object type.")
+        return ConditionOR([Condition.fromJSON(cond) for cond in jsonParams["conditions"]])
+
+
+    def toJSON(self):
+        json = {"type"        : "ConditionOR",
+                "conditions"  : [cond.toJSON() for cond in self.conditions]}
+        return json
+
+        
+        
 class ConditionNOT(Condition):
 
     def __init__(self, condition):
@@ -267,4 +334,20 @@ class ConditionNOT(Condition):
         for annot in annotToRemove:
             annotations.remove(annot)
         return annotations      
+
+        
+    @staticmethod
+    def fromJSON(jsonParams):
+        if jsonParams["type"] != "ConditionNOT":
+            raise TypeError("Invalid object type.")
+        return ConditionNOT(Condition.fromJSON(jsonParams["condition"]))
+
+
+    def toJSON(self):
+        json = {"type"        : "ConditionNOT",
+                "conditions"  : self.conditions.toJSON()}
+        return json
+
+        
+        
                 

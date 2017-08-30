@@ -7,7 +7,7 @@ Created on Tue Aug 15 17:14:30 2017
 
 from quantities import Quantity
 import numpy as np
-from copy import copy
+from copy import copy, deepcopy
 
 from .variable import NumericalVariable
 from .values import ValuesSimple, ValuesCompound
@@ -17,20 +17,17 @@ from .annotationSearch import ParameterGetter
 from .zoteroWrap import ZoteroWrap
 from .ageResolver import AgeResolver
 from .treeData import getChildren
-
+from .annotationSearch import ParameterSearch
+from .condition import Condition
+from .aggregators import SampleAggregator
 
 class ParamSample:
     
-    def __init__(self, searcher, libraryId=None, libraryType=None, apiKey=None):
+    def __init__(self, searcher=None, libraryId=None, libraryType=None, apiKey=None):
         
-        self.searcher = searcher
-        self.sampleDF = searcher.search()
-        if not libraryId is None and not libraryType is None and not apiKey is None:
-            self.zotWrap = ZoteroWrap()
-            self.zotWrap.loadCachedDB(libraryId, libraryType, apiKey)
-        else:
-            self.zotWrap = None
-            
+        self.setSearchAttributes(searcher)
+        self.setZoteroLib(libraryId, libraryType, apiKey)
+
         self.ageUnit = "day"
         
         # For the conversion of age categories (e.g., adult) to 
@@ -40,27 +37,57 @@ class ParamSample:
         # value for the age "adult" in rats.
         self.ageTypeValue = "min"
         
-        self.sampleDF["isValid"] = None
-        self.sampleDF["statusStr"] = ""
-        self.__report = "Search string: " + str(self.searcher.conditions) + "\n"
-        if self.searcher.onlyCentralTendancy:
-            self.__report = "Search : Using central tendencies for single annotations containing multiple values.\n"
         self.__aggregators = {}
+        
+        self.__operations = []
             
 
 
     def copy(self):
+        # A bit intricated because we cannot deepcopy pandas DataFrames
         copiedSample = copy(self)            
+        copiedSample.sampleDF = None
+        copiedSample.zotWrap = None
+        copiedSample = deepcopy(copiedSample)
         copiedSample.sampleDF = self.sampleDF.copy()
+        copiedSample.zotWrap  = self.setZoteroLib(self.zotWrap.libraryId, 
+                                                  self.zotWrap.libraryType, 
+                                                  self.zotWrap.apiKey)
         return copiedSample
             
     def setZoteroLib(self, libraryId, libraryType, apiKey):
-        self.zotWrap = ZoteroWrap()
-        self.zotWrap.loadCachedDB(libraryId, libraryType, apiKey)    
+        if not libraryId is None and not libraryType is None and not apiKey is None:
+            self.zotWrap = ZoteroWrap()
+            self.zotWrap.loadCachedDB(libraryId, libraryType, apiKey)
+        else:
+            self.zotWrap = None
+
+    def setSearchAttributes(self, searcher):
+        if not searcher is None:
+            self.sampleDF            = searcher.search()
+            self.searchConditions    = searcher.conditions
+            self.onlyCentralTendancy = searcher.onlyCentralTendancy
+            self.pathDB              = searcher.pathDB        
+            self.expandRequiredTags  = searcher.expandRequiredTags
+    
+            self.sampleDF["isValid"] = None
+            self.sampleDF["statusStr"] = ""
+            self.__report = "Search string: " + str(self.searchConditions) + "\n"
+            if self.onlyCentralTendancy:
+                self.__report = "Search : Using central tendencies for single annotations containing multiple values.\n"
+
+    def setSearchAttributes_withoutSearcher(self, pathDB, searchCondition, 
+                                            onlyCentralTendancy=True, expandRequiredTags=True):
+        searcher = ParameterSearch(pathDB=pathDB)
+        searcher.setSearchConditions(searchCondition)
+        searcher.expandRequiredTags = expandRequiredTags
+        searcher.onlyCentralTendancy = onlyCentralTendancy
+        self.setSearchAttributes(searcher)
 
 
 
     def rescaleUnit(self, unit, rescaleStereo=True):
+        self.__operations.append(["rescaleUnit", unit, rescaleStereo])   
         
         def rescale2DStereo(paramID, thicknessValue, thicknessUnit, desiredUnit):
             density = paramGetter.getParam(paramID)
@@ -72,7 +99,7 @@ class ParamSample:
         if rescaleStereo:
             self.__report += "Rescaling densities from 2D densities to 3D.\n"              
         
-        paramGetter = ParameterGetter(pathDB=self.searcher.pathDB)
+        paramGetter = ParameterGetter(pathDB=self.pathDB)
         for param, annot, (index, row) in zip(self.sampleDF["obj_parameter"], 
                                               self.sampleDF["obj_annotation"], 
                                               self.sampleDF.iterrows()):
@@ -119,6 +146,8 @@ class ParamSample:
 
 
     def reformatAsNumericalTraces(self, indepVarName = None, indepVarId = None):
+        self.__operations.append(["reformatAsNumericalTraces", indepVarName, indepVarId])   
+            
         if not indepVarName is None:
             if not indepVarId is None:
                 if getParameterTypeNameFromID(indepVarId) != indepVarName:
@@ -198,6 +227,8 @@ class ParamSample:
         
     
     def preprocess_species(self):
+        self.__operations.append(["preprocess_species"])   
+        
         speciesId = []
         species   = []
         for index, row in self.sampleDF.iterrows():
@@ -218,6 +249,8 @@ class ParamSample:
 
 
     def preprocess_age(self):    
+        self.__operations.append(["preprocess_age"])           
+        
         if not "SpeciesId" in self.sampleDF:
             self.preprocess_species()
             
@@ -235,7 +268,7 @@ class ParamSample:
                 continue   
             
             if len(ageExpProp) == 1 :
-                getter = ParameterGetter(pathDB=self.searcher.pathDB)
+                getter = ParameterGetter(pathDB=self.pathDB)
                 
                 ageParam = getter.getParam(ageExpProp[0])
                 
@@ -274,6 +307,8 @@ class ParamSample:
 
     
     def preprocess_ref(self):    
+        self.__operations.append(["preprocess_ref"])     
+        
         if self.zotWrap is None:
             raise ValueError("To add references to the sample, you need first to set " +
                              "the Zotero library by calling LitSample.setZoteroLib()")
@@ -285,6 +320,8 @@ class ParamSample:
     
         
     def filter_species(self, speciesTermId):
+        self.__operations.append(["filter_species", speciesTermId])     
+        
         self.rootSpeciesId = speciesTermId
         childrenDict = getChildren(speciesTermId)
 
@@ -303,12 +340,14 @@ class ParamSample:
 
         
     def validateUndefined(self):
+        self.__operations.append(["validateUndefined"])          
+        
         self.sampleDF.loc[np.equal(self.sampleDF["isValid"], None), "isValid"] = True
 
         self.__report += "Validated parameters with undefined status.\n"     
 
 
-    def addAggregator(self, aggregator):
+    def addAggregator(self, aggregator):        
         self.__aggregators[aggregator.paramName] = aggregator
         self.__report += "Adding an aggregator for parameter '" + aggregator.paramName + \
                          "':" + str(aggregator) + ".\n"            
@@ -348,13 +387,13 @@ class ParamSample:
         for the independant variable for which interpolation should be run and
         the values are the value to which the parameter should be interpolated.
         """        
+        self.__operations.append(["interpolate", interpValues])          
         
         df = self.sampleDF
         self.interpValues = interpValues
         for interParamName, value  in interpValues.items():
             self.__report += "Interpolation of the parameters for independent variables '" \
                              + interParamName + "' at value " + str(value) + ".\n"   
-            finalValues = np.zeros((len(df["Result type"])))
             for ind, (paramTrace, resType) in enumerate(zip(df["obj_parameter"], df["Result type"])):
                 if resType == "numericalTrace" and interParamName in paramTrace.indepNames:
                     val = paramTrace.getInterp1dValues(value, interParamName, statsToReturn=["mean"])
@@ -392,4 +431,49 @@ class ParamSample:
     def report(self):
         return self.__report
 
-    #def get
+
+    def performOperation(self, operation):
+        getattr(self, operation[0])(*operation[1:])
+
+
+    @staticmethod
+    def fromJSON(jsonParams):
+        paramSample = ParamSample()
+        searchCondition = Condition.fromJSON(jsonParams["searchCondition"]) 
+        paramSample.setSearchAttributes_withoutSearcher(jsonParams["pathDB"], searchCondition, 
+                                                        jsonParams["onlyCentralTendancy"], 
+                                                        jsonParams["expandRequiredTags"])
+        paramSample.setZoteroLib(jsonParams["libraryId"], 
+                                 jsonParams["libraryType"], 
+                                 jsonParams["apiKey"])
+    
+        paramSample.ageUnit = jsonParams["ageUnit"]
+        paramSample.ageTypeValue = jsonParams["ageTypeValue"]
+
+        for operation in jsonParams["operations"]:
+            paramSample.performOperation(operation)
+            
+        for aggJSON in jsonParams["aggregators"]:
+            paramSample.addAggregator(SampleAggregator.fromJSON(jsonParams["aggregators"][aggJSON]))
+
+        return paramSample
+
+
+
+    def toJSON(self):
+        json = {"searchCondition"    : self.searchConditions.toJSON(),
+                "pathDB"             : self.pathDB,
+                "onlyCentralTendancy": self.onlyCentralTendancy,
+                "expandRequiredTags" : self.expandRequiredTags,
+                "libraryId"          : self.zotWrap.libraryId,
+                "libraryType"        : self.zotWrap.libraryType,
+                "apiKey"             : self.zotWrap.apiKey,
+                "ageUnit"            : self.ageUnit,
+                "ageTypeValue"       : self.ageTypeValue,
+                "aggregators"        : {agg:self.__aggregators[agg].toJSON() for agg in self.__aggregators},
+                "operations"         : self.__operations}
+
+        return json
+
+
+
