@@ -16,15 +16,63 @@ import zipfile
 import io
 from os.path import join, isfile
 
+from threading import Lock, Thread
 from nat import utils
 
 
 #from nat.annotationSearch import AnnotationGetter
 
 
+
+def acquireLockWithTimeout():
+    for i in range(60):
+        if app.OCRLock.acquire(blocking=False):
+            return
+        time.sleep(1)
+    if i == 59:
+        return genericError(jsonify(**{"status"  : "error",
+                                "errorNo" :     11,
+                                "message" : "The server seems to be dead-locked."
+                               }))         
+
+
+def runOCR(fileName):
+    
+    for i in range(60):
+        if app.OCRLock.acquire(blocking=False):
+            break
+        time.sleep(1)
+    if i == 59:
+        return genericError(jsonify(**{"status"  : "error",
+                                "errorNo" :     11,
+                                "message" : "The server seems to be dead-locked."
+                               }))            
+                   
+    acquireLockWithTimeout()
+    app.OCRFiles.append(fileName)
+    app.OCRLock.release()    
+    
+    
+    # Run OCR
+    time.sleep(20)
+
+
+    acquireLockWithTimeout()
+    app.OCRFiles.append(fileName)
+    app.OCRLock.release()    
+    
+    return
+
+
+
+
 dbPath = "/mnt/curator_DB/"
 
 app = Flask(__name__)
+
+app.OCRLock = Lock()
+app.OCRFiles = []
+
 
 @app.errorhandler(404)
 def not_found(error):
@@ -107,13 +155,15 @@ def getContext():
             contextEnd = min(annotStart + len(annotStr) + contextLength, len(fileText))
             return jsonify({'context': fileText[contextStart:contextEnd]}) 
             
-    except FileNotFoundError:
+    except OSError: # as e:
+        #if e.errno == errno.ENOENT:        
         return make_response(jsonify({"status"  : "error",
                                 "errorNo" :     3,
                                 "message" : "No paper corresponding to this id. File " +\
                                             txtFileName + " not found." 
                                       }), 500)
-
+    else:
+        raise
 
 
 
@@ -138,9 +188,28 @@ def getContext():
 """
 
 
+@app.route('/neurocurator/api/v1.0/check_OCR_finished', methods=['POST'])
+def checkOCRFinished():
+    if (not request.files       or
+        not request.form        or
+        not "json" in request.form  or
+        not 'paperId' in request.form["json"]):
+        abort(400)
+
+    paperId  = json.loads(request.form["json"])["paperId"]
+    fileName = join(dbPath, paperId)
+
+    if fileName in app.OCRFiles:
+        return make_response(jsonify({'Response': "OCR for " + fileName + " is finished."}), 200)
+    else:
+        return make_response(jsonify({'Response': "Still running OCR for " + fileName + "."}), 201)
+
+
+
 @app.route('/neurocurator/api/v1.0/is_pdf_in_db/<string:paperId>', methods=['GET'])
 def is_pdf_in_db(paperId):
     return jsonify({"result":isPDFInDb(paperId)})
+
 
 
 @app.route('/neurocurator/api/v1.0/import_pdf', methods=['POST'])
@@ -170,6 +239,20 @@ def importPDF():
                                                 "version."
                                    }))
 
+
+    if os.path.getsize(fileName + ".txt") < 2024:
+        # If file size is smaller than 2kb than it is most likely a scanned PDF
+        # with no OCR. We need to perform OCR.
+    
+    
+        thread = Thread(target = runOCR, args = (fileName, ))
+        thread.start()    
+        
+        return make_response(jsonify({'Response': "Running OCR."}), 201)
+        
+        
+        
+        
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w') as zf:
 

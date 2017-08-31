@@ -12,6 +12,7 @@ import webbrowser
 from bs4 import BeautifulSoup as bs
 import io
 from zipfile import ZipFile
+import time
 
 class RESTClient:
 
@@ -44,6 +45,13 @@ class RESTClient:
                         
             zipDoc = ZipFile(io.BytesIO(response.content)) 
             zipDoc.extractall(pathDB)
+            
+        elif response.status_code == 201:            
+            print("Need to run OCR.")
+            
+            while(self.checkOCRFinished(paperId)):
+                time.sleep(5)
+            
         else:
             path = os.path.abspath("error_log.html")
             url = 'file://' + path            
@@ -58,6 +66,39 @@ class RESTClient:
                                  "\Response content: " + str(response.content) +
                                  "\nRequest sent to the URL: " + self.serverURL + "import_pdf" +
                                  "\nContent of it 'files' argument: " + str(files))
+
+
+
+
+    def checkOCRFinished(self, paperId):
+        files = {"json": (None, json.dumps({"paperId": paperId}), 'application/json')}
+ 
+        response = requests.post(self.serverURL + "check_OCR_finished", 
+                                 files=files, stream=True)
+
+        if response.status_code == 200:
+            print("Finished.")
+            return True            
+            
+        elif response.status_code == 201:
+            print("Not finished.")
+            return False
+            
+        else:
+            path = os.path.abspath("error_log.html")
+            url = 'file://' + path            
+            soup=bs(response.content)                #make BeautifulSoup
+            prettyHTML=soup.prettify()   #prettify the html
+            with open(path, 'w') as f:
+                f.write(prettyHTML)
+            webbrowser.open(url)            
+
+            raise AttributeError("REST server returned an error number " + 
+                                 str(response.status_code) +
+                                 "\Response content: " + str(response.content) +
+                                 "\nRequest sent to the URL: " + self.serverURL + "import_pdf" +
+                                 "\nContent of it 'files' argument: " + str(files))
+
 
 
 
