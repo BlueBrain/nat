@@ -46,27 +46,20 @@ def acquireLockWithTimeout():
 
 def runOCR(fileName):
     with app.app_context():
-        for i in range(60):
-            if app.OCRLock.acquire(blocking=False):
-                break
-            time.sleep(1)
-        if i == 59:
-            return genericError(jsonify(**{"status"  : "error",
-                                    "errorNo" :     11,
-                                    "message" : "The server seems to be dead-locked."
-                                   }))            
-                       
+        print("Acquire")
         acquireLockWithTimeout()
         app.OCRFiles.append(fileName)
+        print("Release")
         app.OCRLock.release()    
         
         
         # Run OCR
         time.sleep(20)
     
-    
+        print("Acquire")
         acquireLockWithTimeout()
-        app.OCRFiles.append(fileName)
+        del app.OCRFiles[app.OCRFiles.index(fileName)]
+        print("Release")
         app.OCRLock.release()    
         
         return
@@ -202,9 +195,9 @@ def checkOCRFinished():
     fileName = join(dbPath, paperId)
 
     if fileName in app.OCRFiles:
-        return make_response(jsonify({'Response': "OCR for " + fileName + " is finished."}), 200)
-    else:
         return make_response(jsonify({'Response': "Still running OCR for " + fileName + "."}), 201)
+    else:
+        return make_response(jsonify({'Response': "OCR for " + fileName + " is finished."}), 200)
 
 
 
