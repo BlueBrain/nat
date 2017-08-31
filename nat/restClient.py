@@ -13,6 +13,19 @@ from bs4 import BeautifulSoup as bs
 import io
 from zipfile import ZipFile
 
+
+class RESTClientError(Exception):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super(RESTClientError, self).__init__(message)
+
+
+class RESTImportPDFErr(RESTClientError):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super(RESTImportPDFErr, self).__init__(message)
+        
+        
 class RESTClient:
 
     def __init__(self, serverURL):
@@ -29,7 +42,8 @@ class RESTClient:
         return json.loads(response.content.decode("utf8"))["context"]        
         
 
-        
+
+
     def importPDF(self, localPDF, paperId, pathDB):
         files = {"file": (os.path.basename(localPDF), open(localPDF, 'rb'), 'application/octet-stream'),
          "json": (None, json.dumps({"paperId": paperId}), 'application/json')}
@@ -39,11 +53,16 @@ class RESTClient:
                                  files=files, stream=True)
 
         if response.status_code == 200:
-            #if response["status"] == "error":
-            #    raise AttributeError(response["message"])
-                        
             zipDoc = ZipFile(io.BytesIO(response.content)) 
             zipDoc.extractall(pathDB)
+            
+        elif response.status_code == 201:            
+            # Need to run OCR.   
+            errMsg = "Optical character recognition needs to be run on this paper. " +\
+                     "The process has been launched, but this process may take some" +\
+                     " time (i.e., in the order of 10 minutes)."
+            raise RESTImportPDFErr(errMsg)            
+          
         else:
             path = os.path.abspath("error_log.html")
             url = 'file://' + path            
@@ -58,6 +77,42 @@ class RESTClient:
                                  "\Response content: " + str(response.content) +
                                  "\nRequest sent to the URL: " + self.serverURL + "import_pdf" +
                                  "\nContent of it 'files' argument: " + str(files))
+
+
+
+
+
+
+    def checkOCRFinished(self, paperId, pathDB=None):
+        files = {"json": (None, json.dumps({"paperId": paperId}), 'application/json')}
+ 
+        response = requests.post(self.serverURL + "check_OCR_finished", 
+                                 json=json.dumps({"paperId" : paperId}))
+
+        if response.status_code == 200:
+            if not pathDB is None:
+                zipDoc = ZipFile(io.BytesIO(response.content)) 
+                zipDoc.extractall(pathDB)
+            return True            
+            
+        elif response.status_code == 201:
+            return False
+            
+        else:
+            path = os.path.abspath("error_log.html")
+            url = 'file://' + path            
+            soup=bs(response.content)                #make BeautifulSoup
+            prettyHTML=soup.prettify()   #prettify the html
+            with open(path, 'w') as f:
+                f.write(prettyHTML)
+            webbrowser.open(url)            
+
+            raise AttributeError("REST server returned an error number " + 
+                                 str(response.status_code) +
+                                 "\Response content: " + str(response.content) +
+                                 "\nRequest sent to the URL: " + self.serverURL + "import_pdf" +
+                                 "\nContent of it 'files' argument: " + str(files))
+
 
 
 

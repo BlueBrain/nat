@@ -9,15 +9,16 @@ Created on Sun Jun  5 14:50:40 2016
 
 from flask import Flask, jsonify, abort, make_response, request, Response, send_file
 import json, os
-from subprocess import check_call
+from subprocess import check_call, CalledProcessError
 import difflib as dl
 import time
 import zipfile
 import io
 from os.path import join, isfile
+from threading import Lock, Thread
 
-from nat import utils
-
+from . import utils
+from .runOCR import run_ocrmypdf
 
 #from nat.annotationSearch import AnnotationGetter
 
@@ -25,6 +26,40 @@ from nat import utils
 dbPath = "/mnt/curator_DB/"
 
 app = Flask(__name__)
+
+app.OCRLock = Lock()
+app.OCRFiles = []
+
+
+
+def acquireLockWithTimeout(): 
+    with app.app_context():
+        for i in range(60):
+            if app.OCRLock.acquire(blocking=False):
+                return
+            time.sleep(1)
+        if i == 59:
+            return genericError(jsonify(**{"status"  : "error",
+                                    "errorNo" :     11,
+                                    "message" : "The server seems to be dead-locked."
+                                   }))         
+
+
+def runOCR(fileName):
+    with app.app_context():
+
+        acquireLockWithTimeout()
+        app.OCRFiles.append(fileName)
+        app.OCRLock.release()    
+                
+        # Run OCR
+        run_ocrmypdf(fileName + ".pdf", fileName + ".txt")
+ 
+        acquireLockWithTimeout()
+        del app.OCRFiles[app.OCRFiles.index(fileName)]
+        app.OCRLock.release()    
+        
+
 
 @app.errorhandler(404)
 def not_found(error):
@@ -107,13 +142,15 @@ def getContext():
             contextEnd = min(annotStart + len(annotStr) + contextLength, len(fileText))
             return jsonify({'context': fileText[contextStart:contextEnd]}) 
             
-    except FileNotFoundError:
+    except OSError: # as e:
+        #if e.errno == errno.ENOENT:        
         return make_response(jsonify({"status"  : "error",
                                 "errorNo" :     3,
                                 "message" : "No paper corresponding to this id. File " +\
                                             txtFileName + " not found." 
                                       }), 500)
-
+    else:
+        raise
 
 
 
@@ -138,38 +175,9 @@ def getContext():
 """
 
 
-@app.route('/neurocurator/api/v1.0/is_pdf_in_db/<string:paperId>', methods=['GET'])
-def is_pdf_in_db(paperId):
-    return jsonify({"result":isPDFInDb(paperId)})
 
 
-@app.route('/neurocurator/api/v1.0/import_pdf', methods=['POST'])
-def importPDF():
-    if (not request.files       or
-        not request.form        or
-        not "file" in request.files or
-        not "json" in request.form  or
-        not 'paperId' in request.form["json"]):
-        abort(400)
-
-    paperId  = json.loads(request.form["json"])["paperId"]
-    pdf      = request.files["file"]
-    fileName = join(dbPath, paperId)
-
-    if not isPDFInDb(paperId):
-        pdf.save(fileName + ".pdf")
-        # check_call is blocking
-        check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
-    else:
-        if not isUserPDFValid(paperId, pdf):
-            return genericError(jsonify(**{"status"  : "error",
-                                    "errorNo" :     2,
-                                    "message" : "The database already contains a PDF "   +
-                                                "for this publication and the provided " +
-                                                "PDF does not correspond to the stored " +
-                                                "version."
-                                   }))
-
+def returnPDF(fileName):        
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w') as zf:
 
@@ -186,7 +194,79 @@ def importPDF():
             zf.writestr(data, f.read())
 
     memory_file.seek(0)
-    return send_file(memory_file, attachment_filename='paper.zip', as_attachment=True)
+    return send_file(memory_file, attachment_filename='paper.zip', as_attachment=True)       
+    
+    
+
+@app.route('/neurocurator/api/v1.0/check_OCR_finished', methods=['POST'])
+def checkOCRFinished():
+    if not request.json:
+        abort(400)
+
+    requestJSON = json.loads(request.json)
+
+    if not 'paperId' in requestJSON:
+        abort(400)    
+    
+    paperId       = utils.Id2FileName(requestJSON['paperId'])
+    fileName = join(dbPath, paperId)
+
+    if fileName in app.OCRFiles:
+        return make_response(jsonify({'Response': "Still running OCR for " + fileName + "."}), 201)
+    else:
+        return returnPDF(fileName)
+
+
+@app.route('/neurocurator/api/v1.0/is_pdf_in_db/<string:paperId>', methods=['GET'])
+def is_pdf_in_db(paperId):
+    return jsonify({"result":isPDFInDb(paperId)})
+
+
+
+@app.route('/neurocurator/api/v1.0/import_pdf', methods=['POST'])
+def importPDF():
+    if (not request.files       or
+        not request.form        or
+        not "file" in request.files or
+        not "json" in request.form  or
+        not 'paperId' in request.form["json"]):
+        abort(400)
+
+    paperId  = json.loads(request.form["json"])["paperId"]
+    pdf      = request.files["file"]
+    fileName = join(dbPath, utils.Id2FileName(paperId))
+
+    if not isPDFInDb(paperId):
+        pdf.save(fileName + ".pdf")
+        # check_call is blocking
+        try:
+            check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
+            print(" ".join(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"]))
+        except CalledProcessError:
+            return genericError(jsonify(**{"status"  : "error",
+                                           "errorNo" :     10,
+                                           "message" : "pdftotext failed to run OCR on this paper. " +
+                                                       "Command ran: " +
+                                                       " ".join(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])}))
+            
+    else:
+        if not isUserPDFValid(paperId, pdf):
+            return genericError(jsonify(**{"status"  : "error",
+                                    "errorNo" :     2,
+                                    "message" : "The database already contains a PDF "   +
+                                                "for this publication and the provided " +
+                                                "PDF does not correspond to the stored " +
+                                                "version."
+                                   }))
+
+    if os.path.getsize(fileName + ".txt") < 2024:
+        # If file size is smaller than 2kb than it is most likely a scanned PDF
+        # with no OCR. We need to perform OCR.    
+        thread = Thread(target = runOCR, args = (fileName, ))
+        thread.start()            
+        return make_response(jsonify({'Response': "Running OCR."}), 201)
+
+    return returnPDF(fileName)
 
 
 

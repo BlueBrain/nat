@@ -39,17 +39,14 @@ encoders["plus"]         = ("+", "%2B")
 
 # When Zotero imports from pubmed, it uses the "&lt;" for "<" and "&gt;" for ">"
 # so we also replace these.
-encoders["zotLT" ]       = ("&lt;", "%3C")
-encoders["zotGT" ]       = ("&gt;", "%3E")
-
-
-
+encoders["zotLT" ]       = ("&lt;", "%_3C_")
+encoders["zotGT" ]       = ("&gt;", "%_3E_")
 
 def Id2FileName(ID):
     # Replacement characters according to http://www.doi.org/factsheets/DOIProxy.html#rest-api
     # but "%" signs must be replaced first since they are involved in the other replaced characters.
-    if '%' in ID:
-        ID = ID.replace('%', '%25')    
+    #if '%' in ID:
+    #    ID = ID.replace('%', '%25')    
     
     for key, (symbol, replacement) in encoders.items():
         #if 
@@ -61,9 +58,13 @@ def Id2FileName(ID):
 
 def fileName2Id(fileName):
     for key, (symbol, replacement) in encoders.items():
-        assert(not symbol in fileName)
+        #assert(not symbol in fileName)
+        #if symbol in [">", "<"]:
+        #    # We don't use these symbols. We use instead the &gt; and &lt; encoders.
+        #    continue
         fileName = fileName.replace(replacement, symbol)
     return fileName
+    
     
     
 def reprocessFileNames(path = "/home/oreilly/curator_DB/"):
@@ -76,6 +77,25 @@ def reprocessFileNames(path = "/home/oreilly/curator_DB/"):
                 print(f_in, " ===> ", f_out)
                 os.rename(path + f_in, 
                           path + f_out)
+
+
+
+from .zoteroWrap import ZoteroWrap
+def test_ID_conversion():        
+    libraryType = "group"
+    apiKey      = "4D3rDZsAVBd139alqoVZBKOO"
+    libraryId   = "427244"
+    zotWrap     = ZoteroWrap()
+    zotWrap.loadCachedDB(libraryId, libraryType, apiKey)
+    idList = [zotWrap.getID(no) for no in range(len(zotWrap.refList))]
+    idList2 = [Id2FileName(id) for id in idList]
+    idList3 = [Id2FileName(id) for id in idList2]
+    assert(idList2 == idList3)
+    idList4 = [fileName2Id(id) for id in idList3]
+    idList5 = [fileName2Id(id) for id in idList4]
+    assert(idList4 == idList5)
+    assert(idList == idList5)
+
 
 if __name__ == "__main__":
     reprocessFileNames('/home/oreilly/GIT_repos/nat/notebooks/neurocuratorDB/')
