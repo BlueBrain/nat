@@ -74,7 +74,7 @@ class RESTClient:
         files = {"json": (None, json.dumps({"paperId": paperId}), 'application/json')}
  
         response = requests.post(self.serverURL + "check_OCR_finished", 
-                                 files=files, stream=True)
+                                 json=json.dumps({"paperId"      : paperId}))
 
         if response.status_code == 200:
             print("Finished.")

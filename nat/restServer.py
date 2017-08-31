@@ -190,13 +190,15 @@ def getContext():
 
 @app.route('/neurocurator/api/v1.0/check_OCR_finished', methods=['POST'])
 def checkOCRFinished():
-    if (not request.files       or
-        not request.form        or
-        not "json" in request.form  or
-        not 'paperId' in request.form["json"]):
+    if not request.json:
         abort(400)
 
-    paperId  = json.loads(request.form["json"])["paperId"]
+    requestJSON = json.loads(request.json)
+
+    if not 'paperId' in requestJSON:
+        abort(400)    
+    
+    paperId       = utils.Id2FileName(requestJSON['paperId'])
     fileName = join(dbPath, paperId)
 
     if fileName in app.OCRFiles:
