@@ -15,10 +15,10 @@ import time
 import zipfile
 import io
 from os.path import join, isfile
-
 from threading import Lock, Thread
-from nat import utils
 
+from . import utils
+from .runOCR import run_ocrmypdf
 
 #from nat.annotationSearch import AnnotationGetter
 
@@ -53,15 +53,12 @@ def runOCR(fileName):
         app.OCRLock.release()    
                 
         # Run OCR
-        time.sleep(20)
-    
+        run_ocrmypdf(fileName + ".pdf", fileName + ".txt")
+ 
         acquireLockWithTimeout()
         del app.OCRFiles[app.OCRFiles.index(fileName)]
         app.OCRLock.release()    
         
-        return
-
-
 
 
 @app.errorhandler(404)
