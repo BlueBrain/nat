@@ -23,8 +23,16 @@ from nat import utils
 #from nat.annotationSearch import AnnotationGetter
 
 
+dbPath = "/mnt/curator_DB/"
 
-def acquireLockWithTimeout():
+app = Flask(__name__)
+
+app.OCRLock = Lock()
+app.OCRFiles = []
+
+
+
+def acquireLockWithTimeout(): 
     for i in range(60):
         if app.OCRLock.acquire(blocking=False):
             return
@@ -37,41 +45,33 @@ def acquireLockWithTimeout():
 
 
 def runOCR(fileName):
+    with app.app_context():
+        for i in range(60):
+            if app.OCRLock.acquire(blocking=False):
+                break
+            time.sleep(1)
+        if i == 59:
+            return genericError(jsonify(**{"status"  : "error",
+                                    "errorNo" :     11,
+                                    "message" : "The server seems to be dead-locked."
+                                   }))            
+                       
+        acquireLockWithTimeout()
+        app.OCRFiles.append(fileName)
+        app.OCRLock.release()    
+        
+        
+        # Run OCR
+        time.sleep(20)
     
-    for i in range(60):
-        if app.OCRLock.acquire(blocking=False):
-            break
-        time.sleep(1)
-    if i == 59:
-        return genericError(jsonify(**{"status"  : "error",
-                                "errorNo" :     11,
-                                "message" : "The server seems to be dead-locked."
-                               }))            
-                   
-    acquireLockWithTimeout()
-    app.OCRFiles.append(fileName)
-    app.OCRLock.release()    
     
-    
-    # Run OCR
-    time.sleep(20)
+        acquireLockWithTimeout()
+        app.OCRFiles.append(fileName)
+        app.OCRLock.release()    
+        
+        return
 
 
-    acquireLockWithTimeout()
-    app.OCRFiles.append(fileName)
-    app.OCRLock.release()    
-    
-    return
-
-
-
-
-dbPath = "/mnt/curator_DB/"
-
-app = Flask(__name__)
-
-app.OCRLock = Lock()
-app.OCRFiles = []
 
 
 @app.errorhandler(404)
