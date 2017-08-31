@@ -9,7 +9,7 @@ Created on Sun Jun  5 14:50:40 2016
 
 from flask import Flask, jsonify, abort, make_response, request, Response, send_file
 import json, os
-from subprocess import check_call
+from subprocess import check_call, CalledProcessError
 import difflib as dl
 import time
 import zipfile
@@ -33,15 +33,16 @@ app.OCRFiles = []
 
 
 def acquireLockWithTimeout(): 
-    for i in range(60):
-        if app.OCRLock.acquire(blocking=False):
-            return
-        time.sleep(1)
-    if i == 59:
-        return genericError(jsonify(**{"status"  : "error",
-                                "errorNo" :     11,
-                                "message" : "The server seems to be dead-locked."
-                               }))         
+    with app.app_context():
+        for i in range(60):
+            if app.OCRLock.acquire(blocking=False):
+                return
+            time.sleep(1)
+        if i == 59:
+            return genericError(jsonify(**{"status"  : "error",
+                                    "errorNo" :     11,
+                                    "message" : "The server seems to be dead-locked."
+                                   }))         
 
 
 def runOCR(fileName):
@@ -55,7 +56,7 @@ def runOCR(fileName):
                                     "errorNo" :     11,
                                     "message" : "The server seems to be dead-locked."
                                    }))            
-                       
+                
         acquireLockWithTimeout()
         app.OCRFiles.append(fileName)
         app.OCRLock.release()    
@@ -188,6 +189,29 @@ def getContext():
 """
 
 
+
+
+def returnPDF(fileName):        
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w') as zf:
+
+        with open(fileName + ".pdf", 'rb') as f:
+            data = zipfile.ZipInfo(os.path.basename(fileName + ".pdf"))
+            data.date_time = time.localtime(time.time())[:6]
+            data.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(data, f.read())
+
+        with open(fileName + ".txt", 'rb') as f:
+            data = zipfile.ZipInfo(os.path.basename(fileName + ".txt"))
+            data.date_time = time.localtime(time.time())[:6]
+            data.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(data, f.read())
+
+    memory_file.seek(0)
+    return send_file(memory_file, attachment_filename='paper.zip', as_attachment=True)       
+    
+    
+
 @app.route('/neurocurator/api/v1.0/check_OCR_finished', methods=['POST'])
 def checkOCRFinished():
     if not request.json:
@@ -202,7 +226,8 @@ def checkOCRFinished():
     fileName = join(dbPath, paperId)
 
     if fileName in app.OCRFiles:
-        return make_response(jsonify({'Response': "OCR for " + fileName + " is finished."}), 200)
+        #return make_response(jsonify({'Response': "OCR for " + fileName + " is finished."}), 200)
+        return returnPDF(fileName) 
     else:
         return make_response(jsonify({'Response': "Still running OCR for " + fileName + "."}), 201)
 
@@ -250,37 +275,14 @@ def importPDF():
                                                 "version."
                                    }))
 
-
     if os.path.getsize(fileName + ".txt") < 2024:
         # If file size is smaller than 2kb than it is most likely a scanned PDF
-        # with no OCR. We need to perform OCR.
-    
-    
+        # with no OCR. We need to perform OCR.    
         thread = Thread(target = runOCR, args = (fileName, ))
-        thread.start()    
-        
+        thread.start()            
         return make_response(jsonify({'Response': "Running OCR."}), 201)
-        
-        
-        
-        
-    memory_file = io.BytesIO()
-    with zipfile.ZipFile(memory_file, 'w') as zf:
 
-        with open(fileName + ".pdf", 'rb') as f:
-            data = zipfile.ZipInfo(os.path.basename(fileName + ".pdf"))
-            data.date_time = time.localtime(time.time())[:6]
-            data.compress_type = zipfile.ZIP_DEFLATED
-            zf.writestr(data, f.read())
-
-        with open(fileName + ".txt", 'rb') as f:
-            data = zipfile.ZipInfo(os.path.basename(fileName + ".txt"))
-            data.date_time = time.localtime(time.time())[:6]
-            data.compress_type = zipfile.ZIP_DEFLATED
-            zf.writestr(data, f.read())
-
-    memory_file.seek(0)
-    return send_file(memory_file, attachment_filename='paper.zip', as_attachment=True)
+    return returnPDF(fileName)
 
 
 

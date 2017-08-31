@@ -12,8 +12,20 @@ import webbrowser
 from bs4 import BeautifulSoup as bs
 import io
 from zipfile import ZipFile
-import time
 
+
+class RESTClientError(Exception):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super(RESTClientError, self).__init__(message)
+
+
+class RESTImportPDFErr(RESTClientError):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super(RESTImportPDFErr, self).__init__(message)
+        
+        
 class RESTClient:
 
     def __init__(self, serverURL):
@@ -30,7 +42,8 @@ class RESTClient:
         return json.loads(response.content.decode("utf8"))["context"]        
         
 
-        
+
+
     def importPDF(self, localPDF, paperId, pathDB):
         files = {"file": (os.path.basename(localPDF), open(localPDF, 'rb'), 'application/octet-stream'),
          "json": (None, json.dumps({"paperId": paperId}), 'application/json')}
@@ -47,11 +60,10 @@ class RESTClient:
             zipDoc.extractall(pathDB)
             
         elif response.status_code == 201:            
-            print("Need to run OCR.")
-            
-            while(self.checkOCRFinished(paperId)):
-                time.sleep(5)
-            
+            # Need to run OCR.   
+            errMsg = "Optical character recognition needs to be run on this paper. The process has been launched, but this process may take some time."
+            raise RESTImportPDFErr(errMsg)            
+          
         else:
             path = os.path.abspath("error_log.html")
             url = 'file://' + path            
@@ -70,18 +82,21 @@ class RESTClient:
 
 
 
-    def checkOCRFinished(self, paperId):
+
+
+    def checkOCRFinished(self, paperId, pathDB=None):
         files = {"json": (None, json.dumps({"paperId": paperId}), 'application/json')}
  
         response = requests.post(self.serverURL + "check_OCR_finished", 
-                                 json=json.dumps({"paperId"      : paperId}))
+                                 json=json.dumps({"paperId" : paperId}))
 
         if response.status_code == 200:
-            print("Finished.")
+            if not pathDB is None:
+                zipDoc = ZipFile(io.BytesIO(response.content)) 
+                zipDoc.extractall(pathDB)
             return True            
             
         elif response.status_code == 201:
-            print("Not finished.")
             return False
             
         else:
