@@ -154,12 +154,21 @@ def importPDF():
 
     paperId  = json.loads(request.form["json"])["paperId"]
     pdf      = request.files["file"]
-    fileName = join(dbPath, paperId)
+    fileName = join(dbPath, utils.Id2FileName(paperId))
 
     if not isPDFInDb(paperId):
         pdf.save(fileName + ".pdf")
         # check_call is blocking
-        check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
+        try:
+            check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
+            print(" ".join(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"]))
+        except CalledProcessError:
+            return genericError(jsonify(**{"status"  : "error",
+                                           "errorNo" :     10,
+                                           "message" : "pdftotext failed to run OCR on this paper. " +
+                                                       "Command ran: " +
+                                                       " ".join(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])}))
+            
     else:
         if not isUserPDFValid(paperId, pdf):
             return genericError(jsonify(**{"status"  : "error",
