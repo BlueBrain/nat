@@ -50,6 +50,10 @@
 "BBP-015000";"BBP-010000";"sag_amplitude";"NeuroElectro: Absolute difference between the steady state decrease in the voltage and the largest decrease in voltage following a hyperpolarizing current step."; {"sao1813327414":"Cell"}
 "BBP-015001";"BBP-015000";"sag_ratio";"NeuroElectro: Ratio between the steady state decrease in the voltage and the largest decrease in voltage following a hyperpolarizing current step.";{"sao1813327414":"Cell"}
 
+"BBP-016000";"BBP-010000";"PSP_amplitude";"Amplitude of a postsynaptic potential."; {}
+"BBP-016001";"BBP-016000";"EPSP_amplitude";"Amplitude of an excitatory postsynaptic potential."; {}
+"BBP-016002";"BBP-016000";"IPSP_amplitude";"Amplitude of an inhibitory postsynaptic potential."; {}
+
 "BBP-020000";"BBP-000000";"resistivity";"Resistivity.";{}
 "BBP-021000";"BBP-020000";"resist_membrane";"Resistivity in the cell membrane, e.g. in Ohm*cm^2.";{"sao1813327414":"Cell"}
 "BBP-021001";"BBP-021000";"resist_membrane_soma";"Resistance for displacement of ionic current across the membrane of the soma.";{"sao1813327414":"Cell"}
@@ -114,6 +118,8 @@
 "BBP-090001";"BBP-090000";"mid_amp_activ";"Mid amplitude of an ion channel activation function.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-090002";"BBP-090000";"mid_amp_inact";"Mid amplitude of an ion channel inactivation function.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-090003";"BBP-090000";"mid_amp_ion_curr";"Membrane potential at half the maximum amplitude of an ion channel current.";{"NIFMOL:nifext_2506":"Multimeric Voltage-gated ion channel", "sao1813327414":"Cell"}
+
+
 
 "BBP-100000";"BBP-000000";"slope";"Variable specifying the slope of a relationship between two variables.";{}
 "BBP-101000";"BBP-100000";"slope_factor";"Factor specifying the slope of a relationship between two variables. It is often used as a shape parameter for sigmoidal functions, such as the Boltzmann function.";{}
