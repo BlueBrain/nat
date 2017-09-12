@@ -53,15 +53,14 @@ class RESTClient:
                                  files=files, stream=True)
 
         if response.status_code == 200:
-            #if response["status"] == "error":
-            #    raise AttributeError(response["message"])
-                        
             zipDoc = ZipFile(io.BytesIO(response.content)) 
             zipDoc.extractall(pathDB)
             
         elif response.status_code == 201:            
             # Need to run OCR.   
-            errMsg = "Optical character recognition needs to be run on this paper. The process has been launched, but this process may take some time."
+            errMsg = "Optical character recognition needs to be run on this paper. " +\
+                     "The process has been launched, but this process may take some" +\
+                     " time (i.e., in the order of 10 minutes)."
             raise RESTImportPDFErr(errMsg)            
           
         else:

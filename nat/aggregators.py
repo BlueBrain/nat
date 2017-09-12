@@ -5,6 +5,7 @@ Created on Mon Aug 29
 @author: oreilly
 """
 
+import numpy as np
 from .modelingParameter import getParameterTypeNameFromID
 
 
@@ -30,7 +31,8 @@ class AggregatedIndex:
 
 class SampleAggregator:
     
-    def __init__(self, paramId=None, paramName=None, grouping=None, method="mean"):
+    def __init__(self, paramId=None, paramName=None, groupingFactors=None, 
+                 method="mean", categoryGrouping=None):
         if not paramName is None:
             if not paramId is None:
                 if getParameterTypeNameFromID(paramId) != paramName:
@@ -43,15 +45,20 @@ class SampleAggregator:
             paramName = getParameterTypeNameFromID(paramId)        
         
         self.paramName          = paramName
-        self.grouping           = grouping
+        if categoryGrouping is None:
+            self.groupingFactors = []
+        else:
+            self.groupingFactors    = groupingFactors
         self.method             = method
+        self.categoryGrouping   = categoryGrouping
         #self.usedParamInstances = []
         self.aggreatedLst       = []
     
     def __str__(self):
         return "SampleAggregator(paramName=" + self.paramName + \
-               ", grouping=" + str(self.grouping) + \
-               ", method=" + str(self.method) + ")"
+               ", groupingFactors=" + str(self.groupingFactors) + \
+               ", method=" + str(self.method) + \
+               ", categoryGrouping=" + str(self.categoryGrouping) + ")"
 
     def values(self, sample=None):
         if not sample is None:
@@ -82,15 +89,24 @@ class SampleAggregator:
        
         #self.usedParamInstances = [param.id for param in sample.sampleDF.loc[indices, "obj_parameter"]]
 
-        data = sample.sampleDF.iloc[indices]
+        data = sample.sampleDF.iloc[indices].copy()
+        
+        for catGroup in self.categoryGrouping:
+            for valuesToReplace in catGroup[1:]:
+                condition = np.ones(data.shape[0])
+                for key, value in zip(self.groupingFactors, valuesToReplace):                  
+                    condition *= data[key] == value
+                for key, value in zip(self.groupingFactors, catGroup[0]):   
+                    data.loc[condition.astype(bool), key] = value
+        
         values = data["Values"].astype(float).values
         data.loc[:, "Values"]  = values
         data.loc[:, "paramId"] = [param.id for param in sample.sampleDF.loc[indices, "obj_parameter"]]
 
         fields = ["Values", "paramId"]
-        fields.extend(self.grouping)
-        values = data[fields].groupby(self.grouping).aggregate({"Values":self.method, 
-                                                                "paramId":lambda ids: [id for id in ids]})
+        fields.extend(self.groupingFactors)
+        values = data[fields].groupby(self.groupingFactors).aggregate({"Values":self.method, 
+                                                                "paramId":lambda ids: tuple([id for id in ids])})
         
         self.aggreatedLst = [AggregatedIndex(index, row["Values"], row["paramId"]) 
                                       for index, row in values.iterrows()]
@@ -99,8 +115,9 @@ class SampleAggregator:
     @staticmethod
     def fromJSON(jsonParams):
         obj = SampleAggregator(paramName=jsonParams["paramName"], 
-                               grouping=jsonParams["grouping"], 
-                               method=jsonParams["method"])
+                               groupingFactors=jsonParams["groupingFactors"], 
+                               method=jsonParams["method"],
+                               categoryGrouping=jsonParams["categoryGrouping"] )
         obj.aggreatedLst = [AggregatedIndex.fromJSON(aggJSON) for aggJSON in jsonParams["aggreatedLst"]]
         return obj
 
@@ -108,8 +125,9 @@ class SampleAggregator:
 
     def toJSON(self):
         json = {"paramName":self.paramName,
-                "grouping": self.grouping,
+                "groupingFactors": self.groupingFactors,
                 "method": self.method,
+                "categoryGrouping": self.categoryGrouping,
                 "aggreatedLst":[aggIndex.toJSON() for aggIndex in self.aggreatedLst]}
 
         return json
