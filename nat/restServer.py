@@ -241,13 +241,20 @@ def importPDF():
         # check_call is blocking
         try:
             check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
-            print(" ".join(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"]))
         except CalledProcessError:
             return genericError(jsonify(**{"status"  : "error",
-                                           "errorNo" :     10,
-                                           "message" : "pdftotext failed to run OCR on this paper. " +
+                                           "errorNo" : 10,
+                                           "message" : "pdftotext failed to convert the PDF of this paper to txt. " +
                                                        "Command ran: " +
                                                        " ".join(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])}))
+        except OSError:
+            return genericError(jsonify(**{"status"  : "error",
+                                           "errorNo" : 11,
+                                           "message" : "pdftotext failed to convert the PDF of this paper to txt. " +
+                                                       "Command ran: " +
+                                                       " ".join(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])}))
+
+
             
     else:
         if not isUserPDFValid(paperId, pdf):
