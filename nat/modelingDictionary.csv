@@ -12,8 +12,6 @@
 "BBP-001010";"BBP-001000";"distance";"Distance."; {}
 "BBP-001011";"BBP-001010";"distance_rostrocaudal";"Distance along the rostrocaudal axis."; {}
 
-
-
 "BBP-002000";"BBP-000000";"experimental_properties";"Root for some experimental properties."; {}
 "BBP-002001";"BBP-002000";"age";"Age of subjects/animals."; {}
 "BBP-002002";"BBP-002000";"temperature";"Temperature used for the experiment."; {}
@@ -32,13 +30,13 @@
 "BBP-002102";"BBP-002100";"stereology_area_counting_frame";"The area of counting frame used in stereology."; {}
 "BBP-002103";"BBP-002100";"stereology_area_sampling_grid";"The area of the sampling grid used in stereology."; {}
 
-
-
 "BBP-010000";"BBP-000000";"potential";"Potential."; {}
 "BBP-010001";"BBP-010000";"potential_membrane";"Potential of a cell membrane."; {"sao1813327414":"Cell"}
 "BBP-010002";"BBP-010000";"resting_membrane_potential";"Potential of a cell membrane, at rest."; {"sao1813327414":"Cell"}
 "BBP-011000";"BBP-010000";"eq_potential";"Equilibrium potential of a biochemical process."; {"sao1813327414":"Cell"}
 "BBP-011001";"BBP-011000";"eq_potential_ion_curr";"Equilibrium potential (a.k.a. reversal potential, voltage) of an ionic current accross a cell membrane (normally through channels).";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
+"BBP-011002";"BBP-011000";"eq_potential_syn_curr";"Equilibrium potential (a.k.a. reversal potential, voltage) of for the synaptic current.";{"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+
 "BBP-012000";"BBP-010000";"AP_threshold";"Votage threshold that will cause a cell de fire an action potential."; {"sao1813327414":"Cell"}
 
 "BBP-013000";"BBP-010000";"peak_potential";"Peak potential of a transient biochemical process."; {"sao1813327414":"Cell"}
@@ -50,9 +48,14 @@
 "BBP-015000";"BBP-010000";"sag_amplitude";"NeuroElectro: Absolute difference between the steady state decrease in the voltage and the largest decrease in voltage following a hyperpolarizing current step."; {"sao1813327414":"Cell"}
 "BBP-015001";"BBP-015000";"sag_ratio";"NeuroElectro: Ratio between the steady state decrease in the voltage and the largest decrease in voltage following a hyperpolarizing current step.";{"sao1813327414":"Cell"}
 
-"BBP-016000";"BBP-010000";"PSP_amplitude";"Amplitude of a postsynaptic potential."; {}
-"BBP-016001";"BBP-016000";"EPSP_amplitude";"Amplitude of an excitatory postsynaptic potential."; {}
-"BBP-016002";"BBP-016000";"IPSP_amplitude";"Amplitude of an inhibitory postsynaptic potential."; {}
+"BBP-016000";"BBP-010000";"PSP_amplitude";"Amplitude of a postsynaptic potential. Amplitudes are always positive values."; {"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-016001";"BBP-016000";"EPSP_amplitude";"Amplitude of an excitatory postsynaptic potential. Amplitudes are always positive values."; {"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-016002";"BBP-016000";"IPSP_amplitude";"Amplitude of an inhibitory postsynaptic potential. Amplitudes are always positive values."; {"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+
+"BBP-016100";"BBP-010000";"PSC_amplitude";"Amplitude of a postsynaptic current. Amplitudes are always positive values."; {"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-016101";"BBP-016100";"EPSC_amplitude";"Amplitude of an excitatory postsynaptic current. Amplitudes are always positive values."; {"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-016102";"BBP-016100";"IPSC_amplitude";"Amplitude of an inhibitory postsynaptic current. Amplitudes are always positive values."; {"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+
 
 "BBP-020000";"BBP-000000";"resistivity";"Resistivity.";{}
 "BBP-021000";"BBP-020000";"resist_membrane";"Resistivity in the cell membrane, e.g. in Ohm*cm^2.";{"sao1813327414":"Cell"}
@@ -69,7 +72,7 @@
 
 "BBP-030000";"BBP-000000";"conductance";"General category for conductances. Normally specified in Siemens if taken as point measurement or in Siemens per surface units if it is specified as a density. [g]";{}
 "BBP-030001";"BBP-030000";"conductance_ion_curr";"Conductance of a ionic current.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
-"BBP-030002";"BBP-030000";"conductance_synap";"Conductance for synapses.";{"NIFSUB:sao914572699":"Synapse", "sao1813327414":"Cell"}
+"BBP-030002";"BBP-030000";"conductance_synap";"Conductance for synapses. This is a property of the post-synaptic cell.";{"NIFSUB:sao914572699":"Synapse", "sao1813327414":"Cell"}
 "BBP-030003";"BBP-030000";"conductance_ion_curr_max";"Maximal conductance of a ionic current.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell", "NOLOAD|OPTIONAL||GO:0097458":"neuron part"}
 
 "BBP-035000";"BBP-000000";"permeability";"General category for permeability.";{}
@@ -96,30 +99,23 @@
 
 "BBP-072001";"BBP-070000";"rheobase";"Minimal current amplitude of infinite duration (in practice, around 300 ms) that results in an excitable cell reaching its depolarization threshold.";{"sao1813327414":"Cell"}
 
-
-
 "BBP-080000";"BBP-000000";"time_const";"Time constants are generally entered in exponential equations and represent the time at which the amplitude of the process as decayed by about 63% (i.e., 1-1/e).";{}
 "BBP-080001";"BBP-080000";"time_const_activ_ion";"";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-080002";"BBP-080000";"time_const_inact_ion";"";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-080003";"BBP-080000";"time_const_recov_ion";"";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-080004";"BBP-080000";"time_const_membrane";"Time constant for a cell to reach its equilibrium potential when an input step function is applied. This correspond to the eFel 'time_constant' parameter.";{"sao1813327414":"Cell"}
+"BBP-080005";"BBP-080000";"time_const_rise_syn_curr";"Time constant for the rise of a post-synaptic current.";{"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+"BBP-080006";"BBP-080000";"time_const_decay_syn_curr";"Time constant for the decay of a post-synaptic current.";{"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain"}
+
 "BBP-080100";"BBP-080000";"time_const_concentration_decay";"Time constant for the rate of decay in the concentration of some substance.";{"CHEBI:23367":"molecular entity"}
 "BBP-080101";"BBP-080100";"time_const_concentration_decay_cell";"Time constant for the rate of decay in the concentration of some substance within the intra-cellular cytoplasm.";{"CHEBI:23367":"molecular entity", "sao1813327414":"Cell"}
 "BBP-080110";"BBP-080100";"time_const_calcium_decay";"Time constant of the rate of decay for the concentration in calcium ions.";{}
 "BBP-080111";"BBP-080100";"time_const_calcium_decay_cell";"Time constant of the rate of decay for the concentration in calcium ions within the intra-cellular cytoplasm.";{"sao1813327414":"Cell"}
 
-
-
-
-
-
-
 "BBP-090000";"BBP-000000";"mid_amp";"Mid amplitude of some phenomenon. It is often used as a shape parameter for sigmoidal functions, such as the Boltzmann function.";{}
 "BBP-090001";"BBP-090000";"mid_amp_activ";"Mid amplitude of an ion channel activation function.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-090002";"BBP-090000";"mid_amp_inact";"Mid amplitude of an ion channel inactivation function.";{"nifext_8054":"Transmembrane ionic current", "sao1813327414":"Cell"}
 "BBP-090003";"BBP-090000";"mid_amp_ion_curr";"Membrane potential at half the maximum amplitude of an ion channel current.";{"NIFMOL:nifext_2506":"Multimeric Voltage-gated ion channel", "sao1813327414":"Cell"}
-
-
 
 "BBP-100000";"BBP-000000";"slope";"Variable specifying the slope of a relationship between two variables.";{}
 "BBP-101000";"BBP-100000";"slope_factor";"Factor specifying the slope of a relationship between two variables. It is often used as a shape parameter for sigmoidal functions, such as the Boltzmann function.";{}
@@ -128,19 +124,16 @@
 
 "BBP-102000";"BBP-100000";"slope_freq_current";"Slope of the frequency-current relationship of a neuron.";{"sao1813327414":"Cell"}
 
-
-
 "BBP-110000";"BBP-000000";"connectivity";"From X to Y [as matrix; value takes the form of a JSON string specifying a list of tags (for col/row names) and a 2D array of values].";{}
 "BBP-110001";"BBP-110000";"connectivity_prob";"Probability of connection.";{}
 "BBP-110002";"BBP-110000";"connectivity_strength";"Coefficient stating the strength of connectivity. Generally a pure number.";{}
 "BBP-110003";"BBP-110000";"connectivity_delay";"Delay for propagation of information from X to Y.";{}
 "BBP-110004";"BBP-110000";"connectivity_nbCell";"Number of cells a given cell is connected with.";{"sao1813327414":"Cell", "NIFSUB:sao914572699":"Synapse"}
 "BBP-110005";"BBP-110000";"connectivity_nbCell_plusSelf";"Number of cells a given cell is connected with, including the cell itself. There exist a relationship between this parameter and connectivity_nbCell which is the following: connectivity_nbCell=connectivity_nbCell_plusSelf-1. The use of this parameter is necessary to follow the rule that the value of a parameter should be annotated as such (without modification). Thus, for a paper reporting the number of interconnected cells (including the dye-injected cell), we cannot use the connectivity_nbCell parameter directly.";{"sao1813327414":"Cell", "NIFSUB:sao914572699":"Synapse"}
+"BBP-110006";"BBP-110000";"num_syn_per_connection";"Number of synapses made between a pair of pre- and post-synaptic cells.";{"property(from)||sao1813327414":"Cell", "property(to)||sao1813327414":"Cell", "NIFGA:birnlex_1167":"Regional part of brain", "NIFSUB:sao914572699":"Synapse"}
 
 "BBP-110100";"BBP-110000";"coupling_coefficient";"The coupling coefficient between two connected entities.";{}
 "BBP-110100";"BBP-110000";"elec_synap_coupling_coefficient";"The coupling coefficient can be measured in electrical synapse by assessing the voltage deflection caused by a stimulus applied to one paired cell (dV1) (i.e., presynaptic cell) and the voltage deflection observed in the second paired cell (dV2) (i.e., postsynaptic cell), and calculating the ratio of these deflections such that coupling_coefficient=dV2/dV1";{"sao1813327414":"Cell"}
-
-
 
 "BBP-120000";"BBP-000000";"morphology";"";{}
 "BBP-121000";"BBP-120000";"morphology_neuron";"";{"sao1813327414":"Cell"}
@@ -151,9 +144,10 @@
 "BBP-121005";"BBP-121000";"dendrite_length";"Length of the dendrites of a neuron.";{"sao1813327414":"Cell"}  
 "BBP-121006";"BBP-121000";"dendrite_diameter";"Diameter of the dendrites of a neuron.";{"sao1813327414":"Cell"}  
 "BBP-121007";"BBP-121000";"spine_length";"Length of the spines of a neuron.";{"sao1813327414":"Cell"}  
-"BBP-121008";"BBP-121000";"number_spine_per_cell";"Number of spines a neuron have.";{"sao1813327414":"Cell"}  
-"BBP-121009";"BBP-121000";"spine_density";"Density of neuronal spines, for example in spine per mm of dentrites.";{"sao1813327414":"Cell"}  
-
+"BBP-121008";"BBP-121000";"spine_number_per_cell";"Number of spines a neuron have. Spines are post-synaptic structures.";{"sao1813327414":"Cell"}  
+"BBP-121009";"BBP-121000";"spine_density";"Density of neuronal spines. These can be reported as linear density (e.g., spines per mm of dentrite), as an areal density (e.g., spines counted in some a given conting frame), or as an volumetric density (e.g., number of spines counted in a volume of tissue).";{"sao1813327414":"Cell"}  
+"BBP-121010";"BBP-121000";"bouton_number_per_cell";"Number of boutons a neuron have. Boutons are post-synaptic structures.";{"sao1813327414":"Cell"}  
+"BBP-121011";"BBP-121000";"bouton_density";"Density of synaptic boutons. These can be reported as linear density (e.g., boutons per mm of dentrite), as an areal density (e.g., boutons counted in a counting frame), or as an volumetric density (e.g., number of boutons counted in a volume of tissue).";{"sao1813327414":"Cell"}  
 
 "BBP-130000";"BBP-000000";"structure";"";{}
 "BBP-131000";"BBP-130000";"structure_brain_region";"";{}
@@ -168,9 +162,11 @@
 
 "BBP-140000";"BBP-000000";"rate";"Rate or frequency.";{}
 "BBP-140001";"BBP-140000";"tonic_firing_rate";"Firing rate in tonic mode.";{"sao1813327414":"Cell"}
-"BBP-141002";"BBP-140000";"burst_firing_rate";"Firing rate in bursting mode. Equivalent to eFel burst_mean_freq feature.";{"sao1813327414":"Cell"}
+"BBP-140002";"BBP-140000";"mini_PSP_frequency";"Frequency of spontaneous miniature PSP.";{"sao1813327414":"Cell"}
 "BBP-140003";"BBP-140001";"maximum_tonic_firing_rate";"Maximal tonic firing rate of a neuron.";{"sao1813327414":"Cell"}
 "BBP-140004";"BBP-140001";"spontaneous_tonic_firing_rate";"Spontaneous tonic firing rate of a neuron, in absence of any current injection or stimulation.";{"sao1813327414":"Cell"}
+
+"BBP-141002";"BBP-140000";"burst_firing_rate";"Firing rate in bursting mode. Equivalent to eFel burst_mean_freq feature.";{"sao1813327414":"Cell"}
 
 "BBP-142000";"BBP-140000";"activate_transport_rate";"Rate of active transport accross the membrane of a cell.";{"sao1813327414":"Cell"}
 "BBP-142001";"BBP-142000";"extrusion_rate";;{"sao1813327414":"Cell", "CHEBI:23367":"molecular entity"}
@@ -178,7 +174,6 @@
 
 "BBP-150000";"BBP-000000";"concentration";"Concentration of some substance.";{"CHEBI:23367":"molecular entity"}
 "BBP-150001";"BBP-000000";"concentration_cell";"Intra-cellular concentration of some substance.";{"CHEBI:23367":"molecular entity"}
-
 
 "BBP-960001";"BBP-000000";"number_spikes_per_burst";"Number of spikes per burst for a bursting cell.";{"sao1813327414":"Cell"}
 
