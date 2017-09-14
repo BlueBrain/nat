@@ -5,8 +5,10 @@ Created on Tue Aug 15 17:14:30 2017
 @author: oreilly
 """
 
-from quantities import Quantity
 import numpy as np
+import os
+import json
+from quantities import Quantity
 from copy import copy, deepcopy
 
 from .variable import NumericalVariable
@@ -476,4 +478,16 @@ class ParamSample:
         return json
 
 
-
+    def save(self, fileName):
+        dir_path = os.path.dirname(os.path.realpath(fileName))
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        with open(fileName, "w") as outfile:
+            json.dump(self.toJSON(), outfile, sort_keys=True, 
+                      indent=4, separators=(',', ': '))  
+                      
+                      
+    @staticmethod
+    def load(fileName):
+        with open(fileName, "r") as inFile:        
+            return ParamSample.fromJSON(json.load(inFile))            

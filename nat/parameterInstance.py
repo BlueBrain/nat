@@ -260,7 +260,6 @@ class ParameterInstance:
             
             if isinstance(valuesObject, ValuesSimple):
                 y = self.values
-                print(self.indepNames)
                 x = self.indepValues[self.indepNames.index(indepName)]
                 f = interpolate.interp1d(x, y, kind=kind)
                 return f(indepValues)
