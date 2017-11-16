@@ -16,12 +16,14 @@ from .values import ValuesSimple, ValuesCompound
 from .paramDesc import ParamDescTrace
 from .modelingParameter import getParameterTypeIDFromName, getParameterTypeNameFromID
 from .annotationSearch import ParameterGetter
-from .zoteroWrap import ZoteroWrap
+from .zotero_wrap import ZoteroWrap
 from .ageResolver import AgeResolver
 from .treeData import getChildren
 from .annotationSearch import ParameterSearch
 from .condition import Condition
 from .aggregators import SampleAggregator
+from neurocurator.utils import working_directory
+
 
 class ParamSample:
     
@@ -56,11 +58,13 @@ class ParamSample:
                                                   self.zotWrap.libraryType, 
                                                   self.zotWrap.apiKey)
         return copiedSample
-            
-    def setZoteroLib(self, libraryId, libraryType, apiKey):
-        if not libraryId is None and not libraryType is None and not apiKey is None:
-            self.zotWrap = ZoteroWrap()
-            self.zotWrap.loadCachedDB(libraryId, libraryType, apiKey)
+
+    def setZoteroLib(self, library_id, library_type, api_key):
+        # FIXME Delayed refactoring.
+        if library_id is not None and library_type is not None and api_key is not None:
+            work_dir = working_directory()
+            self.zotWrap = ZoteroWrap(library_id, library_type, api_key, work_dir)
+            self.zotWrap.initialize()
         else:
             self.zotWrap = None
 
@@ -315,7 +319,7 @@ class ParamSample:
             raise ValueError("To add references to the sample, you need first to set " +
                              "the Zotero library by calling LitSample.setZoteroLib()")
 
-        self.sampleDF["ref"] = [self.zotWrap.getInTextCitationFromID(annot.pubId) 
+        self.sampleDF["ref"] = [self.zotWrap.reference_creators_citation(annot.pubId)
                                            for annot in self.sampleDF["obj_annotation"]]
     
         self.__report += "Preprocessing associated references.\n"            

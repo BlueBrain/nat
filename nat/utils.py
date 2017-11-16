@@ -10,6 +10,7 @@ from copy import copy
 from os.path import basename
 import os 
 
+from neurocurator.utils import working_directory
 
 
 # See http://www.w3schools.com/tags/ref_urlencode.asp for list of encoders
@@ -79,15 +80,16 @@ def reprocessFileNames(path = "/home/oreilly/curator_DB/"):
                           path + f_out)
 
 
-
-from .zoteroWrap import ZoteroWrap
+from .zotero_wrap import ZoteroWrap
 def test_ID_conversion():        
-    libraryType = "group"
-    apiKey      = "4D3rDZsAVBd139alqoVZBKOO"
-    libraryId   = "427244"
-    zotWrap     = ZoteroWrap()
-    zotWrap.loadCachedDB(libraryId, libraryType, apiKey)
-    idList = [zotWrap.getID(no) for no in range(len(zotWrap.refList))]
+    library_type = "group"
+    api_key = "4D3rDZsAVBd139alqoVZBKOO"
+    library_id = "427244"
+    work_dir = working_directory()
+    zot_wrap = ZoteroWrap(library_id, library_type, api_key, work_dir)
+    zot_wrap.initialize()
+    # FIXME _reference should be private.
+    idList = [zot_wrap.reference_id(no) for no in range(len(zot_wrap._references))]
     idList2 = [Id2FileName(id) for id in idList]
     idList3 = [Id2FileName(id) for id in idList2]
     assert(idList2 == idList3)
