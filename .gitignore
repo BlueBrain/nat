@@ -1,0 +1,6 @@
+*.pickle
+*.pkl
+*.bin
+nat/__pycache__/*
+nat.egg-info/*
+**/.DS_Store
