@@ -87,8 +87,9 @@ def test_ID_conversion():
     library_id = "427244"
     work_dir = working_directory()
     zot_wrap = ZoteroWrap(library_id, library_type, api_key, work_dir)
+    # TODO Implement an offline mode. Catch PyZoteroError.
     zot_wrap.initialize()
-    # FIXME _reference should be private.
+    # FIXME Delayed refactoring. _reference is private.
     idList = [zot_wrap.reference_id(no) for no in range(len(zot_wrap._references))]
     idList2 = [Id2FileName(id) for id in idList]
     idList3 = [Id2FileName(id) for id in idList2]

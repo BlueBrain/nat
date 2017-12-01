@@ -64,6 +64,7 @@ class ParamSample:
         if library_id is not None and library_type is not None and api_key is not None:
             work_dir = working_directory()
             self.zotWrap = ZoteroWrap(library_id, library_type, api_key, work_dir)
+            # TODO Implement an offline mode. Catch PyZoteroError.
             self.zotWrap.initialize()
         else:
             self.zotWrap = None
