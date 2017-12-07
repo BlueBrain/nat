@@ -116,7 +116,7 @@ class ZoteroWrap:
 
     def get_reference_templates(self, ref_types):
         """Return the reference templates for the types as an ordered dictionary."""
-        return OrderedDict({x: self.get_reference_template(x) for x in ref_types})
+        return OrderedDict([(x, self.get_reference_template(x)) for x in ref_types])
 
     def get_reference_template(self, ref_type):
         """Return the reference template for the type as an ordered dictionary.
