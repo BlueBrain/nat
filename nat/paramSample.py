@@ -5,24 +5,25 @@ Created on Tue Aug 15 17:14:30 2017
 @author: oreilly
 """
 
-import numpy as np
-import os
 import json
-from quantities import Quantity
+import os
 from copy import copy, deepcopy
 
-from .variable import NumericalVariable
-from .values import ValuesSimple, ValuesCompound
-from .paramDesc import ParamDescTrace
-from .modelingParameter import getParameterTypeIDFromName, getParameterTypeNameFromID
-from .annotationSearch import ParameterGetter
-from .zotero_wrap import ZoteroWrap
+import numpy as np
+from quantities import Quantity
+
+from neurocurator import utils
 from .ageResolver import AgeResolver
-from .treeData import getChildren
+from .aggregators import SampleAggregator
+from .annotationSearch import ParameterGetter
 from .annotationSearch import ParameterSearch
 from .condition import Condition
-from .aggregators import SampleAggregator
-from neurocurator.utils import working_directory
+from .modelingParameter import getParameterTypeIDFromName, getParameterTypeNameFromID
+from .paramDesc import ParamDescTrace
+from .treeData import getChildren
+from .values import ValuesSimple, ValuesCompound
+from .variable import NumericalVariable
+from .zotero_wrap import ZoteroWrap
 
 
 class ParamSample:
@@ -62,7 +63,7 @@ class ParamSample:
     def setZoteroLib(self, library_id, library_type, api_key):
         # FIXME Delayed refactoring.
         if library_id is not None and library_type is not None and api_key is not None:
-            work_dir = working_directory()
+            work_dir = utils.working_directory()
             self.zotWrap = ZoteroWrap(library_id, library_type, api_key, work_dir)
             # TODO Implement an offline mode. Catch PyZoteroError.
             self.zotWrap.initialize()

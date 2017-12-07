@@ -5,13 +5,12 @@ Created on Wed Mar 16 12:12:13 2016
 @author: oreilly
 """
 
-from glob import glob 
+import os
 from copy import copy
+from glob import glob
 from os.path import basename
-import os 
 
-from neurocurator.utils import working_directory
-
+from neurocurator import utils
 
 # See http://www.w3schools.com/tags/ref_urlencode.asp for list of encoders
 
@@ -85,11 +84,11 @@ def test_ID_conversion():
     library_type = "group"
     api_key = "4D3rDZsAVBd139alqoVZBKOO"
     library_id = "427244"
-    work_dir = working_directory()
+    work_dir = utils.working_directory()
     zot_wrap = ZoteroWrap(library_id, library_type, api_key, work_dir)
     # TODO Implement an offline mode. Catch PyZoteroError.
     zot_wrap.initialize()
-    # FIXME Delayed refactoring. _reference is private.
+    # FIXME Delayed refactoring. _references is private.
     idList = [zot_wrap.reference_id(no) for no in range(len(zot_wrap._references))]
     idList2 = [Id2FileName(id) for id in idList]
     idList3 = [Id2FileName(id) for id in idList2]
