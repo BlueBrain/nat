@@ -131,7 +131,8 @@ class RESTClient:
 
 from glob import glob
 def checkSimilarities(dbPath):
-    client = RESTClient("http://bbpca063.bbp.epfl.ch:5000/neurocurator/api/v1.0/")
+    # FIXME Delayed refactoring. Define only once the REST server URL.
+    client = RESTClient("https://bbpteam.epfl.ch:5000/neurocurator/api/v1.0/")
 
     intra = []
     inter = []
@@ -153,7 +154,8 @@ def checkSimilarities(dbPath):
 
 
 def checkImportPDF(localPDF, paperId):
-    client = RESTClient("http://bbpca063.bbp.epfl.ch:5000/neurocurator/api/v1.0/")
+    # FIXME Delayed refactoring. Define only once the REST server URL.
+    client = RESTClient("https://bbpteam.epfl.ch:5000/neurocurator/api/v1.0/")
     response = json.loads(client.importPDF(localPDF, paperId).decode("utf8"))
     #client.removePDF(localPDF)
     return response
