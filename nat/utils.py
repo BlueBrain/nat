@@ -6,11 +6,18 @@ Created on Wed Mar 16 12:12:13 2016
 """
 
 import os
+import sys
 from copy import copy
 from glob import glob
 from os.path import basename
 
-from neurocurator import utils
+
+def working_directory():
+    """Return the working directory according to it being bundled/frozen."""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    else:
+        return os.path.dirname(__file__)
 
 # See http://www.w3schools.com/tags/ref_urlencode.asp for list of encoders
 
@@ -84,7 +91,7 @@ def test_ID_conversion():
     library_type = "group"
     api_key = "4D3rDZsAVBd139alqoVZBKOO"
     library_id = "427244"
-    work_dir = utils.working_directory()
+    work_dir = working_directory()
     zot_wrap = ZoteroWrap(library_id, library_type, api_key, work_dir)
     # TODO Implement an offline mode. Catch PyZoteroError.
     zot_wrap.initialize()

@@ -12,7 +12,7 @@ from copy import copy, deepcopy
 import numpy as np
 from quantities import Quantity
 
-from neurocurator import utils
+from nat import utils
 from .ageResolver import AgeResolver
 from .aggregators import SampleAggregator
 from .annotationSearch import ParameterGetter
