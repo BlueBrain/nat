@@ -6,7 +6,7 @@ NAME = "nat"
 DESCRIPTION = open(os.path.join(os.path.dirname(__file__), "README.md")).read()
 AUTHOR = "Christian O'Reilly"
 AUTHOR_EMAIL = "christian.oreilly@epfl.ch"
-VERSION = "0.3.5"
+VERSION = "0.4.0"
 REQUIRED = ["numpy", "parse", "metapub", "pyzotero", "GitPython", "pandas",
             "biopython", "beautifulsoup4", "quantities", "wand", "scipy"]
 
