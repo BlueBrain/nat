@@ -242,7 +242,7 @@ class ZoteroWrap:
     # Public methods section.
 
     def reference_index(self, ref_id):
-        """Return the reference with this key."""
+        """Return the reference with this ID."""
         try:
             indexes = range(len(self._references))
             return next((i for i in indexes if self.reference_id(i) == ref_id))
