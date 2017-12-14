@@ -4,3 +4,11 @@
 nat/__pycache__/*
 nat.egg-info/*
 **/.DS_Store
+*.pyc
+*.py.bak
+*.ini
+MANIFEST
+notebooks/.ipynb_checkpoints/*
+build/*
+*~
+dist/*
