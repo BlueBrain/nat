@@ -77,6 +77,7 @@ class ZoteroWrap:
             created_key = creation_status["success"]["0"]
             return created_key
         except KeyError:
+            print(creation_status)
             raise CreateZoteroItemError
 
     def update_local_reference(self, index, ref):
