@@ -12,6 +12,7 @@ import webbrowser
 from bs4 import BeautifulSoup as bs
 import io
 from zipfile import ZipFile
+import warnings
 
 
 class RESTClientError(Exception):
@@ -39,7 +40,7 @@ class RESTClient:
                                                   "contextLength": contextLength,
                                                   "annotStart"   : annotStart}))
 
-        return json.loads(response.content.decode("utf8"))["context"]        
+        return json.loads(response.content.decode("utf8"))["context"]  
         
 
 
@@ -132,7 +133,7 @@ class RESTClient:
 from glob import glob
 def checkSimilarities(dbPath):
     # FIXME Delayed refactoring. Define only once the REST server URL.
-    client = RESTClient("https://bbpteam.epfl.ch:5000/neurocurator/api/v1.0/")
+    client = RESTClient("https://bbpteam.epfl.ch/neurocurator/api/v1.0/")
 
     intra = []
     inter = []
@@ -155,7 +156,7 @@ def checkSimilarities(dbPath):
 
 def checkImportPDF(localPDF, paperId):
     # FIXME Delayed refactoring. Define only once the REST server URL.
-    client = RESTClient("https://bbpteam.epfl.ch:5000/neurocurator/api/v1.0/")
+    client = RESTClient("https://bbpteam.epfl.ch/neurocurator/api/v1.0/")
     response = json.loads(client.importPDF(localPDF, paperId).decode("utf8"))
     #client.removePDF(localPDF)
     return response

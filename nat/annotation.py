@@ -335,7 +335,7 @@ class Annotation:
             raise AttributeError
 
     # FIXME Delayed refactoring. Define only once the REST server URL.
-    def getContext(self, contextLength=100, dbPath="./curator_DB", restServerURL="https://bbpteam.epfl.ch:5000/neurocurator/api/v1.0/"):
+    def getContext(self, contextLength=100, dbPath="./curator_DB", restServerURL="https://bbpteam.epfl.ch/neurocurator/api/v1.0/"):
         
         if not isinstance(self.localizer, TextLocalizer):
             return ""        
