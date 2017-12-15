@@ -40,7 +40,12 @@ class RESTClient:
                                                   "contextLength": contextLength,
                                                   "annotStart"   : annotStart}))
 
-        return json.loads(response.content.decode("utf8"))["context"]  
+        response = json.loads(response.content.decode("utf8"))
+        
+        if not "context" in response:
+            print(warnings.warn(response["message"]))
+            return ""
+        return response["context"]        
         
 
 
