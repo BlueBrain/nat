@@ -1,4 +1,4 @@
-_Tell in the title the affected section (ZoteroWrap, Notebooks, ...) between square brackets and what doesn't work._
+_Tell in the title the affected section (ZoteroWrap, Notebooks, REST service, ...) between square brackets and what doesn't work._
 
 **NAT version:**
 
