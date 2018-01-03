@@ -12,3 +12,4 @@ notebooks/.ipynb_checkpoints/*
 build/*
 *~
 dist/*
+.cache/*
