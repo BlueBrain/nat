@@ -1,5 +1,7 @@
 _Tell in the title the affected section (ZoteroWrap, Notebooks, REST service, External REST services, ...) between square brackets and what doesn't work._
 
+_Please **do not** specify 'Assignees', 'Labels', 'Projects' or 'Milestones'._
+
 **NAT version:**
 
 _Specify the version used (see VERSION in setup.py)._
