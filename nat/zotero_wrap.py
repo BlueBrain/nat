@@ -217,8 +217,8 @@ class ZoteroWrap:
         # TODO Use meta:parsedDate field instead?
         ref_date = self.reference_date(index)
         try:
-            # Use datetime.min for a common representation of missing fields.
-            return parse(ref_date, default=datetime.min).year
+            # NB: datetime.year returns an int.
+            return parse(ref_date).year
         except ValueError:
             matched = re.search(r"\d{4}", ref_date)
             if matched:
