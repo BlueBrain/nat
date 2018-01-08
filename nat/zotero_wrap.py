@@ -206,11 +206,7 @@ class ZoteroWrap:
 
     def reference_creator_surnames_str(self, index):
         """Return as a string the surnames of the reference creators (locally defined)."""
-        creator_surnames = self.reference_creator_surnames(index)
-        if creator_surnames:
-            return ", ".join(creator_surnames)
-        else:
-            return ""
+        return ", ".join(self.reference_creator_surnames(index))
 
     def reference_date(self, index):
         """Return the reference publication date."""
