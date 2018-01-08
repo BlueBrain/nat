@@ -238,10 +238,10 @@ class ZoteroWrap:
     # Public methods section.
 
     def reference_index(self, ref_id):
-        """Return the reference with this ID."""
+        """Return the first reference with this ID."""
         try:
-            indexes = range(len(self._references))
-            return next((i for i in indexes if self.reference_id(i) == ref_id))
+            indexes = range(self.reference_count())
+            return next(i for i in indexes if self.reference_id(i) == ref_id)
         except StopIteration as e:
             raise ReferenceNotFoundError("ID: " + ref_id) from e
 
