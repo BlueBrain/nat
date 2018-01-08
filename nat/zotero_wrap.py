@@ -75,9 +75,9 @@ class ZoteroWrap:
         try:
             created_key = creation_status["success"]["0"]
             return created_key
-        except KeyError:
+        except KeyError as e:
             print(creation_status)
-            raise CreateZoteroItemError
+            raise CreateZoteroItemError from e
 
     def update_local_reference(self, index, ref):
         """Replace the reference in the reference list and cache it."""
@@ -246,8 +246,8 @@ class ZoteroWrap:
         try:
             indexes = range(len(self._references))
             return next((i for i in indexes if self.reference_id(i) == ref_id))
-        except StopIteration:
-            raise ReferenceNotFoundError("ID: " + ref_id)
+        except StopIteration as e:
+            raise ReferenceNotFoundError("ID: " + ref_id) from e
 
     def reference_creators_citation(self, ref_id):
         """Return for citation the creator surnames (locally defined) and the publication year."""
