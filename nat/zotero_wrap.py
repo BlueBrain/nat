@@ -247,19 +247,17 @@ class ZoteroWrap:
 
     def reference_creators_citation(self, ref_id):
         """Return for citation the creator surnames (locally defined) and the publication year."""
-        # FIXME Delayed refactoring. Use an index instead.
+        # FIXME Delayed refactoring. Use an index instead of an ID.
         index = self.reference_index(ref_id)
         creators = self.reference_creator_surnames(index)
         year = self.reference_year(index)
         creator_count = len(creators)
-        if creator_count == 0:
-            return ""
         if creator_count == 1:
-            return "{}, ({})".format(creators[0], year)
+            return "{} ({})".format(creators[0], year)
         elif creator_count == 2:
-            return "{} and {}, ({})".format(creators[0], creators[1], year)
+            return "{} and {} ({})".format(creators[0], creators[1], year)
         else:
-            return "{} et al., ({})".format(creators[0], year)
+            return "{} et al. ({})".format(creators[0], year)
 
 
 class CreateZoteroItemError(Exception):
