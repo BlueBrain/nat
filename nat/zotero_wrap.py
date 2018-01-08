@@ -9,6 +9,7 @@ from datetime import datetime
 
 from dateutil.parser import parse
 from pyzotero.zotero import Zotero
+from pyzotero.zotero_errors import InvalidItemFields
 
 
 class ZoteroWrap:
@@ -98,8 +99,8 @@ class ZoteroWrap:
         """
         try:
             self._zotero_lib.check_items([ref_data])
-        except KeyError:
-            raise InvalidZoteroItemError
+        except InvalidItemFields as e:
+            raise InvalidZoteroItemError from e
 
     def get_references(self):
         """Return all references in the Zotero database. Takes time..."""
