@@ -143,13 +143,13 @@ class ZoteroWrap:
     def reference_extra_field(self, field, index):
         """Return the value of the field in 'extra', otherwise ''."""
         ref_data = self.reference_data(index)
-        if "extra" in ref_data:
-            extra_fields = ref_data["extra"].split("\n")
-            field_id = field + ":"
-            matched = next((x for x in extra_fields if x.startswith(field_id)), None)
-            if matched:
-                return matched.replace(field_id, "", 1).strip()
-        return ""
+        extra_fields = ref_data["extra"].split("\n")
+        field_id = field + ":"
+        matched = next((x for x in extra_fields if x.startswith(field_id)), None)
+        if matched:
+            return matched.replace(field_id, "", 1).strip()
+        else:
+            return ""
 
     def reference_type(self, index):
         """Return the reference type."""
