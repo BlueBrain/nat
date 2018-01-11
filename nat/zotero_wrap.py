@@ -5,7 +5,6 @@ import os
 import pickle
 import re
 from collections import OrderedDict
-from datetime import datetime
 
 from dateutil.parser import parse
 from pyzotero.zotero import Zotero
