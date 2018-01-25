@@ -1,283 +1,477 @@
 __author__ = "Pierre-Alexandre Fonta"
 __maintainer__ = "Pierre-Alexandre Fonta"
 
-from pytest import raises
+import os
+from copy import deepcopy
 
-from nat.zotero_wrap import ReferenceNotFoundError
+import pyzotero
+from _pytest.mark import param
+from pytest import raises, mark
+from pytest_lazyfixture import lazy_fixture
+
+import nat
+from tests.zotero.data import (REFERENCES, REFERENCE_TYPES, REFERENCE_TEMPLATES,
+                               DOI, DOI_STR, PMID, PMID_STR, UPID, UPID_STR,
+                               DATE, CREATORS, TEMPLATES_TEST_DATA)
+
+
+# Helper to get the ZoteroWrap instance in the required state for testing.
+
+def init(zww, field, value, is_data_subfield=True):
+    """Add to a ZoteroWrap instance a reference with a field set to a value."""
+    from tests.zotero.data import ARTICLE_TEMPLATE
+    ref = deepcopy(ARTICLE_TEMPLATE)
+    if is_data_subfield:
+        ref["data"][field] = value
+    else:
+        ref[field] = value
+    zww._references.append(ref)
+    return ref
 
 
 class TestZoteroWrap:
 
-    # FIXME Monkeypatch PyZotero calls, generate data instead using cached ones.
-    # FIXME Parametrize test functions after monkeypatching PyZotero calls.
-    # FIXME Comply with PEP 8 line length after test parametrizing test functions.
+    # __init__
+
+    def test_init(self, zw0_shared, shared_directory, cache_filename):
+        """Test the creation of a ZoteroWrap instance."""
+        assert zw0_shared.cache_path == os.path.join(shared_directory, cache_filename)
+        assert zw0_shared.reference_types == []
+        assert zw0_shared.reference_templates == {}
+        assert zw0_shared._references == []
+
+    # initialize
+
+    def test_initialize_cache(self, mocker, zw0):
+        """When there are data cached."""
+        mocker.patch("nat.zotero_wrap.ZoteroWrap.load_cache")
+        zw0.initialize()
+        # TODO Use assert_called_once() with Python 3.6+.
+        nat.zotero_wrap.ZoteroWrap.load_cache.assert_called_once_with()
+
+    def test_initialize_distant(self, mocker, zw0):
+        """When there are no data cached."""
+        mocker.patch("nat.zotero_wrap.ZoteroWrap.load_distant")
+        zw0.initialize()
+        # TODO Use assert_called_once() with Python 3.6+.
+        nat.zotero_wrap.ZoteroWrap.load_distant.assert_called_once_with()
+
+    # cache
+
+    def test_cache(self, zw0_shared, references, reference_types, reference_templates):
+        """Test ZoteroWrap.cache()."""
+        zw0_shared._references = references
+        zw0_shared.reference_types = reference_types
+        zw0_shared.reference_templates = reference_templates
+        zw0_shared.cache()
+        assert os.path.getsize(zw0_shared.cache_path) > 0
+
+    # load_cache
+
+    # Should be executed after test_cache().
+    def test_load_cache(self, zw0_shared):
+        """Test ZoteroWrap.load_cache()."""
+        zw0_shared.load_cache()
+        assert zw0_shared._references == REFERENCES
+        assert zw0_shared.reference_types == REFERENCE_TYPES
+        assert zw0_shared.reference_templates == REFERENCE_TEMPLATES
+
+    # load_distant
+
+    def test_load_distant(self, monkeypatch, zw0, references, reference_types, reference_templates):
+        """Test ZoteroWrap.load_distant()."""
+        scope = "nat.zotero_wrap.ZoteroWrap."
+        monkeypatch.setattr(scope + "get_references", lambda _: references)
+        monkeypatch.setattr(scope + "get_reference_types", lambda _: reference_types)
+        monkeypatch.setattr(scope + "get_reference_templates", lambda _, x: reference_templates)
+        zw0.load_distant()
+        assert zw0._references == REFERENCES
+        assert zw0.reference_types == REFERENCE_TYPES
+        assert zw0.reference_templates == REFERENCE_TEMPLATES
+        assert os.path.getsize(zw0.cache_path) > 0
+
+    # create_local_reference
+
+    @mark.parametrize("zww", [
+        param(lazy_fixture("zw"), id="initialized"),
+        param(lazy_fixture("zw0"), id="not_initialized")
+    ])
+    def test_create_local_reference(self, zww, reference):
+        """When a ZoteroWrap instance has several references or none."""
+        reference_count = zww.reference_count()
+        zww.create_local_reference(reference)
+        assert zww.reference_count() == reference_count + 1
+        assert zww._references[-1] == reference
+        assert os.path.getsize(zww.cache_path) > 0
+
+    # create_distant_reference
+
+    def test_create_distant_reference_successful(self, monkeypatch, zw0, reference):
+        """When Zotero.create_items() has been successful."""
+        creation_status = {
+            "failed": {},
+            "success": {"0": reference["key"]},
+            "successful": {"0": reference},
+            "unchanged": {}
+        }
+        monkeypatch.setattr("nat.zotero_wrap.ZoteroWrap.validate_reference_data", lambda _, x: None)
+        monkeypatch.setattr("pyzotero.zotero.Zotero.create_items", lambda _, x: creation_status)
+        assert zw0.create_distant_reference(reference["data"]) == reference
+
+    def test_create_distant_reference_unsuccessful(self, monkeypatch, zw0, reference):
+        """When Zotero.create_items() hasn't been successful."""
+        # NB: Creation status expected when unsuccessful hasn't been observed.
+        monkeypatch.setattr("nat.zotero_wrap.ZoteroWrap.validate_reference_data", lambda _, x: None)
+        monkeypatch.setattr("pyzotero.zotero.Zotero.create_items", lambda _, x: {})
+        with raises(nat.zotero_wrap.CreateZoteroItemError):
+            zw0.create_distant_reference(reference["data"])
+
+    def test_create_distant_reference_invalid(self, monkeypatch, mocker, zw0, reference):
+        """When ZoteroWrap.validate_reference_data() hasn't been successful."""
+        # NB: Exception raised at the validate_reference_data() level isn't captured.
+        def raise_exception(_, x):
+            raise pyzotero.zotero_errors.InvalidItemFields
+        monkeypatch.setattr("pyzotero.zotero.Zotero.check_items", raise_exception)
+        mocker.patch("pyzotero.zotero.Zotero.create_items")
+        with raises(nat.zotero_wrap.InvalidZoteroItemError):
+            zw0.create_distant_reference(reference["data"])
+        # TODO Use assert_not_called() with Python 3.5+.
+        assert not pyzotero.zotero.Zotero.create_items.called
+
+    # update_local_reference
+
+    def test_update_local_reference(self, zw, reference):
+        """When a ZoteroWrap instance has several references."""
+        references = deepcopy(zw._references)
+        reference_count = zw.reference_count()
+        index = reference_count // 2
+        zw.update_local_reference(index, reference)
+        changed = [new for old, new in zip(references, zw._references) if old != new]
+        assert zw.reference_count() == reference_count
+        assert zw._references[index] == reference
+        assert len(changed) == 1
+        assert os.path.getsize(zw.cache_path) > 0
+
+    def test_update_local_reference_empty(self, zw0, reference):
+        """When a ZoteroWrap instance has no references."""
+        with raises(IndexError):
+            zw0.update_local_reference(0, reference)
+        assert zw0.reference_count() == 0
+        assert len(os.listdir(os.path.dirname(zw0.cache_path))) == 0
+
+    # update_distant_reference
+
+    def test_update_distant_reference(self, monkeypatch, mocker, zw0, reference):
+        """Test ZoteroWrap.update_distant_reference()."""
+        monkeypatch.setattr("nat.zotero_wrap.ZoteroWrap.validate_reference_data", lambda _, x: None)
+        mocker.patch("pyzotero.zotero.Zotero.update_item")
+        zw0.update_distant_reference(reference)
+        # TODO Use assert_called_once() with Python 3.6+.
+        pyzotero.zotero.Zotero.update_item.assert_called_once_with(reference)
+
+    def test_update_distant_reference_invalid(self, monkeypatch, mocker, zw0, reference):
+        """When ZoteroWrap.validate_reference_data() hasn't been successful."""
+        # NB: Exception raised at the validate_reference_data() level isn't captured.
+        def raise_exception(_, x):
+            raise pyzotero.zotero_errors.InvalidItemFields
+        monkeypatch.setattr("pyzotero.zotero.Zotero.check_items", raise_exception)
+        mocker.patch("pyzotero.zotero.Zotero.update_item")
+        with raises(nat.zotero_wrap.InvalidZoteroItemError):
+            zw0.update_distant_reference(reference)
+        # TODO Use assert_not_called() with Python 3.5+.
+        assert not pyzotero.zotero.Zotero.update_item.called
+
+    # validate_reference_data
+
+    def test_validate_reference_data(self, monkeypatch, zw0, reference):
+        """When Zotero.check_items() isn't successful."""
+        def raise_exception(_, x):
+            raise pyzotero.zotero_errors.InvalidItemFields
+        monkeypatch.setattr("pyzotero.zotero.Zotero.check_items", raise_exception)
+        with raises(nat.zotero_wrap.InvalidZoteroItemError):
+            zw0.validate_reference_data(reference["data"])
+
+    # get_references
+
+    def test_get_references(self, mocker, zw0):
+        """Test ZoteroWrap.get_references()."""
+        mocker_top = mocker.patch("pyzotero.zotero.Zotero.top")
+        mocker.patch("pyzotero.zotero.Zotero.everything")
+        zw0.get_references()
+        # TODO Use assert_called_once() with Python 3.6+.
+        pyzotero.zotero.Zotero.top.assert_called_once_with()
+        pyzotero.zotero.Zotero.everything.assert_called_once_with(mocker_top())
+
+    # get_reference_types
+
+    def test_get_reference_types(self, monkeypatch, zw0, item_types):
+        """Test ZoteroWrap.get_reference_types()."""
+        monkeypatch.setattr("pyzotero.zotero.Zotero.item_types", lambda _: item_types)
+        assert zw0.get_reference_types() == REFERENCE_TYPES
+
+    # get_reference_templates
+
+    def test_get_reference_templates(self, monkeypatch, zw0, reference_types):
+        """Test ZoteroWrap.get_reference_templates()."""
+        def patch(_, ref_type):
+            from tests.zotero.data import GET_REFERENCE_TEMPLATES
+            index = reference_types.index(ref_type)
+            return GET_REFERENCE_TEMPLATES[index]
+        monkeypatch.setattr("nat.zotero_wrap.ZoteroWrap.get_reference_template", patch)
+        assert zw0.get_reference_templates(reference_types) == REFERENCE_TEMPLATES
+
+    # get_reference_template
+
+    @mark.parametrize("ref_type, patched, expected", TEMPLATES_TEST_DATA)
+    def test_get_reference_template(self, monkeypatch, zw0, ref_type, patched, expected):
+        """Test ZoteroWrap.get_reference_template() for each known cases."""
+        monkeypatch.setattr("pyzotero.zotero.Zotero.item_template", lambda _, x: patched)
+        assert zw0.get_reference_template(ref_type) == expected
+
+    # get_reference
+
+    def test_get_reference(self, mocker, zw0, reference):
+        """Test ZoteroWrap.get_reference()."""
+        reference_key = reference["key"]
+        mocker.patch("pyzotero.zotero.Zotero.item")
+        zw0.get_reference(reference_key)
+        pyzotero.zotero.Zotero.item.assert_called_once_with(reference_key)
 
     # reference_count
 
-    def test_reference_count_zw_initialized(self, zw):
-        assert zw.reference_count() == 645
-
-    def test_reference_count_zw_not_initialized(self, zw_not_initialized):
-        assert zw_not_initialized.reference_count() == 0
+    @mark.parametrize("zww, expected", [
+        param(lazy_fixture("zw"), len(REFERENCES), id="initialized"),
+        param(lazy_fixture("zw0"), 0, id="not_initialized")
+    ])
+    def test_reference_count(self, zww, expected):
+        """When a ZoteroWrap instance has several references or none."""
+        assert zww.reference_count() == expected
 
     # reference_data
 
-    def test_reference_data(self, zw, idx):
-        # FIXME Find a way not to have this huge dict.
-        idx_data = {'DOI': '',
-                    'ISSN': '0022-3751',
-                    'abstractNote': '1. Neurones enzymatically dissociated from the rat dorsal '
-                                    'lateral geniculate nucleus (LGN) were identified as '
-                                    'GABAergic local circuit interneurones and geniculocortical '
-                                    'relay cells, based upon quantitative analysis of soma '
-                                    'profiles, immunohistochemical detection of GABA or glutamic '
-                                    'acid decarboxylase, and basic electrogenic behaviour. 2. '
-                                    'During whole-cell current-clamp recording, isolated LGN '
-                                    'neurones generated firing patterns resembling those in '
-                                    'intact tissue, with the most striking difference relating '
-                                    'to the presence in relay cells of a Ca2+ action potential '
-                                    'with a low threshold of activation, capable of triggering '
-                                    'fast spikes, and the absence of a regenerative Ca2+ '
-                                    'response with a low threshold of activation in local '
-                                    'circuit cells. 3. Whole-cell voltage-clamp experiments '
-                                    'demonstrated that both classes of LGN neurones possess at '
-                                    'least two voltage-dependent membrane currents which operate '
-                                    'in a range of membrane potentials negative to the threshold '
-                                    'for generation of Na(+)-K(+)-mediated spikes: the T-type '
-                                    'Ca2+ current (IT) and an A-type K+ current (IA). Taking '
-                                    'into account the differences in membrane surface area, the '
-                                    'average size of IT was similar in the two types of '
-                                    'neurones, and interneurones possessed a slightly larger '
-                                    'A-conductance. 4. In local circuit neurones, the ranges of '
-                                    'steady-state inactivation and activation of IT and IA were '
-                                    'largely overlapping (VH = 81.1 vs. -82.8 mV), both currents '
-                                    'activated at around -70 mV, and they rapidly increased in '
-                                    'amplitude with further depolarization. In relay cells, the '
-                                    'inactivation curve of IT was negatively shifted along the '
-                                    'voltage axis by about 20 mV compared with that of IA (Vh = '
-                                    '-86.1 vs. -69.2 mV), and the activation threshold for IT '
-                                    '(at -80 mV) was 20 mV more negative than that for IA. In '
-                                    'interneurones, the activation range of IT was shifted to '
-                                    'values more positive than that in relay cells (Vh = -54.9 '
-                                    'vs. -64.5 mV), whereas the activation range of IA was more '
-                                    'negative (Vh = -25.2 vs. -14.5 mV). 5. Under whole-cell '
-                                    'voltage-clamp conditions that allowed the combined '
-                                    'activation of Ca2+ and K+ currents, depolarizing voltage '
-                                    'steps from -110 mV evoked inward currents resembling IT in '
-                                    'relay cells and small outward currents indicative of IA in '
-                                    'local circuit neurones. After blockade of IA with '
-                                    '4-aminopyridine (4-AP), the same pulse protocol produced IT '
-                                    'in both types of neurones. Under current clamp, 4-AP '
-                                    'unmasked a regenerative membrane depolarization with a low '
-                                    'threshold of activation capable of triggering fast spikes '
-                                    'in local circuit neurones.(ABSTRACT TRUNCATED AT 400 WORDS)',
-                    'accessDate': '2016-10-25T07:48:29Z',
-                    'archive': '',
-                    'archiveLocation': '',
-                    'callNumber': '',
-                    'collections': ['7TC2C724', 'TSSBTP2X'],
-                    'creators': [{'creatorType': 'author', 'firstName': 'H C',
-                                  'lastName': 'Pape'},
-                                 {'creatorType': 'author', 'firstName': 'T',
-                                  'lastName': 'Budde'},
-                                 {'creatorType': 'author', 'firstName': 'R',
-                                  'lastName': 'Mager'},
-                                 {'creatorType': 'author',
-                                  'firstName': 'Z F',
-                                  'lastName': 'Kisvárday'}],
-                    'date': '1994-8-1',
-                    'dateAdded': '2016-10-25T07:48:29Z',
-                    'dateModified': '2016-10-25T07:48:29Z',
-                    'extra': 'PMID: 7965855\nPMCID: PMC1155662',
-                    'issue': 'Pt 3',
-                    'itemType': 'journalArticle',
-                    'journalAbbreviation': 'J Physiol',
-                    'key': 'BSAGS4P8',
-                    'language': '',
-                    'libraryCatalog': 'PubMed Central',
-                    'pages': '403-422',
-                    'publicationTitle': 'The Journal of Physiology',
-                    'relations': {},
-                    'rights': '',
-                    'series': '',
-                    'seriesText': '',
-                    'seriesTitle': '',
-                    'shortTitle': '',
-                    'tags': [],
-                    'title': 'Prevention of Ca(2+)-mediated action potentials in GABAergic local '
-                             'circuit neurones of rat thalamus by a transient K+ current.',
-                    'url': 'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1155662/',
-                    'version': 631,
-                    'volume': '478'}
-        assert zw.reference_data(idx) == idx_data
+    def test_reference_data(self, zw0, reference):
+        """Test ZoteroWrap.reference_data()."""
+        zw0._references.append(reference)
+        assert zw0.reference_data(0) == reference["data"]
 
     # reference_extra_field
 
-    def test_reference_extra_field_one(self, zw, idx_extra_one):
-        assert zw.reference_extra_field("NONE", idx_extra_one) == ""
-        assert zw.reference_extra_field("PMID", idx_extra_one) == "8174288"
-
-    def test_reference_extra_field_several(self, zw, idx_extra_several):
-        assert zw.reference_extra_field("NONE", idx_extra_several) == ""
-        assert zw.reference_extra_field("PMID", idx_extra_several) == "7965855"
-        assert zw.reference_extra_field("PMCID", idx_extra_several) == "PMC1155662"
-
-    def test_reference_extra_field_empty(self, zw, idx_extra_empty):
-        assert zw.reference_extra_field("NONE", idx_extra_empty) == ""
+    @mark.parametrize("value, expected", [
+        param(PMID_STR, (PMID, ""), id="one"),
+        param(PMID_STR + "\nPMCID: PMC1234567", (PMID, "PMC1234567"), id="several"),
+        param("", ("", ""), id="empty")
+    ])
+    def test_reference_extra_field(self, zw0, value, expected):
+        """When a reference has one, several, or no extra field(s)."""
+        init(zw0, "extra", value)
+        assert zw0.reference_extra_field("PMID", 0) == expected[0]
+        assert zw0.reference_extra_field("PMCID", 0) == expected[1]
 
     # reference_type
 
-    def test_reference_type(self, zw, idx):
-        assert zw.reference_type(idx) == "journalArticle"
+    def test_reference_type(self, zw0):
+        """Test ZoteroWrap.reference_type()."""
+        value = "journalArticle"
+        init(zw0, "itemType", value)
+        assert zw0.reference_type(0) == value
 
     # reference_key
 
-    def test_reference_key(self, zw, idx):
-        assert zw.reference_key(idx) == "BSAGS4P8"
+    def test_reference_key(self, zw0):
+        """Test ZoteroWrap.reference_key()."""
+        value = "01ABC3DE"
+        init(zw0, "key", value, is_data_subfield=False)
+        assert zw0.reference_key(0) == value
 
     # reference_doi
 
-    def test_reference_doi(self, zw, idx_doi):
-        assert zw.reference_doi(idx_doi) == "10.1093/cercor/bhr356"
+    def test_reference_doi(self, zw0):
+        """When a reference has a DOI."""
+        init(zw0, "DOI", DOI)
+        assert zw0.reference_doi(0) == DOI
 
-    def test_reference_doi_extra(self, zw, idx_doi_extra):
-        assert zw.reference_doi(idx_doi_extra) == "10.1016/B978-0-12-374245-2.00024-3"
+    def test_reference_doi_extra(self, zw0, reference_book):
+        """When a reference has a DOI as an extra field (not a 'journalArticle')."""
+        reference_book["data"]["extra"] = DOI_STR
+        zw0._references.append(reference_book)
+        assert zw0.reference_doi(0) == DOI
 
-    def test_reference_doi_without(self, zw, idx_doi_without):
-        assert zw.reference_doi(idx_doi_without) == ""
+    def test_reference_doi_without(self, zw0):
+        """When a reference has no DOI (dedicated field or in 'extra')."""
+        reference = init(zw0, "DOI", "")
+        reference["extra"] = ""
+        assert zw0.reference_doi(0) == ""
 
     # reference_pmid
 
-    def test_reference_pmid(self, zw, idx_pmid):
-        assert zw.reference_pmid(idx_pmid) == "7965855"
-
-    def test_reference_pmid_without(self, zw, idx_pmid_without):
-        assert zw.reference_pmid(idx_pmid_without) == ""
+    @mark.parametrize("value, expected", [
+        param(PMID_STR, PMID, id="with"),
+        param("", "", id="without"),
+    ])
+    def test_reference_pmid(self, zw0, value, expected):
+        """When a reference has a PMID as an extra field or none."""
+        init(zw0, "extra", value)
+        assert zw0.reference_pmid(0) == expected
 
     # reference_unpublished_id
 
-    def test_reference_unpublished_id(self, zw, idx_unpublished):
-        assert zw.reference_unpublished_id(idx_unpublished) == "5b06d66a-85be-11e7-9105-64006a67e5d0"
-
-    def test_reference_unpublished_id_without(self, zw, idx_unpublished_without):
-        assert zw.reference_unpublished_id(idx_unpublished_without) == ""
+    @mark.parametrize("value, expected", [
+        param(UPID_STR, UPID, id="with"),
+        param("", "", id="without"),
+    ])
+    def test_reference_unpublished_id(self, zw0, value, expected):
+        """When a reference has an UNPUBLISHED ID as an extra field or none."""
+        init(zw0, "extra", value)
+        assert zw0.reference_unpublished_id(0) == expected
 
     # reference_id
 
-    def test_reference_id_doi(self, zw, idx_doi):
-        assert zw.reference_id(idx_doi) == "10.1093/cercor/bhr356"
+    def test_reference_id_doi(self, zw0):
+        """When a reference has a DOI."""
+        init(zw0, "DOI", DOI)
+        assert zw0.reference_id(0) == DOI
 
-    def test_reference_id_doi_extra(self, zw, idx_doi_extra):
-        assert zw.reference_id(idx_doi_extra) == "10.1016/B978-0-12-374245-2.00024-3"
+    def test_reference_id_doi_extra(self, zw0, reference_book):
+        """When a reference has a DOI as an extra field (not a 'journalArticle')."""
+        reference_book["data"]["extra"] = DOI_STR
+        zw0._references.append(reference_book)
+        assert zw0.reference_id(0) == DOI
 
-    def test_reference_id_pmid(self, zw, idx_pmid):
-        assert zw.reference_id(idx_pmid) == "PMID_7965855"
+    @mark.parametrize("value, expected", [
+        param(PMID_STR, "PMID_" + PMID, id="PMID"),
+        param(UPID_STR, "UNPUBLISHED_" + UPID, id="UNPUBLISHED_ID")
+    ])
+    def test_reference_id_extra(self, zw0, value, expected):
+        """When a reference has a PMID or a UNPUBLISHED ID as an extra field."""
+        init(zw0, "extra", value)
+        assert zw0.reference_id(0) == expected
 
-    def test_reference_id_unpublished(self, zw, idx_unpublished):
-        assert zw.reference_id(idx_unpublished) == "UNPUBLISHED_5b06d66a-85be-11e7-9105-64006a67e5d0"
-
-    def test_reference_id_without(self, zw, idx_id_without):
-        assert zw.reference_id(idx_id_without) == ""
+    def test_reference_id_without(self, zw0):
+        """When a reference has no ID (DOI, PMID, UNPUBLISHED ID)."""
+        reference = init(zw0, "DOI", "")
+        reference["extra"] = ""
+        assert zw0.reference_id(0) == ""
 
     # reference_title
 
-    def test_reference_title(self, zw, idx):
-        title = ("Prevention of Ca(2+)-mediated action potentials in GABAergic "
-                 "local circuit neurones of rat thalamus by a transient K+ current.")
-        assert zw.reference_title(idx) == title
+    def test_reference_title(self, zw0):
+        """When a reference has a title."""
+        value = "Journal Article"
+        init(zw0, "title", value)
+        assert zw0.reference_title(0) == value
 
     # reference_creator_surnames
 
-    def test_reference_creator_surnames_one_author(self, zw, idx_creators_one_author):
-        assert zw.reference_creator_surnames(idx_creators_one_author) == ["Castro-Alamancos"]
+    @mark.parametrize("value, expected", [
+        param(CREATORS[:1], ["AuthorLastA"], id="one_author"),
+        param(CREATORS[:2], ["AuthorLastA", "AuthorLast-B"], id="two_authors"),
+        param(CREATORS[3:], ["EditorLastD", "EditorLast-E"], id="several_not_authors"),
+        param(CREATORS, ["AuthorLastA", "AuthorLast-B", "AuthorLastC"], id="several_mixed")
+    ])
+    def test_reference_creator_surnames(self, zw0, value, expected):
+        """Test reference_creator_surnames().
 
-    def test_reference_creator_surnames_two_authors(self, zw, idx_creators_two_authors):
-        assert zw.reference_creator_surnames(idx_creators_two_authors) == ["Ebner", "Kaas"]
-
-    def test_reference_creator_surnames_several_not_authors(self, zw, idx_creators_several_not_authors):
-        assert zw.reference_creator_surnames(idx_creators_several_not_authors) == ["Krieger", "Groh"]
-
-    def test_reference_creator_surnames_several_mixed(self, zw, idx_creators_several_mixed):
-        assert zw.reference_creator_surnames(idx_creators_several_mixed) == ["Holmes"]
+        When a reference has one creator of type 'author'.
+        When a reference has two creators of type 'author'.
+        When a reference has several creators which aren't of type 'author'.
+        When a reference has several creators of type 'author' and not.
+        """
+        init(zw0, "creators", value)
+        assert zw0.reference_creator_surnames(0) == expected
 
     # reference_creator_surnames_str
 
-    def test_reference_creator_surnames_str_one(self, zw, idx_creators_one_author):
-        assert zw.reference_creator_surnames_str(idx_creators_one_author) == "Castro-Alamancos"
-
-    def test_reference_creator_surnames_str_two(self, zw, idx_creators_two_authors):
-        assert zw.reference_creator_surnames_str(idx_creators_two_authors) == "Ebner, Kaas"
+    @mark.parametrize("value, expected", [
+        param(CREATORS[:1], "AuthorLastA", id="one"),
+        param(CREATORS[:2], "AuthorLastA, AuthorLast-B", id="two")
+    ])
+    def test_reference_creator_surnames_str(self, zw0, value, expected):
+        """When a reference has one or two creator(s) of type 'author'."""
+        init(zw0, "creators", value)
+        assert zw0.reference_creator_surnames_str(0) == expected
 
     # reference_date
 
-    def test_reference_date(self, zw, idx):
-        assert zw.reference_date(idx) == "1994-8-1"
-
-    def test_reference_date_empty(self, zw, idx_date_empty):
-        assert zw.reference_date(idx_date_empty) == ""
+    @mark.parametrize("value, expected", [
+        param(DATE, DATE, id="with"),
+        param("", "", id="empty")
+    ])
+    def test_reference_date(self, zw0, value, expected):
+        """When a reference has a date or none."""
+        init(zw0, "date", value)
+        assert zw0.reference_date(0) == expected
 
     # reference_year
 
-    def test_reference_year(self, zw, idx_year):
-        assert zw.reference_year(idx_year) == 1994
+    @mark.parametrize("value, expected", [
+        param(DATE, 2017, id="recognized"),
+        param("9 avr. 2017", 2017, id="unrecognized"),
+        param("", "", id="without")
+    ])
+    def test_reference_year(self, zw0, value, expected):
+        """Test reference_year().
 
-    def test_reference_year_unrecognized(self, zw, idx_year_unrecognized):
-        assert zw.reference_year(idx_year_unrecognized) == 2017
-
-    def test_reference_year_without(self, zw, idx_year_without):
-        assert zw.reference_year(idx_year_without) == ""
+        When a reference has a year recognized by dateutil.parser.parse().
+        When a reference has a year not recognized by dateutil.parser.parse().
+        When a reference has no year (because no date).
+        """
+        init(zw0, "date", value)
+        assert zw0.reference_year(0) == expected
 
     # reference_journal
 
-    def test_reference_journal(self, zw, idx_journal):
-        assert zw.reference_journal(idx_journal) == "The Journal of Physiology"
+    def test_reference_journal(self, zw0):
+        """When a reference has a journal."""
+        value = "The Journal of Journals"
+        init(zw0, "publicationTitle", value)
+        assert zw0.reference_journal(0) == value
 
-    def test_reference_journal_without(self, zw, idx_journal_without):
-        assert zw.reference_journal(idx_journal_without) == "(book)"
+    def test_reference_journal_without(self, zw0, reference_book):
+        """When a reference has no journal (not a 'journalArticle')."""
+        zw0._references.append(reference_book)
+        assert zw0.reference_journal(0) == "(book)"
 
     # reference_index
 
-    def test_reference_index_one_found(self, zw, ref_index_one_found):
-        # FIXME Break if source data change. Will not after parametrization.
-        assert zw.reference_index(ref_index_one_found) == 278
+    def test_reference_index_one_found(self, zw0):
+        """When a reference in the reference list has the searched reference ID."""
+        init(zw0, "extra", PMID_STR)
+        init(zw0, "DOI", DOI)
+        init(zw0, "extra", UPID_STR)
+        assert zw0.reference_index(DOI) == 1
 
-    def test_reference_index_several_found(self, zw, ref_index_several_found):
-        # Reference found at indexes 11 and 138.
-        # FIXME Break if source data change. Will not after parametrization.
-        assert zw.reference_index(ref_index_several_found) == 11
+    def test_reference_index_several_found(self, zw0):
+        """When there are duplicates in the reference list (same reference ID)."""
+        init(zw0, "DOI", DOI)
+        init(zw0, "extra", PMID_STR)
+        init(zw0, "extra", PMID_STR)
+        assert zw0.reference_index("PMID_" + PMID) == 1
 
-    def test_reference_index_not_found(self, zw, ref_index_not_found):
-        exception_str = "^ID: {}$".format(ref_index_not_found)
-        with raises(ReferenceNotFoundError, match=exception_str):
-            zw.reference_index(ref_index_not_found)
+    def test_reference_index_not_found(self, zw0):
+        """When no reference in the reference list has the searched reference ID."""
+        init(zw0, "extra", PMID_STR)
+        init(zw0, "extra", UPID_STR)
+        exception_str = "^ID: {}$".format(DOI)
+        with raises(nat.zotero_wrap.ReferenceNotFoundError, match=exception_str):
+            zw0.reference_index(DOI)
 
     # reference_creators_citation
 
-    def test_reference_creators_citation_one_author(self, zw, ref_creators_one_author):
-        assert zw.reference_creators_citation(ref_creators_one_author) == "Castro-Alamancos (2002)"
+    @mark.parametrize("value, expected", [
+        param(CREATORS[:1], "AuthorLastA (2017)", id="one"),
+        param(CREATORS[:2], "AuthorLastA and AuthorLast-B (2017)", id="two"),
+        param(CREATORS[:3], "AuthorLastA et al. (2017)", id="three")
+    ])
+    def test_reference_creators_citation(self, zw0, value, expected):
+        """When a reference has an ID, a date, and 1, 2, or 3 creator(s)."""
+        reference = init(zw0, "DOI", DOI)
+        reference["data"]["date"] = DATE
+        reference["data"]["creators"] = value
+        assert zw0.reference_creators_citation(DOI) == expected
 
-    def test_reference_creators_citation_two_authors(self, zw, ref_creators_two_authors):
-        assert zw.reference_creators_citation(ref_creators_two_authors) == "Ebner and Kaas (2015)"
-
-    def test_reference_creators_citation_three_authors(self, zw, ref_creators_three_authors):
-        assert zw.reference_creators_citation(ref_creators_three_authors) == "Huguenard et al. (1991)"
-
-    def test_reference_creators_citation_index_not_found(self, zw, ref_index_not_found):
-        with raises(ReferenceNotFoundError):
-            zw.reference_creators_citation(ref_index_not_found)
-
-    def test_reference_creators_citation_year_unrecognized(self, zw, idx_year_unrecognized):
-        ref_id = zw.reference_id(idx_year_unrecognized)
-        assert zw.reference_creators_citation(ref_id) == "Schwalger et al. (2017)"
-
-    def test_reference_creators_citation_year_without(self, zw, idx_year_without):
-        ref_id = zw.reference_id(idx_year_without)
-        assert zw.reference_creators_citation(ref_id) == "Makinson et al. ()"
-
-    def test_reference_creators_citation_several_not_authors(self, zw, idx_creators_several_not_authors):
-        ref_id = zw.reference_id(idx_creators_several_not_authors)
-        assert zw.reference_creators_citation(ref_id) == "Krieger and Groh (2015)"
-
-    def test_reference_creators_citation_several_mixed(self, zw, idx_creators_several_mixed):
-        ref_id = zw.reference_id(idx_creators_several_mixed)
-        assert zw.reference_creators_citation(ref_id) == "Holmes (2014)"
+    def test_reference_creators_citation_year_without(self, zw0):
+        """When a reference has no year (because no date)."""
+        reference = init(zw0, "DOI", DOI)
+        reference["data"]["date"] = ""
+        reference["data"]["creators"] = CREATORS[:3]
+        assert zw0.reference_creators_citation(DOI) == "AuthorLastA et al. ()"
