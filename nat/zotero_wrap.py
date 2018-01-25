@@ -68,12 +68,12 @@ class ZoteroWrap:
         self.cache()
 
     def create_distant_reference(self, ref_data):
-        """Validate and create the reference in Zotero and return the new key."""
+        """Validate and create the reference in Zotero and return the created item."""
         self.validate_reference_data(ref_data)
         creation_status = self._zotero_lib.create_items([ref_data])
         try:
-            created_key = creation_status["success"]["0"]
-            return created_key
+            created_item = creation_status["successful"]["0"]
+            return created_item
         except KeyError as e:
             print(creation_status)
             raise CreateZoteroItemError from e
