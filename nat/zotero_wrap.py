@@ -17,9 +17,9 @@ class ZoteroWrap:
     CACHE_REFERENCE_TYPES = "reference_types"
     CACHE_REFERENCE_TEMPLATES = "reference_templates"
 
-    def __init__(self, library_id, library_type, api_key, working_directory):
+    def __init__(self, library_id, library_type, api_key, directory):
         cache_filename = "{}-{}-{}.pkl".format(library_id, library_type, api_key)
-        self.cache_path = os.path.join(working_directory, cache_filename)
+        self.cache_path = os.path.join(directory, cache_filename)
         # reference_types and reference_templates must have the same ordering.
         self.reference_types = []
         self.reference_templates = {}
