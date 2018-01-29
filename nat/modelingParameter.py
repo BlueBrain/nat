@@ -2,14 +2,13 @@
 
 __author__ = "Christian O'Reilly"
 
-import os
 import csv
 from io import StringIO
+
 import pandas as pd
 
+from nat.utils import data_path
 from .tag import RequiredTag
-
-
 
 
 class ParameterTypeTree:
@@ -89,7 +88,7 @@ class ParameterTypeTree:
     def getParamTypeDF(fileName = None):
 
         if fileName is None:
-            fileName = os.path.join(os.path.dirname(__file__), "modelingDictionary.csv")
+            fileName = data_path("modelingDictionary.csv")
 
         df = pd.read_csv(fileName, skip_blank_lines=True, comment="#",
                          delimiter=";", quotechar='"',
@@ -103,7 +102,7 @@ class ParameterTypeTree:
 def getParameterTypes(fileName = None):
 
     if fileName is None:
-        fileName = os.path.join(os.path.dirname(__file__), "modelingDictionary.csv")
+        fileName = data_path("modelingDictionary.csv")
 
     with open(fileName, 'r') as f:
         lines = f.readlines()

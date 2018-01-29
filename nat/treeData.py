@@ -3,18 +3,19 @@
 __author__ = 'oreilly'
 __email__  = 'christian.oreilly@epfl.ch'
 
+import os
+import pickle
 
-from .tagUtilities import nlx2ks
-from .tag import RequiredTag
-from .modelingParameter import ParameterTypeTree
-#from .scigraph_client import Graph
-from .ontoDic import OntoDic
+import numpy as np
+import pandas as pd
 import requests
 
-import os
-import pandas as pd
-import numpy as np
-import pickle
+from nat.utils import data_path
+from .modelingParameter import ParameterTypeTree
+# from .scigraph_client import Graph
+from .ontoDic import OntoDic
+from .tag import RequiredTag
+from .tagUtilities import nlx2ks
 
 rootIDs = {}
 
@@ -33,7 +34,7 @@ def flatten_list(l):
 
 def getBBPChildren(root_id, df=None, childrenDic=None):
     if df is None:
-        csvFileName = os.path.join(os.path.dirname(__file__), './additionsToOntologies.csv')
+        csvFileName = data_path("additionsToOntologies.csv")
     
         df = pd.read_csv(csvFileName, skip_blank_lines=True, comment="#", 
                          delimiter=";", names=["id", "label", "definition", "superCategory", "synonyms"])    
@@ -173,7 +174,7 @@ def addSuppTerms(dic):
 
 
 def appendAdditions(treeData, dicData):
-    csvFileName = os.path.join(os.path.dirname(__file__), './additionsToOntologies.csv')
+    csvFileName = data_path("additionsToOntologies.csv")
 
     df = pd.read_csv(csvFileName, skip_blank_lines=True, comment="#", 
                      delimiter=";", names=["id", "label", "definition", "superCategory", "synonyms"])

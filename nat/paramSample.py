@@ -12,7 +12,7 @@ from copy import copy, deepcopy
 import numpy as np
 from quantities import Quantity
 
-from nat import utils
+from nat.utils import data_directory
 from .ageResolver import AgeResolver
 from .aggregators import SampleAggregator
 from .annotationSearch import ParameterGetter
@@ -63,7 +63,7 @@ class ParamSample:
     def setZoteroLib(self, library_id, library_type, api_key):
         # FIXME Delayed refactoring.
         if library_id is not None and library_type is not None and api_key is not None:
-            work_dir = utils.working_directory()
+            work_dir = data_directory()
             self.zotWrap = ZoteroWrap(library_id, library_type, api_key, work_dir)
             # TODO Implement an offline mode. Catch PyZoteroError.
             self.zotWrap.initialize()
