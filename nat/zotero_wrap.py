@@ -199,9 +199,22 @@ class ZoteroWrap:
         creators = self.reference_data(index)["creators"]
         creator_types = [x["creatorType"] for x in creators]
         if "author" in creator_types:
-            return [x["lastName"] for x in creators if x["creatorType"] == "author"]
+            creator_lst = [x for x in creators if x["creatorType"] == "author"]
         else:
-            return [x["lastName"] for x in creators]
+            creator_lst = [x for x in creators]
+
+        name_lst = []
+        for x in creator_lst:
+            if "lastName" in x:
+                name_lst.append(x["lastName"])
+            elif "name" in x:
+                name_lst.append(x["name"])
+            else:
+                warn("The zotero record " + str(x) + 
+                     " does not seem to contain proper author name information.") 
+                name_lst.append("")
+        return name_lst
+
 
     def reference_creator_surnames_str(self, index):
         """Return as a string the surnames of the reference creators (locally defined)."""
