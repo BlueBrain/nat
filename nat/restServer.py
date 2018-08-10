@@ -53,7 +53,8 @@ def runOCR(fileName):
         app.OCRLock.release()    
                 
         # Run OCR
-        run_ocrmypdf(fileName + ".pdf", fileName + ".txt")
+        run_ocrmypdf(fileName + ".pdf", fileName + ".pdf")
+        check_call(['pdftotext', '-enc', 'UTF-8', fileName + ".pdf", fileName + ".txt"])
  
         acquireLockWithTimeout()
         del app.OCRFiles[app.OCRFiles.index(fileName)]
