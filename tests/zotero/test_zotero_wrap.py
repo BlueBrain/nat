@@ -365,8 +365,9 @@ class TestZoteroWrap:
     @mark.parametrize("value, expected", [
         param(CREATORS[:1], ["AuthorLastA"], id="one_author"),
         param(CREATORS[:2], ["AuthorLastA", "AuthorLast-B"], id="two_authors"),
-        param(CREATORS[3:], ["EditorLastD", "EditorLast-E"], id="several_not_authors"),
-        param(CREATORS, ["AuthorLastA", "AuthorLast-B", "AuthorLastC"], id="several_mixed")
+        param(CREATORS[3:-1], ["EditorLastA", "EditorLast-B"], id="several_not_authors"),
+        param(CREATORS[:-1], ["AuthorLastA", "AuthorLast-B", "AuthorLastC"], id="several_mixed"),
+        param(CREATORS[-1:], [], id="no_last_name"),
     ])
     def test_reference_creator_surnames(self, zw0, value, expected):
         """Test reference_creator_surnames().
@@ -375,6 +376,7 @@ class TestZoteroWrap:
         When a reference has two creators of type 'author'.
         When a reference has several creators which aren't of type 'author'.
         When a reference has several creators of type 'author' and not.
+        When a reference has one creator of type 'author' described with 'name'.
         """
         init(zw0, "creators", value)
         assert zw0.reference_creator_surnames(0) == expected
@@ -382,11 +384,17 @@ class TestZoteroWrap:
     # reference_creator_surnames_str
 
     @mark.parametrize("value, expected", [
-        param(CREATORS[:1], "AuthorLastA", id="one"),
-        param(CREATORS[:2], "AuthorLastA, AuthorLast-B", id="two")
+        param(CREATORS[:1], "AuthorLastA", id="one_author"),
+        param(CREATORS[:2], "AuthorLastA, AuthorLast-B", id="two_authors"),
+        param(CREATORS[-1:], "", id="no_last_name"),
     ])
     def test_reference_creator_surnames_str(self, zw0, value, expected):
-        """When a reference has one or two creator(s) of type 'author'."""
+        """Test reference_creator_surnames_str().
+
+        When a reference has one creator of type 'author'.
+        When a reference has two creators of type 'author'.
+        When a reference has one creator of type 'author' described with 'name'.
+        """
         init(zw0, "creators", value)
         assert zw0.reference_creator_surnames_str(0) == expected
 
@@ -458,20 +466,31 @@ class TestZoteroWrap:
     # reference_creators_citation
 
     @mark.parametrize("value, expected", [
-        param(CREATORS[:1], "AuthorLastA (2017)", id="one"),
-        param(CREATORS[:2], "AuthorLastA and AuthorLast-B (2017)", id="two"),
-        param(CREATORS[:3], "AuthorLastA et al. (2017)", id="three")
+        param(CREATORS[:1], "AuthorLastA (2017)", id="one_author"),
+        param(CREATORS[:2], "AuthorLastA and AuthorLast-B (2017)", id="two_authors"),
+        param(CREATORS[:3], "AuthorLastA et al. (2017)", id="three_authors"),
+        param(CREATORS[-1:], "", id="no_last_name"),
     ])
     def test_reference_creators_citation(self, zw0, value, expected):
-        """When a reference has an ID, a date, and 1, 2, or 3 creator(s)."""
+        """Test reference_creators_citation().
+
+        When a reference with an ID and a date has one creator.
+        When a reference with an ID and a date has two creators.
+        When a reference with an ID and a date has three creators.
+        When a reference with an ID and a date has one creator described with 'name'.
+        """
         reference = init(zw0, "DOI", DOI)
         reference["data"]["date"] = DATE
         reference["data"]["creators"] = value
         assert zw0.reference_creators_citation(DOI) == expected
 
-    def test_reference_creators_citation_year_without(self, zw0):
+    @mark.parametrize("value, expected", [
+        param(CREATORS[:3], "AuthorLastA et al. ()", id="three_authors"),
+        param(CREATORS[-1:], "", id="no_last_name"),
+    ])
+    def test_reference_creators_citation_year_without(self, zw0, value, expected):
         """When a reference has no year (because no date)."""
         reference = init(zw0, "DOI", DOI)
         reference["data"]["date"] = ""
-        reference["data"]["creators"] = CREATORS[:3]
-        assert zw0.reference_creators_citation(DOI) == "AuthorLastA et al. ()"
+        reference["data"]["creators"] = value
+        assert zw0.reference_creators_citation(DOI) == expected

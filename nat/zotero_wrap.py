@@ -198,13 +198,18 @@ class ZoteroWrap:
         # book (as opposed to the level of a chapter).
         creators = self.reference_data(index)["creators"]
         creator_types = [x["creatorType"] for x in creators]
-        if "author" in creator_types:
-            return [x["lastName"] for x in creators if x["creatorType"] == "author"]
-        else:
-            return [x["lastName"] for x in creators]
+        # 'name' (not split) might be used instead of 'firstName' and 'lastName'.
+        try:
+            if "author" in creator_types:
+                return [x["lastName"] for x in creators if x["creatorType"] == "author"]
+            else:
+                return [x["lastName"] for x in creators]
+        except KeyError:
+            return []
 
     def reference_creator_surnames_str(self, index):
         """Return as a string the surnames of the reference creators (locally defined)."""
+        # NB: str.join() returns an empty string for an empty list.
         return ", ".join(self.reference_creator_surnames(index))
 
     def reference_date(self, index):
@@ -249,8 +254,10 @@ class ZoteroWrap:
         # FIXME Delayed refactoring. Use an index instead of an ID.
         index = self.reference_index(ref_id)
         creators = self.reference_creator_surnames(index)
-        year = self.reference_year(index)
         creator_count = len(creators)
+        if creator_count == 0:
+            return ""
+        year = self.reference_year(index)
         if creator_count == 1:
             return "{} ({})".format(creators[0], year)
         elif creator_count == 2:

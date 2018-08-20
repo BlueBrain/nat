@@ -43,13 +43,17 @@ CREATORS = [
     {
         "creatorType": "editor",
         "firstName": "EditorFirstA",
-        "lastName": "EditorLastD"
+        "lastName": "EditorLastA"
     },
     {
         "creatorType": "editor",
         "firstName": "EditorFirst B",
-        "lastName": "EditorLast-E"
-    }
+        "lastName": "EditorLast-B"
+    },
+    {
+        "creatorType": "author",
+        "name": "AuthorLastD AuthorFirstD"
+    },
 ]
 
 
