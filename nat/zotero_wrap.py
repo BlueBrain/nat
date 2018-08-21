@@ -37,13 +37,13 @@ class ZoteroWrap:
 
     def load_cache(self):
         """Load the cached Zotero data."""
-        print("Loading cached Zotero data...")
         with open(self.cache_path, "rb") as f:
+            print("Loading cached Zotero data...")
             cache = pickle.load(f)
             self._references = cache[self.CACHE_REFERENCE_LIST]
             self.reference_types = cache[self.CACHE_REFERENCE_TYPES]
             self.reference_templates = cache[self.CACHE_REFERENCE_TEMPLATES]
-        print("Cached Zotero data loaded.")
+            print("Cached Zotero data loaded.")
 
     def load_distant(self):
         """Load the distant Zotero data."""
