@@ -10,7 +10,7 @@
 "BBP-001000";"BBP-000000";"fundamental_variables";"Root for some fundamental variables such as time."; {}
 "BBP-001001";"BBP-001000";"time";"Time."; {}
 "BBP-001002";"BBP-001000";"percentage";"Generic percentage variable, e.g., when plotting a density function where the y-axis is given in percentage."; {}
-"BBP-001003";"BBP-001000";"poportion";"Generic proportion, generally a portion of the whole, such that is is between 0 and 1. "; {}
+"BBP-001003";"BBP-001000";"poportion";"Generic proportion, generally a portion of the whole, such that is is between 0 and 1."; {}
 "BBP-001010";"BBP-001000";"distance";"Distance."; {}
 "BBP-001011";"BBP-001010";"distance_rostrocaudal";"Distance along the rostrocaudal axis."; {}
 
