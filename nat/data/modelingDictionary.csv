@@ -9,6 +9,8 @@
 
 "BBP-001000";"BBP-000000";"fundamental_variables";"Root for some fundamental variables such as time."; {}
 "BBP-001001";"BBP-001000";"time";"Time."; {}
+"BBP-001002";"BBP-001000";"percentage";"Generic percentage variable, e.g., when plotting a density function where the y-axis is given in percentage."; {}
+"BBP-001003";"BBP-001000";"poportion";"Generic proportion, generally a portion of the whole, such that is is between 0 and 1."; {}
 "BBP-001010";"BBP-001000";"distance";"Distance."; {}
 "BBP-001011";"BBP-001010";"distance_rostrocaudal";"Distance along the rostrocaudal axis."; {}
 
@@ -148,6 +150,8 @@
 "BBP-121009";"BBP-121000";"spine_density";"Density of neuronal spines. These can be reported as linear density (e.g., spines per mm of dentrite), as an areal density (e.g., spines counted in some a given conting frame), or as an volumetric density (e.g., number of spines counted in a volume of tissue).";{"sao1813327414":"Cell"}  
 "BBP-121010";"BBP-121000";"bouton_number_per_cell";"Number of boutons a neuron have. Boutons are post-synaptic structures.";{"sao1813327414":"Cell"}  
 "BBP-121011";"BBP-121000";"bouton_density";"Density of synaptic boutons. These can be reported as linear density (e.g., boutons per mm of dentrite), as an areal density (e.g., boutons counted in a counting frame), or as an volumetric density (e.g., number of boutons counted in a volume of tissue).";{"sao1813327414":"Cell"}  
+"BBP-121012";"BBP-121000";"interbouton_distance";"Typically given as an average value of distance between buttons in some neurites.";{"sao1813327414":"Cell"}  
+"BBP-121013";"BBP-121000";"bouton_per_connection";"Number of boutons made per connection between two cells.";{"sao1813327414":"Cell"}  
 
 "BBP-130000";"BBP-000000";"structure";"";{}
 "BBP-131000";"BBP-130000";"structure_brain_region";"";{}
