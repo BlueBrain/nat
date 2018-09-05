@@ -8,6 +8,7 @@ from uuid import uuid1
 from scipy import interpolate
 from copy import deepcopy
 import json
+import numpy as np
 
 from .tag import RequiredTag
 from .tagUtilities import nlx2ks
@@ -247,7 +248,7 @@ class ParameterInstance:
         return indepVarValues
 
 
-    def getInterp1dValues(self, indepValues, indepName, kind='linear', statsToReturn=None):
+    def getInterp1dValues(self, indepValues, indepName, kind='linear', statsToReturn=None, extrapol="constant"):
 
         if isinstance(self.description.depVar, NumericalVariable):
             valuesObject = self.description.depVar.values
@@ -261,6 +262,12 @@ class ParameterInstance:
             if isinstance(valuesObject, ValuesSimple):
                 y = self.values
                 x = self.indepValues[self.indepNames.index(indepName)]
+
+                if np.all(indepValues <= x) and extrapol == "constant":
+                    return y[np.where(x == np.max(x))]
+                if np.all(indepValues >= x) and extrapol == "constant":
+                    return y[np.where(x == np.min(x))]
+
                 f = interpolate.interp1d(x, y, kind=kind)
                 return f(indepValues)
 

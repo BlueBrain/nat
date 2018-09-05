@@ -329,7 +329,7 @@ def isUserPDFValid(paperId, userPDF):
     if not isPDFInDb(paperId):
          return None
 
-    if computePDFSimilarity(paperId, userPDF) >= 0.5:
+    if computePDFSimilarity(paperId, userPDF) >= 0.6:
          return True
     return False
 
