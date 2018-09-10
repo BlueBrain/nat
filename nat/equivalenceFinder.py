@@ -5,7 +5,7 @@ Created on Tue Aug 15 15:33:25 2017
 @author: oreilly
 """
 
-from .modelingParameter import getParameterTypeNameFromID
+from nat.modelingParameter import getParameterTypeNameFromID
 
 # Equivalence rules. These are define such that
 # parameterEquivalenceRules[idFrom][idTo] is giving a rule to convert

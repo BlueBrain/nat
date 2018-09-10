@@ -7,7 +7,7 @@ Created on Mon Aug 14 12:28:29 2017
 
 from quantities import Quantity
 #from ontoManager import OntoManager
-from .treeData import getChildren
+from nat.treeData import getChildren
 
 
     

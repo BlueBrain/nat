@@ -14,13 +14,13 @@ with open(os.path.join(HERE, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="nat",
+    name="nat-analytics",
     version=VERSION,
-    description="Module to use the annotations created with NeuroCurator.",
+    description="Module to analyze annotation corpora created with NeuroCurator.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords="neuroscience annotation curation literature modeling parameters",
-    url="https://github.com/BlueBrain/nat",
+    url="https://github.com/BlueBrain/nat/tree/nat-analytics",
     author="Christian O'Reilly, Pierre-Alexandre Fonta",
     author_email="christian.oreilly@epfl.ch, pierre-alexandre.fonta@epfl.ch",
     # NB: 'If maintainer is provided, distutils lists it as the author in PKG-INFO'.
@@ -28,25 +28,16 @@ setup(
     # maintainer="Pierre-Alexandre Fonta",
     # maintainer_email="pierre-alexandre@epfl.ch",
     license="GPLv3",
-    packages=["nat"],
+    packages=["nat-analytics"],
     python_requires=">=3",  # unittest.mock needs Python 3.3+.
     install_requires=[
-        "beautifulsoup4",
-        "gitpython",
-        "lxml",
+        "nat",
         "numpy",
-        "pandas",
-        "parse",
-        "pyzotero",
         "quantities",
-        "scipy",
-        "wand"
+        "matplotlib"
     ],
     extras_require={
         "test": ["pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock"]
-    },
-    package_data={
-        "nat": ["data/*.csv"]
     },
     data_files=[("", ["LICENSE.txt"])],
     classifiers=[

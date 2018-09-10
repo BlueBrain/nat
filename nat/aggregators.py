@@ -6,7 +6,7 @@ Created on Mon Aug 29
 """
 
 import numpy as np
-from .modelingParameter import getParameterTypeNameFromID
+from nat.modelingParameter import getParameterTypeNameFromID
 
 
 class AggregatedIndex:

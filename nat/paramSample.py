@@ -13,19 +13,19 @@ import numpy as np
 from quantities import Quantity
 
 from nat.utils import data_directory
+from nat.annotationSearch import ParameterGetter, ParameterSearch
+from nat.condition import Condition
+from nat.modelingParameter import getParameterTypeIDFromName, getParameterTypeNameFromID
+from nat.paramDesc import ParamDescTrace
+from nat.treeData import getChildren
+from nat.values import ValuesSimple, ValuesCompound
+from nat.variable import NumericalVariable
+from nat.zotero_wrap import ZoteroWrap
+from nat import utils
+
 from .ageResolver import AgeResolver
 from .aggregators import SampleAggregator
-from .annotationSearch import ParameterGetter
-from .annotationSearch import ParameterSearch
-from .condition import Condition
-from .modelingParameter import getParameterTypeIDFromName, getParameterTypeNameFromID
-from .paramDesc import ParamDescTrace
-from .treeData import getChildren
-from .values import ValuesSimple, ValuesCompound
-from .variable import NumericalVariable
-from .zotero_wrap import ZoteroWrap
 
-from nat import utils
 
 class ParamSample:
 
