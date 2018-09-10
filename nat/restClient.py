@@ -13,7 +13,9 @@ from bs4 import BeautifulSoup as bs
 import io
 from zipfile import ZipFile
 import warnings
-
+from random import sample
+from itertools import combinations
+from glob import glob
 
 class RESTClientError(Exception):
     def __init__(self, message):
@@ -40,8 +42,12 @@ class RESTClient:
                                                   "contextLength": contextLength,
                                                   "annotStart"   : annotStart}))
 
+        if not response:
+            print(warnings.warn(response["message"]))
+            return ""            
+            
         response = json.loads(response.content.decode("utf8"))
-        
+    
         if not "context" in response:
             print(warnings.warn(response["message"]))
             return ""
@@ -120,8 +126,6 @@ class RESTClient:
                                  "\nContent of it 'files' argument: " + str(files))
 
 
-
-
     def checkSimilarity(self, localPDF, paperId):
         files = {"file": (os.path.basename(localPDF), open(localPDF, 'rb'), 'application/octet-stream'),
                  "json": (None, json.dumps({"paperId": paperId}), 'application/json')}
@@ -132,29 +136,42 @@ class RESTClient:
         return response.content
 
 
-
-
-
-from glob import glob
-def checkSimilarities(dbPath):
+def checkSimilarities(dbPath, sample_size=100):
     # FIXME Delayed refactoring. Define only once the REST server URL.
     client = RESTClient("https://bbpteam.epfl.ch/neurocurator/api/v1.0/")
 
-    intra = []
-    inter = []
-    for f1 in glob(os.path.join(dbPath, "*.pdf")):
-        for f2 in glob(os.path.join(dbPath, "*.pdf")):
-            try:
-                print(f1, f2)
-                response = client.checkSimilarity(f1, os.path.basename(f2)[:-4])
-                if f1 == f2:
-                    intra.append(float(response))
-                else:
-                    inter.append(float(response))
-            except ValueError:
-                pass
+    intra_sim = []
+    inter_sim = []
 
-    return intra, inter
+    pdfs = glob(os.path.join(dbPath, "*.pdf"))
+    all_inters = list(combinations(pdfs, 2))
+    if len(all_inters) > sample_size:
+        inter_sample = sample(all_inters, sample_size)
+    else:
+        inter_sample = all_inters
+
+    if len(pdfs) > sample_size:
+        intra_sample = sample(pdfs, sample_size)
+    else:
+        intra_sample = pdfs
+
+    for f1, f2 in inter_sample:
+        try:
+            print(f1, f2)
+            response = client.checkSimilarity(f1, os.path.basename(f2)[:-4])
+            inter_sim.append(float(response))
+        except ValueError:
+            pass
+
+    for f1 in intra_sample:
+        try:
+            print(f1, f1)
+            response = client.checkSimilarity(f1, os.path.basename(f1)[:-4])
+            intra_sim.append(float(response))
+        except ValueError:
+            pass
+
+    return intra_sim, inter_sim
 
 
 

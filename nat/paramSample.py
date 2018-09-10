@@ -25,42 +25,40 @@ from .values import ValuesSimple, ValuesCompound
 from .variable import NumericalVariable
 from .zotero_wrap import ZoteroWrap
 
+from nat import utils
 
 class ParamSample:
-    
-    def __init__(self, searcher=None, libraryId=None, libraryType=None, apiKey=None):
-        
-        self.setSearchAttributes(searcher)
-        self.setZoteroLib(libraryId, libraryType, apiKey)
 
+    def __init__(self, searcher=None, library_id=None, library_type=None, api_key=None):
+
+        self.setSearchAttributes(searcher)
+        self.setZoteroLib(library_id, library_type, api_key)
         self.ageUnit = "day"
-        
+
         # For the conversion of age categories (e.g., adult) to 
         # numerical values. "min" species the lower bound of the interval.
         # For example, rats are adult from 5 months up to their dead (around 2-3.5 years)
         # setting this parametes to min, 5 months will be attributed as numerical
         # value for the age "adult" in rats.
         self.ageTypeValue = "min"
-        
+
         self.__aggregators = {}
-        
+
         self.__operations = []
-            
 
 
     def copy(self):
         # A bit intricated because we cannot deepcopy pandas DataFrames
-        copiedSample = copy(self)            
-        copiedSample.sampleDF = None
-        copiedSample.zotWrap = None
-        copiedSample = deepcopy(copiedSample)
+        copiedSample = copy(self)
         copiedSample.sampleDF = self.sampleDF.copy()
-        copiedSample.zotWrap  = self.setZoteroLib(self.zotWrap.libraryId, 
-                                                  self.zotWrap.libraryType, 
-                                                  self.zotWrap.apiKey)
+        copiedSample.zotWrap  = self.setZoteroLib(self.library_id, self.library_type, self.api_key)
         return copiedSample
 
     def setZoteroLib(self, library_id, library_type, api_key):
+        self.library_id = library_id
+        self.library_type = library_type
+        self.api_key = api_key
+
         # FIXME Delayed refactoring.
         if library_id is not None and library_type is not None and api_key is not None:
             work_dir = data_directory()
@@ -75,9 +73,9 @@ class ParamSample:
             self.sampleDF            = searcher.search()
             self.searchConditions    = searcher.conditions
             self.onlyCentralTendancy = searcher.onlyCentralTendancy
-            self.pathDB              = searcher.pathDB        
+            self.pathDB              = searcher.pathDB
             self.expandRequiredTags  = searcher.expandRequiredTags
-    
+
             self.sampleDF["isValid"] = None
             self.sampleDF["statusStr"] = ""
             self.__report = "Search string: " + str(self.searchConditions) + "\n"
@@ -111,7 +109,6 @@ class ParamSample:
         for param, annot, (index, row) in zip(self.sampleDF["obj_parameter"], 
                                               self.sampleDF["obj_annotation"], 
                                               self.sampleDF.iterrows()):
-                                                  
             if param.unit == unit:
                 continue
                                                   
@@ -245,6 +242,8 @@ class ParamSample:
                 statusStr = "Species ambiguous. More than one species associated to the annotation.\n"
                 self.sampleDF.loc[index, "isValid"]   = False
                 self.sampleDF.loc[index, "statusStr"] += statusStr                
+                speciesId.append("")
+                species.append("")                
                 continue
                 
             speciesId.append(tags[0].id)
@@ -282,7 +281,10 @@ class ParamSample:
                 
                 ageCategoryIds.append(None)
                 ageCategories.append(None)        
-                numericalAges.append(Quantity(ageParam.centralTendancy(), ageParam.unit).rescale(self.ageUnit))
+                try:
+                    numericalAges.append(Quantity(ageParam.centralTendancy(), ageParam.unit).rescale(self.ageUnit))
+                except ValueError:
+                    raise ValueError("Issue encountered while processing annotation Parameter instance ID: " + str(self.sampleDF.loc[index, "Parameter instance ID"]))
 
             # No experimental property attributed. Check to use a age category if one has been attributed.
             else:
@@ -386,9 +388,6 @@ class ParamSample:
         return df[df["paramNames"] == paramName]            
         
 
-
-
-
     def interpolate(self, interpValues):
         """
         interpValues should be a dictionnary where the keys are the parameter names
@@ -411,12 +410,6 @@ class ParamSample:
                         else:
                             raise ValueError("This case has not been implemented yet.")
                     df.loc[ind, "Values"] = float(val)   
-
-                    
-
-    
-
-
 
 
     def getModelingValues(self, paramName):
@@ -446,14 +439,12 @@ class ParamSample:
 
     @staticmethod
     def fromJSON(jsonParams):
-        paramSample = ParamSample()
+        paramSample = ParamSample(searcher=None, library_id=jsonParams["libraryId"], 
+                                  library_type=jsonParams["libraryType"], api_key=jsonParams["apiKey"])
         searchCondition = Condition.fromJSON(jsonParams["searchCondition"]) 
         paramSample.setSearchAttributes_withoutSearcher(jsonParams["pathDB"], searchCondition, 
                                                         jsonParams["onlyCentralTendancy"], 
                                                         jsonParams["expandRequiredTags"])
-        paramSample.setZoteroLib(jsonParams["libraryId"], 
-                                 jsonParams["libraryType"], 
-                                 jsonParams["apiKey"])
     
         paramSample.ageUnit = jsonParams["ageUnit"]
         paramSample.ageTypeValue = jsonParams["ageTypeValue"]
@@ -473,9 +464,9 @@ class ParamSample:
                 "pathDB"             : self.pathDB,
                 "onlyCentralTendancy": self.onlyCentralTendancy,
                 "expandRequiredTags" : self.expandRequiredTags,
-                "libraryId"          : self.zotWrap.libraryId,
-                "libraryType"        : self.zotWrap.libraryType,
-                "apiKey"             : self.zotWrap.apiKey,
+                "libraryId"          : self.library_id,
+                "libraryType"        : self.library_type,
+                "apiKey"             : self.api_key,
                 "ageUnit"            : self.ageUnit,
                 "ageTypeValue"       : self.ageTypeValue,
                 "aggregators"        : {agg:self.__aggregators[agg].toJSON() for agg in self.__aggregators},
