@@ -17,10 +17,8 @@ import io
 from os.path import join, isfile
 from threading import Lock, Thread
 
-from . import utils
+from nat import utils
 from .runOCR import run_ocrmypdf
-
-#from nat.annotationSearch import AnnotationGetter
 
 
 dbPath = "/mnt/curator_DB/"
