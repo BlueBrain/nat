@@ -4,11 +4,16 @@ __maintainer__ = "Pierre-Alexandre Fonta"
 import copy
 import json
 from dataclasses import dataclass, field
+from itertools import chain
 from pathlib import Path
-from typing import List, Optional, Any, Dict, Tuple, Iterable
+from typing import List, Optional, Any, Dict, Tuple, Iterable, Iterator, Callable, Union
 
 
 JSON = Dict[str, Any]
+
+
+def select_by_type(_type: str, data: Iterable[JSON]) -> Iterator[JSON]:
+    return (x for x in data if _type in x["@type"])
 
 
 def find(uuid: str, data: Iterable[JSON], uuid_field: str = "providerId") -> Optional[JSON]:
@@ -17,6 +22,19 @@ def find(uuid: str, data: Iterable[JSON], uuid_field: str = "providerId") -> Opt
         return found
     else:
         return None
+
+
+def profiling(data: Iterable[JSON], conditions: List[Callable[[JSON], bool]],
+              flatten: bool = False) -> Union[List[List[int]], List[int]]:
+    idxs = []
+    for f in conditions:
+        selected = [i for i, x in enumerate(data) if f(x)]
+        print("<count>", f.__name__, len(selected))
+        idxs.append(selected)
+    if flatten:
+        return list(chain.from_iterable(idxs))
+    else:
+        return idxs
 
 
 def prepare(data: JSON, replacements: List[Tuple[str, str]]) -> str:
