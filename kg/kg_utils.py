@@ -82,7 +82,7 @@ class TestDataConfiguration:
         min_data = data.copy()
 
         for x in optional_properties:
-            del min_data[x]
+            min_data.pop(x, None)
 
         name_template = "auto-{}-fields"
         filename = name_template.format("all")
