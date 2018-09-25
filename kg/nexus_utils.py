@@ -4,6 +4,7 @@ __maintainer__ = "Pierre-Alexandre Fonta"
 import json
 import logging
 import re
+from contextlib import redirect_stdout
 from dataclasses import dataclass, field
 from io import StringIO
 from pathlib import Path
@@ -250,7 +251,30 @@ class PipelineConfiguration:
 
         return results
 
-    # Internal helpers methods.
+    # Cleaning helpers.
+
+    def clean(self, organization: bool, domain: bool) -> None:
+        with redirect_stdout(None):
+            instances_search = self.instances_of_domain(resolved=True)
+            instances = self.retrieve_all_results(instances_search)
+
+        for x in instances:
+            # The actual performed operation is a deprecation and not a deletion.
+            # See issue https://github.com/HumanBrainProject/pyxus/issues/28.
+            self.client.instances.delete(x)
+        print("<deprecated>", len(instances), "instances")
+
+        if domain:
+            d = self.client.domains.read(self.organization, self.domain)
+            self.client.domains.delete(d)
+            print("<deprecated>", self.domain)
+
+        if organization:
+            o = self.client.organizations.read(self.organization)
+            self.client.organizations.delete(o)
+            print("<deprecated>", self.organization)
+
+    # Internal helpers.
 
     @staticmethod
     def _print_already_pushed(name: str) -> None:
