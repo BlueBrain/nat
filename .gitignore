@@ -8,9 +8,10 @@ nat.egg-info/*
 *.py.bak
 *.ini
 MANIFEST
-notebooks/.ipynb_checkpoints/*
+**/.ipynb_checkpoints/*
 build/*
 *~
 dist/*
 .cache/*
 .coverage
+**/.idea/*
