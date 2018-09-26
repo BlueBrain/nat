@@ -1,9 +1,9 @@
-# Styling rules for the transformation logic
+## Styling rules for the transformation logic
 
-For this use case, this applies to annotations.py and parameters.py.
+For this use case, this applies to `annotations.py` and `parameters.py`.
 
 
-## Function creation
+### Function creation
 
 **Functions called in a `dict`**
 
@@ -16,7 +16,7 @@ list comprehension calling this function. It makes the mapping testable and
 git diffs more readable.
 
 
-## Naming rules
+### Naming rules
 
 #### Function name
 
@@ -54,7 +54,7 @@ in the source field name`.
 `hx_zzz()` functions (helper) can return more than one value.
 
 
-## Style rules
+### Style rules
 
 Indent the dicts like pretty JSONs. So, no { ... } or [ ... ] on one line.
 
@@ -71,13 +71,13 @@ First the transform_xyz() one and after the px_yyy() ones in the order they are 
 
 The nested `t(x)` is at the beginning of the function which uses one. 
 
-### Tackling complex conditional cases
+#### Tackling complex conditional cases
 
 Use dictionary merging.
 
 Example/Template:
 
-```
+```python
 def hp_variable(parameter_type: str, variable: JSON) -> JSON:
     def t(x: JSON) -> JSON:
         ...
