@@ -39,7 +39,7 @@ and [Nexus Utils](#nexus-utils) sections or directly to the code.
 
 * Configure different pipelines (user domain, Neuroshapes, ...).
 
-```python
+```
 config = PipelineConfiguration(token, deployment, client, organization, domain, organization_desc, domain_desc)
 ```
 
@@ -88,7 +88,7 @@ the transformation logic**.
 
 ### KG Utils
 
-```python
+```
 class TestDataConfiguration:
     
     def write(self, data, schema_name, schema_version, optional_properties, flavour=None) -> None
@@ -104,7 +104,7 @@ remove_empty_values(data) -> None
 
 ### Nexus Utils
 
-```python
+```
 class PipelineConfiguration:
   
     # is_xyz_pushed() methods.
@@ -116,7 +116,7 @@ class PipelineConfiguration:
     
     # create_xyz() methods.
     
-    def create_organization(self) -> Optional[Organization]:
+    def create_organization(self) -> Optional[Organization]
     def create_domain(self) -> Optional[Domain]
     def create_publish_schema(self, name, version, data) -> Optional[Schema]
     def create_publish_schemas(self, data) -> Dict[str, Optional[Schema]]
