@@ -182,7 +182,7 @@ class PipelineConfiguration:
                     created_count += 1
         print("<count>", created_count)
 
-    # load_prepare_xyz() methods
+    # load_prepare_xyz() methods.
 
     def load_prepare_schema(self, neuroshapes_dir: str, name: str, version: str,
                             specific: bool = False) -> JSON:
