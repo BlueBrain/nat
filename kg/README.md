@@ -25,14 +25,16 @@ Components:
 - Data Quality: `kg_utils.py`
 
 Designed for:
-- Python 3.7+
 - Nexus v0
 - pyxus 0.5.1
+- Python 3.7+
 
 
 ## Features
 
-Overview. For the toolkit methods and functions, refer [KG Utils](#kg-utils)
+Overview.
+
+For the toolkit methods and functions, please refer to the [KG Utils](#kg-utils)
 and [Nexus Utils](#nexus-utils) sections or directly to the code.
 
 ### Pipeline
