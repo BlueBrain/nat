@@ -9,7 +9,7 @@ import re
 import numpy as np
 from difflib import SequenceMatcher
 from os.path import join, isfile
-from restClient import RESTClient 
+from nat.restClient import RESTClient
 
 class AnnotTextLocalizer:
     
