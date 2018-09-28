@@ -1,5 +1,4 @@
-__all__ = ["TreeData", "Annotation", "TextLocalizer"]
+__authors__ = ["Pierre-Alexandre Fonta", "Christian O'Reilly"]
+__maintainer__ = "Pierre-Alexandre Fonta"
 
-#from .treeData import TreeData
-from .annotation import Annotation
-from .annotation import TextLocalizer
+from .zotero_wrap import ZoteroWrap

@@ -5,7 +5,7 @@ from copy import deepcopy
 
 from pytest import fixture
 
-from nat.zotero_wrap import ZoteroWrap
+from nat import ZoteroWrap
 from tests.zotero.data import (REFERENCES, REFERENCE_TYPES, REFERENCE_TEMPLATES,
                                ARTICLE_TEMPLATE, BOOK_TEMPLATE, ITEM_TYPES)
 

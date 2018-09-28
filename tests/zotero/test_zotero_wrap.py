@@ -44,17 +44,17 @@ class TestZoteroWrap:
 
     def test_initialize_cache(self, mocker, zw0):
         """When there are data cached."""
-        mocker.patch("nat.zotero_wrap.ZoteroWrap.load_cache")
+        mocker.patch("nat.ZoteroWrap.load_cache")
         zw0.initialize()
         # TODO Use assert_called_once() with Python 3.6+.
-        nat.zotero_wrap.ZoteroWrap.load_cache.assert_called_once_with()
+        nat.ZoteroWrap.load_cache.assert_called_once_with()
 
     def test_initialize_distant(self, mocker, zw0):
         """When there are no data cached."""
-        mocker.patch("nat.zotero_wrap.ZoteroWrap.load_distant")
+        mocker.patch("nat.ZoteroWrap.load_distant")
         zw0.initialize()
         # TODO Use assert_called_once() with Python 3.6+.
-        nat.zotero_wrap.ZoteroWrap.load_distant.assert_called_once_with()
+        nat.ZoteroWrap.load_distant.assert_called_once_with()
 
     # cache
 
@@ -80,7 +80,7 @@ class TestZoteroWrap:
 
     def test_load_distant(self, monkeypatch, zw0, references, reference_types, reference_templates):
         """Test ZoteroWrap.load_distant()."""
-        scope = "nat.zotero_wrap.ZoteroWrap."
+        scope = "nat.ZoteroWrap."
         monkeypatch.setattr(scope + "get_references", lambda _: references)
         monkeypatch.setattr(scope + "get_reference_types", lambda _: reference_types)
         monkeypatch.setattr(scope + "get_reference_templates", lambda _, x: reference_templates)
@@ -114,14 +114,14 @@ class TestZoteroWrap:
             "successful": {"0": reference},
             "unchanged": {}
         }
-        monkeypatch.setattr("nat.zotero_wrap.ZoteroWrap.validate_reference_data", lambda _, x: None)
+        monkeypatch.setattr("nat.ZoteroWrap.validate_reference_data", lambda _, x: None)
         monkeypatch.setattr("pyzotero.zotero.Zotero.create_items", lambda _, x: creation_status)
         assert zw0.create_distant_reference(reference["data"]) == reference
 
     def test_create_distant_reference_unsuccessful(self, monkeypatch, zw0, reference):
         """When Zotero.create_items() hasn't been successful."""
         # NB: Creation status expected when unsuccessful hasn't been observed.
-        monkeypatch.setattr("nat.zotero_wrap.ZoteroWrap.validate_reference_data", lambda _, x: None)
+        monkeypatch.setattr("nat.ZoteroWrap.validate_reference_data", lambda _, x: None)
         monkeypatch.setattr("pyzotero.zotero.Zotero.create_items", lambda _, x: {})
         with raises(nat.zotero_wrap.CreateZoteroItemError):
             zw0.create_distant_reference(reference["data"])
@@ -163,7 +163,7 @@ class TestZoteroWrap:
 
     def test_update_distant_reference(self, monkeypatch, mocker, zw0, reference):
         """Test ZoteroWrap.update_distant_reference()."""
-        monkeypatch.setattr("nat.zotero_wrap.ZoteroWrap.validate_reference_data", lambda _, x: None)
+        monkeypatch.setattr("nat.ZoteroWrap.validate_reference_data", lambda _, x: None)
         mocker.patch("pyzotero.zotero.Zotero.update_item")
         zw0.update_distant_reference(reference)
         # TODO Use assert_called_once() with Python 3.6+.
@@ -217,7 +217,7 @@ class TestZoteroWrap:
             from tests.zotero.data import GET_REFERENCE_TEMPLATES
             index = reference_types.index(ref_type)
             return GET_REFERENCE_TEMPLATES[index]
-        monkeypatch.setattr("nat.zotero_wrap.ZoteroWrap.get_reference_template", patch)
+        monkeypatch.setattr("nat.ZoteroWrap.get_reference_template", patch)
         assert zw0.get_reference_templates(reference_types) == REFERENCE_TEMPLATES
 
     # get_reference_template

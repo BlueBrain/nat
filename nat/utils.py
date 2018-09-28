@@ -10,6 +10,8 @@ from copy import copy
 from glob import glob
 from os.path import basename
 
+from nat import ZoteroWrap
+
 
 def data_directory():
     """Return the absolute path to the directory containing the package data."""
@@ -90,8 +92,7 @@ def reprocessFileNames(path = "/home/oreilly/curator_DB/"):
                           path + f_out)
 
 
-from .zotero_wrap import ZoteroWrap
-def test_ID_conversion():        
+def test_ID_conversion():
     library_type = "group"
     api_key = "4D3rDZsAVBd139alqoVZBKOO"
     library_id = "427244"
