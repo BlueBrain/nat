@@ -24,6 +24,7 @@ NAT provides the necessary functions and utilities to:
 
 System side:
 
+- [Python 3.5+](https://www.python.org/downloads/)
 - [Git 1.7.0+](https://git-scm.com/downloads)
 - [ImageMagick 6](http://docs.wand-py.org/en/latest/guide/install.html)
 
@@ -36,9 +37,10 @@ Python side:
 - [pandas](https://pandas.pydata.org)
 - [parse](https://pypi.python.org/pypi/parse)
 - [Pyzotero](https://pyzotero.readthedocs.io)
+- [dateutils](https://dateutil.readthedocs.io)
 - [quantities](https://python-quantities.readthedocs.io)
-- [SciPy](https://www.scipy.org/scipylib/index.html)
-- [Wand](http://docs.wand-py.org)
+- [requests](http://docs.python-requests.org)
+- [SciPy](https://www.scipy.org/scipylib/)
 
 **Installation:**
 

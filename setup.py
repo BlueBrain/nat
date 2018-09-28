@@ -5,7 +5,7 @@ import os
 
 from setuptools import setup
 
-VERSION = "0.4.3"
+VERSION = "0.4.4"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -29,24 +29,25 @@ setup(
     # maintainer_email="pierre-alexandre@epfl.ch",
     license="GPLv3",
     packages=["nat"],
-    python_requires=">=3",  # unittest.mock needs Python 3.3+.
+    python_requires=">=3.5",  # Package pandas requires Python 3.5+.
     install_requires=[
-        "beautifulsoup4",
-        "gitpython",
-        "lxml",
+        "beautifulsoup4",  # Imported as 'bs4'.
+        "gitpython",  # Imported as 'git'.
+        "lxml",  # Used with BeautifulSoup4.
         "numpy",
         "pandas",
         "parse",
+        "python-dateutil",
         "pyzotero",
         "quantities",
+        "requests",
         "scipy",
-        "wand"
     ],
     extras_require={
-        "test": ["pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock"]
+        "test": ["pytest", "pytest-cov", "pytest-lazy-fixture", "pytest-mock"],
     },
     package_data={
-        "nat": ["data/*.csv"]
+        "nat": ["data/*.csv"],
     },
     data_files=[("", ["LICENSE.txt"])],
     classifiers=[
@@ -58,9 +59,12 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "License :: Free for non-commercial use",
         "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.5'",
+        "Programming Language :: Python :: 3.6'",
+        "Programming Language :: Python :: 3.7'",
         "Operating System :: MacOS",
         "Operating System :: POSIX :: Linux",
         "Operating System :: Microsoft :: Windows",
-        "Natural Language :: English"
+        "Natural Language :: English",
     ]
 )
