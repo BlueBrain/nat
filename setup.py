@@ -29,7 +29,7 @@ setup(
     # maintainer="Pierre-Alexandre Fonta",
     # maintainer_email="pierre-alexandre@epfl.ch",
     license="GPLv3",
-    packages=["nat-analytics"],
+    packages=["natanalytics"],
     python_requires=">=3.5",  # Package pandas requires Python 3.5+.
     install_requires=[
         "nat",
