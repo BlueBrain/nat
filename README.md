@@ -1,4 +1,5 @@
 [Getting Started](#getting-started) |
+[Upgrade](#upgrade) |
 [Releases](#releases) |
 [Status](#status)
 
@@ -20,15 +21,28 @@ NAT provides the necessary functions and utilities to:
 
 ## Getting Started
 
-**Requirements:**
+### Installation
 
-System side:
+After having **installed the [requirements](#requirements)**:
+
+```bash
+pip3 install nat
+```
+
+**Before**, you might want to create a dedicated environment with `conda`:
+
+```bash
+conda create --name nat_env python=3.7
+conda activate nat_env
+```
+
+#### Requirements
 
 - [Python 3.5+](https://www.python.org/downloads/)
-- [Git 1.7.0+](https://git-scm.com/downloads)
-- [ImageMagick 6](http://docs.wand-py.org/en/latest/guide/install.html)
+- [Git 1.7.0+](https://git-scm.com/downloads) (GitPython)
+- [Miniconda](https://conda.io/miniconda.html) (optional)
 
-Python side:
+#### Python dependencies
 
 - [Beautiful Soup 4](https://www.crummy.com/software/BeautifulSoup/)
 - [GitPython](https://gitpython.readthedocs.io)
@@ -36,24 +50,28 @@ Python side:
 - [NumPy](http://www.numpy.org)
 - [pandas](https://pandas.pydata.org)
 - [parse](https://pypi.python.org/pypi/parse)
-- [Pyzotero](https://pyzotero.readthedocs.io)
 - [dateutils](https://dateutil.readthedocs.io)
+- [Pyzotero](https://pyzotero.readthedocs.io)
 - [quantities](https://python-quantities.readthedocs.io)
 - [requests](http://docs.python-requests.org)
 - [SciPy](https://www.scipy.org/scipylib/)
 
-**Installation:**
+## Upgrade
 
 ```bash
-pip install nat
+pip3 install --upgrade nat
+```
+
+If you have used `conda`, activate the environment before:
+
+```bash
+conda activate nat_env
 ```
 
 ## Releases
 
-Versions and their notable changes are listed in the
-[releases section](https://github.com/BlueBrain/nat/releases/).
-
-Releases are synchronized with the ones of NeuroCurator.
+Versions and their notable changes are listed in the [releases section](
+https://github.com/BlueBrain/nat/releases/).
 
 ## Status
 
