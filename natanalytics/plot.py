@@ -143,16 +143,15 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2,
     maxX = {}
 
     uniquePanels = np.unique(panels).tolist()
-    
     if figsize is None:
         figsize = (20, 6*int(np.ceil(len(uniquePanels)/nbCols)))
-        
+
     if len(uniquePanels) > 1:
         context = plt.subplots(int(np.ceil(len(uniquePanels)/nbCols)), nbCols, 
                                figsize=figsize)
     else:
         context = plt.subplots(figsize=figsize)
-    
+
     for paramTrace, panel, ref, marker, text, text_y_offset in \
             zip(paramTraces, panels, labels, markers, texts, text_y_offests):
         no = uniquePanels.index(panel)
@@ -173,6 +172,6 @@ def plotTraces(sample, x, panels=None, labels=None, nbCols=2,
                               title=panel, context=context, index=no, label=ref, text=text,
                               text_y_offset=text_y_offset)
 
-    update_legend(axes)
+        update_legend(axes)
 
     return context
