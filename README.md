@@ -1,5 +1,6 @@
 [Getting Started](#getting-started) |
 [Releases](#releases) |
+[Examples of use](#examples-of-use) |
 [Status](#status)
 
 # NeuroAnnotation Toolbox - Analytics (nat-analytics)
@@ -31,6 +32,20 @@ Python side:
 ```bash
 pip install https://github.com/BlueBrain/nat.git@nat-analytics
 ```
+
+## Examples of use
+
+A series of Jupyter notebooks has been prepared to demonstrate some use-cases for analysis of corpora of annotations using nat-core and nat-analytics. Here are some notebooks demonstrating how to interact with an annotation corpus:
+- [Showing some raw information about a corpus](https://github.com/BlueBrain/nat/blob/nat-analytics/notebooks/Status_thalamus_corpus.ipynb) (nat-core)
+- [Basic formatting and homogenization of a corpus of annotated parameters](https://github.com/BlueBrain/nat/blob/nat-analytics/notebooks/ThalamusStereology.ipynb) (nat-core)
+- [Example with ion current conductances](https://github.com/BlueBrain/nat/blob/nat-analytics/notebooks/Example_ionic_currents.ipynb) (nat-core)
+- [Statistical analysis of curated parameter values](https://github.com/BlueBrain/nat/blob/nat-analytics/notebooks/Analysis_conductances.ipynb) (nat-core)
+- [Aggregating data from an annotation corpus](https://github.com/BlueBrain/nat/blob/nat-analytics/notebooks/brain_cell_densities_aggregation.ipynb) (nat-analytics, nat-core)
+- [Example of how annotated values can be integrated in Notebook documentation](https://github.com/BlueBrain/nat/blob/nat-analytics/notebooks/integrationOfAnnotationsInMarkdown.ipynb) (nat-core)
+
+Some other notebooks for specific functionalities:
+- [Displaying the tree of modeling parameter types](https://github.com/BlueBrain/nat/blob/nat-analytics/notebooks/parameterTree.ipynb) (nat-core)
+- [Computed similarity index between versus within documents](https://github.com/BlueBrain/nat/blob/nat-analytics/notebooks/Check_text_pdf_similarity.ipynb) (nat-core)
 
 ## Releases [TO BE REVISED]
 
