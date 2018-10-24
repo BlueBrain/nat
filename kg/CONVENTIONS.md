@@ -56,14 +56,16 @@ in the source field name`.
 
 ### Style rules
 
+`@type` field value is always a list so that lookups in Python are consistent.
+
 Indent the dicts like pretty JSONs. So, no { ... } or [ ... ] on one line.
+
+Last element of dicts and lists has a `,` at the end for more readable git diffs.
+
+The `mapping` dict is always at the beginning of the function body.
 
 For sibling fields in the dict(s) of the `transform_xyz()`function, introduce
 an empty line between fields.
-
-Last element of dicts has a `,` at the end for more readable git diffs.
-
-The `mapping` dict is always at the beginning of the function body.
 
 #### Function order
 
@@ -85,22 +87,24 @@ def hp_variable(parameter_type: str, variable: JSON) -> JSON:
     _type = hp_variable_type(parameter_type, variable)
 
     base = {
-        "@type": _type,
-        "quantityType": "nsg:" + variable["typeId"],
+        "@type": [
+            _type,
+        ],
+        "nsg:quantityType": variable["typeId"],
     }
 
     if _type == "nsg:SimpleNumericalVariable":
         specific = {
-            "series": t(variable["values"]),
+            "nsg:series": t(variable["values"]),
         }
 
     elif _type == "nsg:CompoundNumericalVariable":
         specific = {
-            "series": [t(x) for x in variable["values"]["valueLst"]],
+            "nsg:series": [t(x) for x in variable["values"]["valueLst"]],
         }
-
+    ...
     else:
-        raise Exception("Unknown variable type!")
+        raise Exception("Unknown variable type!", _type)
 
     return {**base, **specific}
 ```

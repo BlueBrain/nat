@@ -11,10 +11,10 @@ from nexus_utils import prettify
 JSON = Dict[str, Any]
 
 
-def transform_annotations(raw_annotations: List[JSON], data_context: str, agent_iri_base: str,
+def transform_annotations(raw_annotations: List[JSON], data_context_iri: str, agent_iri_base: str,
                           parameter_uuid_mapping: Dict[str, str]) -> Iterator[JSON]:
     for i, x in enumerate(raw_annotations):
-        json_ld = transform_annotation(x, data_context, agent_iri_base, parameter_uuid_mapping)
+        json_ld = transform_annotation(x, data_context_iri, agent_iri_base, parameter_uuid_mapping)
         if json_ld is None:
             # TODO Handle better recovery from transformation errors.
             print("<index>", i)
@@ -23,50 +23,53 @@ def transform_annotations(raw_annotations: List[JSON], data_context: str, agent_
             yield json_ld
 
 
-def transform_annotation(x: JSON, data_context: str, agent_iri_base: str,
+def transform_annotation(x: JSON, data_context_iri: str, agent_iri_base: str,
                          parameter_uuid_mapping: Dict[str, str]) -> Optional[JSON]:
     try:
         base = {
-            "@context": data_context,
+            "@context": data_context_iri,
 
-            "@type": "nsg:ParameterAnnotation",
+            "@type": [
+                "nsg:ParameterAnnotation",
+                "oa:Annotation",
+            ],
 
             # EntityShape properties.
 
-            "name": pa_name(x["annotId"], x["localizer"]["type"]),
+            "schema:name": pa_name(x["annotId"], x["localizer"]["type"]),
 
-            "providerId": x["annotId"],
+            "nsg:providerId": x["annotId"],
 
             # AnnotationShape properties.
 
-            "contribution": {
+            "nsg:contribution": {
 
                 # ContributionShape properties.
 
-                "agent": pa_contribution_agent(x["authors"], agent_iri_base),
+                "prov:agent": pa_contribution_agent(x["authors"], agent_iri_base),
             },
 
-            "hasTarget": {
+            "oa:hasTarget": {
 
                 "@type": pa_hastarget_type(x["localizer"]["type"]),
 
                 # SelectorTargetShape properties.
 
-                "hasSource": pa_hastarget_hassource(x["pubId"]),
+                "oa:hasSource": pa_hastarget_hassource(x["pubId"]),
 
-                "hasSelector": pa_hastarget_hasselector(x["localizer"]),
+                "oa:hasSelector": pa_hastarget_hasselector(x["localizer"]),
             },
 
-            "hasBody": pa_hasbody(x["parameters"], parameter_uuid_mapping),
+            "oa:hasBody": pa_hasbody(x["parameters"], parameter_uuid_mapping),
 
             # Specific properties.
 
-            "keywords": pa_keywords(x["tags"]),
+            "nsg:keyword": pa_keyword(x["tags"]),
 
-            "comment": x["comment"],
+            "nsg:comment": x["comment"],
 
-            "experimentalProperties":
-                pa_experimentalproperties(x["experimentProperties"], parameter_uuid_mapping),
+            "nsg:experimentalProperty":
+                pa_experimentalproperty(x["experimentProperties"], parameter_uuid_mapping),
         }
 
         remove_empty_values(base)
@@ -94,12 +97,14 @@ def pa_contribution_agent(authors: List[str], agent_iri_base: str) -> List[JSON]
         }
         return {
             "@id": mapping[x],
-            "@type": "prov:Agent",
+            "@type": [
+                "prov:Agent",
+            ],
         }
     return [t(x) for x in authors]
 
 
-def pa_hastarget_type(_type: JSON) -> str:
+def pa_hastarget_type(_type: str) -> List[str]:
     mapping = {
         "text": "nsg:TextPositionTarget",
         "figure": "nsg:FigureTarget",
@@ -107,7 +112,7 @@ def pa_hastarget_type(_type: JSON) -> str:
         "table": "nsg:TableTarget",
         "position": "nsg:AreaTarget",
     }
-    return mapping[_type]
+    return [mapping[_type]]
 
 
 # TODO Tackle the case UNPUBLISHED (not DOI nor PMID).
@@ -133,7 +138,7 @@ def pa_hastarget_hassource(pub_id: str) -> str:
 
 def pa_hastarget_hasselector(localizer: JSON) -> JSON:
     mapping = {
-        "text": "nsg:TextPositionSelector",
+        "text": "oa:TextPositionSelector",
         "figure": "nsg:FigureSelector",
         "equation": "nsg:EquationSelector",
         "table": "nsg:TableSelector",
@@ -144,29 +149,31 @@ def pa_hastarget_hasselector(localizer: JSON) -> JSON:
 
     base = {
         # SelectorShape properties.
-        "@type": _type,
+        "@type": [
+            _type,
+        ],
     }
 
-    if _type == "nsg:TextPositionSelector":
+    if _type == "oa:TextPositionSelector":
         # TextPositionSelectorShape properties.
         start = localizer["location"]
         text = localizer["text"]
         specific = {
-            "start": start,
-            "end": start + len(text),
-            "text": text,
+            "oa:start": start,
+            "oa:end": start + len(text),
+            "nsg:text": text,
         }
     elif _type in ["nsg:FigureSelector", "nsg:EquationSelector"]:
         # IndexSelectorShape properties.
         specific = {
-            "index": localizer["no"],
+            "nsg:index": localizer["no"],
         }
     elif _type == "nsg:TableSelector":
         # TableSelectorShape properties.
         specific = {
-            "index": localizer["no"],
-            "row": localizer["noRow"],
-            "column": localizer["noCol"],
+            "nsg:index": localizer["no"],
+            "nsg:row": localizer["noRow"],
+            "nsg:column": localizer["noCol"],
         }
     elif _type == "nsg:AreaSelector":
         # AreaSelectorShape properties.
@@ -176,12 +183,11 @@ def pa_hastarget_hasselector(localizer: JSON) -> JSON:
         wd = localizer["width"]
         ht = localizer["height"]
         specific = {
-            # TODO Remove 'rdf' and 'dcterms' when mappings added to data context.
             "rdf:value": f"page={page_num}&viewrect={left},{top},{wd},{ht}",
             "dcterms:conformsTo": "http://tools.ietf.org/rfc/rfc3778",
         }
     else:
-        raise Exception("Unknown localizer type!")
+        raise Exception("Unknown localizer type!", _type)
 
     return {**base, **specific}
 
@@ -191,25 +197,29 @@ def pa_hasbody(parameters: List[JSON], parameter_uuid_mapping: Dict[str, str]) -
     def t(x: JSON) -> JSON:
         return {
             "@id": parameter_uuid_mapping[x["id"]],
-            "@type": "nsg:Parameter",
+            "@type": [
+                "nsg:Parameter",
+            ],
         }
     return [t(x) for x in parameters]
 
 
-def pa_keywords(tags: List[JSON]) -> List[JSON]:
+def pa_keyword(tags: List[JSON]) -> List[JSON]:
     def t(x: JSON) -> JSON:
         return {
             "@id": x["id"],
-            "label": x["name"],
+            "rdfs:label": x["name"],
         }
     return [t(x) for x in tags]
 
 
-def pa_experimentalproperties(experiment_properties: List[JSON],
-                              parameter_uuid_mapping: Dict[str, str]) -> List[JSON]:
+def pa_experimentalproperty(experiment_properties: List[JSON],
+                            parameter_uuid_mapping: Dict[str, str]) -> List[JSON]:
     def t(x):
         return {
             "@id": parameter_uuid_mapping[x["instanceId"]],
-            "@type": "nsg:Parameter",
+            "@type": [
+                "nsg:Parameter",
+            ],
         }
     return [t(x) for x in experiment_properties]

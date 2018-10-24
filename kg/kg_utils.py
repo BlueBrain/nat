@@ -16,7 +16,7 @@ def select_by_type(_type: str, data: Iterable[JSON]) -> Iterator[JSON]:
     return (x for x in data if _type in x["@type"])
 
 
-def find(uuid: str, data: Iterable[JSON], uuid_field: str = "providerId") -> Optional[JSON]:
+def find(uuid: str, data: Iterable[JSON], uuid_field: str = "nsg:providerId") -> Optional[JSON]:
     found = next(x for x in data if x[uuid_field] == uuid)
     if found:
         return found
@@ -24,8 +24,8 @@ def find(uuid: str, data: Iterable[JSON], uuid_field: str = "providerId") -> Opt
         return None
 
 
-def profiling(data: Iterable[JSON], conditions: List[Callable[[JSON], bool]],
-              flatten: bool = False) -> Union[List[List[int]], List[int]]:
+def profile(data: Iterable[JSON], conditions: List[Callable[[JSON], bool]],
+            flatten: bool = False) -> Union[List[List[int]], List[int]]:
     idxs = []
     for f in conditions:
         selected = [i for i, x in enumerate(data) if f(x)]
@@ -59,8 +59,8 @@ def remove_empty_values(data: JSON) -> None:
 @dataclass
 class TestDataConfiguration:
 
-    organization: str
     neuroshapes_dir: str
+    organization: str
     replacements: List[Tuple[str, str]] = field(default_factory=list)
     valid_data_path: Path = field(init=False)
     invalid_data_path: Path = field(init=False)
@@ -72,10 +72,10 @@ class TestDataConfiguration:
         self.invalid_data_path = part_1 / "invalid" / part_2
 
     def write(self, data: JSON, schema_name: str, schema_version: str,
-              optional_properties: List[str], flavour: str = None) -> None:
+              optional_properties: List[str], suffix: str = None) -> None:
         # Avoid copyright issues.
         try:
-            del data["hasTarget"]["hasSelector"]["text"]
+            del data["oa:hasTarget"]["oa:hasSelector"]["nsg:text"]
         except KeyError:
             pass
 
@@ -88,9 +88,9 @@ class TestDataConfiguration:
         filename = name_template.format("all")
         min_filename = name_template.format("min")
 
-        if flavour is not None:
-            filename += f"-{flavour}"
-            min_filename += f"-{flavour}"
+        if suffix is not None:
+            filename += f"-{suffix}"
+            min_filename += f"-{suffix}"
 
         schema_test_path = self.valid_data_path / schema_name / schema_version
 

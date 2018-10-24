@@ -2,7 +2,7 @@ __author__ = "Pierre-Alexandre Fonta"
 __maintainer__ = "Pierre-Alexandre Fonta"
 
 import traceback
-from typing import List, Dict, Iterator, Union, Optional, Any
+from typing import List, Dict, Iterator, Optional, Any
 
 from kg_utils import remove_empty_values
 from nexus_utils import prettify
@@ -11,11 +11,11 @@ from nexus_utils import prettify
 JSON = Dict[str, Any]
 
 
-def transform_parameters(raw_annotations: List[JSON], data_context: str,
+def transform_parameters(raw_annotations: List[JSON], data_context_iri: str,
                          variable_type_labels: Dict[str, str]) -> Iterator[JSON]:
     for i, x in enumerate(raw_annotations):
         for y in x["parameters"]:
-            json_ld = transform_parameter(y, data_context, variable_type_labels)
+            json_ld = transform_parameter(y, data_context_iri, variable_type_labels)
             if json_ld is None:
                 # TODO Handle better recovery from transformation errors.
                 print("<index>", i)
@@ -25,43 +25,44 @@ def transform_parameters(raw_annotations: List[JSON], data_context: str,
 
 
 # TODO Model the field 'relationship' from the source data.
-def transform_parameter(x: JSON, data_context: str, variable_type_labels: Dict[str, str]) -> Optional[JSON]:
+def transform_parameter(x: JSON, data_context_iri: str,
+                        variable_type_labels: Dict[str, str]) -> Optional[JSON]:
     try:
         _type = hp_type(x["description"]["type"])
 
         base_top = {
-            "@context": data_context,
+            "@context": data_context_iri,
 
             "@type": pp_type(_type, x["isExperimentProperty"]),
 
             # EntityShape properties.
 
-            "name": pp_name(x["id"], x["description"]["depVar"]["typeId"], variable_type_labels),
+            "schema:name": pp_name(x["id"], x["description"]["depVar"]["typeId"], variable_type_labels),
 
-            "providerId": x["id"],
+            "nsg:providerId": x["id"],
 
             # ParameterShape common derived properties.
 
-            "dependentVariable": hp_variable(_type, x["description"]["depVar"]),
+            "nsg:dependentVariable": hp_variable(_type, x["description"]["depVar"]),
         }
 
         if _type == "nsg:NumericalTraceParameter":
             specific = {
                 # NumericalTraceParameterShape properties.
 
-                "independentVariable": pp_independentvariable(_type, x["description"]["indepVars"]),
+                "nsg:independentVariable": pp_independentvariable(_type, x["description"]["indepVars"]),
             }
         elif _type == "nsg:FunctionParameter":
             specific = {
                 # FunctionParameterShape properties.
 
-                "independentVariable": pp_independentvariable(_type, x["description"]["indepVars"]),
+                "nsg:independentVariable": pp_independentvariable(_type, x["description"]["indepVars"]),
 
-                "equation": x["description"]["equation"],
+                "nsg:equation": x["description"]["equation"],
 
                 # Specific properties.
 
-                "equationParameters": pp_equationparameters(x["description"]["parameterRefs"]),
+                "nsg:equationParameter": pp_equationparameter(x["description"]["parameterRefs"]),
             }
         else:
             specific = {}
@@ -71,7 +72,7 @@ def transform_parameter(x: JSON, data_context: str, variable_type_labels: Dict[s
         base_bottom = {
             # Specific properties.
 
-            "requiredTag": pp_requiredtag(x["requiredTags"]),
+            "nsg:requiredTag": pp_requiredtag(x["requiredTags"]),
         }
 
         result = {**merged, **base_bottom}
@@ -97,11 +98,14 @@ def hp_type(_type: str) -> str:
     return mapping[_type]
 
 
-def pp_type(_type: str, is_experiment_property: bool) -> Union[List[str], str]:
+def pp_type(_type: str, is_experiment_property: bool) -> List[str]:
     if is_experiment_property:
-        return [_type, "nsg:ExperimentalPropertyParameter"]
+        return [
+            _type,
+            "nsg:ExperimentalPropertyParameter",
+        ]
     else:
-        return _type
+        return [_type]
 
 
 def pp_name(_id: str, type_id: str, variable_type_labels: Dict[str, str]) -> str:
@@ -131,13 +135,13 @@ def hp_variable(parameter_type: str, variable: JSON) -> JSON:
         value = values[0] if len(values) == 1 else values
         base = {
             # ValueShape properties.
-            "unitCode": x["unit"],
-            "value": value,
+            "schema:unitCode": x["unit"],
+            "schema:value": value,
         }
         statistic = x["statistic"]
         if statistic != "raw":
             specific = {
-                "statistic": statistic,
+                "nsg:statistic": statistic,
             }
         else:
             specific = {}
@@ -146,39 +150,41 @@ def hp_variable(parameter_type: str, variable: JSON) -> JSON:
     _type = hp_variable_type(parameter_type, variable)
 
     base = {
-        "@type": _type,
+        "@type": [
+            _type,
+        ],
 
         # VariableShape common derived properties.
-        "quantityType": "nsg:" + variable["typeId"],
+        "nsg:quantityType": variable["typeId"],
     }
 
     if _type == "nsg:SimpleNumericalVariable":
         specific = {
             # SimpleNumericalVariableShape properties.
-            "series": t(variable["values"]),
+            "nsg:series": t(variable["values"]),
         }
 
     elif _type == "nsg:CompoundNumericalVariable":
         specific = {
             # CompoundNumericalVariableShape properties.
-            "series": [t(x) for x in variable["values"]["valueLst"]],
+            "nsg:series": [t(x) for x in variable["values"]["valueLst"]],
         }
 
     elif _type == "nsg:AlgebraicVariable":
         base_algebraic_value = {
             # AlgebraicValueShape properties.
-            "unitCode": variable["unit"],
+            "schema:unitCode": variable["unit"],
         }
         statistic = variable["statistic"]
         if statistic != "raw":
             specific = {
-                "statistic": statistic,
+                "nsg:statistic": statistic,
                 **base_algebraic_value,
             }
         else:
             specific = base_algebraic_value
     else:
-        raise Exception("Unknown variable type!")
+        raise Exception("Unknown variable type!", _type)
 
     return {**base, **specific}
 
@@ -187,11 +193,13 @@ def pp_independentvariable(parameter_type: str, indep_vars: List[JSON]) -> List[
     return [hp_variable(parameter_type, x) for x in indep_vars]
 
 
-def pp_equationparameters(parameter_refs: List[JSON]) -> List[JSON]:
+def pp_equationparameter(parameter_refs: List[JSON]) -> List[JSON]:
     def t(x: JSON) -> JSON:
         return {
             "@id": x["instanceId"],  # TODO Use the user-provided ID feature of Nexus v1.
-            "@type": "nsg:Parameter",
+            "@type": [
+                "nsg:Parameter",
+            ],
         }
     return [t(x) for x in parameter_refs]
 
@@ -199,8 +207,8 @@ def pp_equationparameters(parameter_refs: List[JSON]) -> List[JSON]:
 def pp_requiredtag(required_tags: List[JSON]) -> List[JSON]:
     def t(x: JSON) -> JSON:
         return {
-            "rootId": x["rootId"],
-            "id": x["id"],
-            "label": x["name"],
+            "nsg:rootId": x["rootId"],
+            "@id": x["id"],
+            "rdfs:label": x["name"],
         }
     return [t(x) for x in required_tags]

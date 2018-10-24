@@ -30,6 +30,12 @@ Designed for:
 - Python 3.7+
 
 
+## Future
+
+* Multithreaded create_xyz() methods.
+* Workflow orchestration with a language like CWL (Common Workflow Language).
+
+
 ## Features
 
 Overview.
