@@ -48,7 +48,7 @@ and [Nexus Utils](#nexus-utils) sections or directly to the code.
 * Configure different pipelines (user domain, Neuroshapes, ...).
 
 ```
-config = PipelineConfiguration(token, deployment, client, organization, domain, organization_desc, domain_desc)
+pipeline = PipelineConfiguration(neuroshapes_dir, client, organization, domain, organization_desc, domain_desc)
 ```
 
 ### Schemas
@@ -82,8 +82,6 @@ config = PipelineConfiguration(token, deployment, client, organization, domain, 
 
 * Update automatically test data to **follow changes in the SHACL shapes or in
 the transformation logic**.
-
-
 * Write valid test data for Neuroshapes (`min-fields.json` & `all-fields.json`).
 * Handle 'flavours' of data (i.e. same root shape with **different nested field shapes**).
 
@@ -99,13 +97,13 @@ the transformation logic**.
 ```
 class TestDataConfiguration:
     
-    def write(self, data, schema_name, schema_version, optional_properties, flavour=None) -> None
+    def write(self, data, schema_name, schema_version, optional_properties, suffix=None) -> None
     def write_missing(self, schema_name, schema_version, base_filename, config) -> None
 
 
 select_by_type(_type, data) -> Iterator[JSON]
-find(uuid, data, uuid_field="providerId") -> Optional[JSON]
-profiling(data, conditions, flatten=False) -> Union[List[List[int]], List[int]]
+find(uuid, data, uuid_field="nsg:providerId") -> Optional[JSON]
+profile(data, conditions, flatten=False) -> Union[List[List[int]], List[int]]
 prepare(data, replacements) -> str
 remove_empty_values(data) -> None
 ```
@@ -114,32 +112,38 @@ remove_empty_values(data) -> None
 
 ```
 class PipelineConfiguration:
-  
-    # is_xyz_pushed() methods.
     
-    def is_organization_pushed(self) -> bool
-    def is_domain_pushed(self) -> bool
-    def is_schema_pushed(self, name, version) -> bool
-    def are_schemas_pushed(self, names_versions) -> Dict[str, bool]
+    # Checking helpers.
     
-    # create_xyz() methods.
+    def is_organization_created(self) -> bool
+    def is_domain_created(self) -> bool
+    def is_context_created(self, name, version) -> bool
+    def is_schema_created(self, name, version) -> bool
+    def are_contexts_created(self, names_versions) -> Dict[str, bool]
+    def are_schemas_created(self, names_versions) -> Dict[str, bool]
     
-    def create_organization(self) -> Optional[Organization]
-    def create_domain(self) -> Optional[Domain]
-    def create_publish_schema(self, name, version, data) -> Optional[Schema]
-    def create_publish_schemas(self, data) -> Dict[str, Optional[Schema]]
+    # Preparation helpers.
+    
+    def prepare_context(self, name, version) -> JSON
+    def prepare_schema(self, name, version, is_user_domain=False) -> JSON
+    def prepare_contexts(self, names_versions) -> Dict[str, JSON]
+    def prepare_schemas(self, names_versions, is_user_domain=False) -> Dict[str, JSON]
+    
+    # Creation helpers.
+    
+    def create_organization(self) -> Organization
+    def create_domain(self) -> Domain
+    def create_context(self, name, version, data, publish) -> Context
+    def create_schema(self, name, version, data, publish) -> Schema
+    def create_contexts(self, data, publish) -> Dict[str, Context]
+    def create_schemas(self, data, publish) -> Dict[str, Schema]
     def create_instance(self, schema_name, schema_version, data) -> Optional[Instance]
-    def create_instances(self, schema_name, schema_version, data, start=0, exclude_idxs=None) -> None
+    def create_instances(self, schema_name, schema_version, data, start_idx=0, exclude_idxs=None) -> None
     
-    # load_prepare_xyz() methods.
+    # Searching helpers.
     
-    def load_prepare_schema(self, neuroshapes_dir, name, version, specific=False) -> JSON
-    def load_prepare_schemas(self, neuroshapes_dir, names_versions, specific=False) -> Dict[str, JSON]
-    
-    # instances_by_xyz() methods.
-    
-    def instances_by_schema(self, name, version, resolved=False, deprecated=False) -> SearchResultList
-    def instances_of_domain(self, resolved=False, deprecated=False) -> SearchResultList
+    def instances_by_schema(self, name, version, resolve=False) -> SearchResultList
+    def instances_of_domain(self, resolve=False) -> SearchResultList
     def retrieve_all_results(self, x) -> Optional[List[Union[SearchResult, Instance]]]
     
     # Cleaning helpers.
