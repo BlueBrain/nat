@@ -140,7 +140,7 @@ class PipelineConfiguration:
     def create_instance(self, schema_name, schema_version, data) -> Optional[Instance]
     def create_instances(self, schema_name, schema_version, data, start_idx=0, exclude_idxs=None) -> None
     
-    # Searching helpers.
+    # Listing helpers.
     
     def instances_by_schema(self, name, version, resolve=False) -> SearchResultList
     def instances_of_domain(self, resolve=False) -> SearchResultList
@@ -149,6 +149,15 @@ class PipelineConfiguration:
     # Cleaning helpers.
     
     def clean(self, organization, domain) -> None
+
+
+class SearchConfiguration:
+
+    # Searching helpers.
+
+    def search(self, query, limit=10) -> List[JSON]
+    def search_by_path(self, path, value, limit=10) -> List[JSON]
+    def search_by_paths(self, paths_values, limit=10) -> List[JSON]
 
 
 def prettify(data) -> None

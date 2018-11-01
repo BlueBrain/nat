@@ -12,6 +12,7 @@ from typing import (Dict, Optional, List, Tuple, Any, Set, Union, Iterator,
                     Iterable, Callable)
 from urllib.parse import urlparse
 
+import requests
 from openid_http_client.auth_client.access_token_client import AccessTokenClient
 from pyxus.client import NexusClient
 from pyxus.resources.entity import (Instance, Schema, Organization, Domain,
@@ -218,22 +219,18 @@ class PipelineConfiguration:
                     created_count += 1
         print("<count>", created_count)
 
-    # Searching helpers.
+    # Listing helpers.
 
     def instances_by_schema(self, name: str, version: str, resolve: bool = False) -> SearchResultList:
-        # TODO Put size: int = None as parameter when Nexus removes the limit of 50.
-        size = 50
         r = self.client.instances.list_by_schema(self.organization, self.domain,
                                                  name, version, resolved=resolve,
-                                                 size=size)
+                                                 size=50)
         self._search_result_list_stats(r)
         return r
 
     def instances_of_domain(self, resolve: bool = False) -> SearchResultList:
-        # TODO Put size: int = None as parameter when Nexus removes the limit of 50.
-        size = 50
         r = self.client.instances.list(subpath=f"/{self.organization}/{self.domain}",
-                                       resolved=resolve, size=size)
+                                       resolved=resolve, size=50)
         self._search_result_list_stats(r)
         return r
 
@@ -325,3 +322,91 @@ class PipelineConfiguration:
             value = fun(name, version, *args)
             _dict[key] = value
         return _dict
+
+
+@dataclass
+class SearchConfiguration:
+
+    token: str
+    deployment: str
+    organization: str
+    domain: str
+    context_version: str
+    include_deprecated: bool = field(default=False)
+    headers: str = field(init=False)
+    endpoint: str = field(init=False)
+    context: str = field(init=False)
+    query_base: str = field(init=False)
+
+    def __post_init__(self):
+        self.headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+        }
+        self.endpoint = f"{self.deployment}/queries/{self.organization}/{self.domain}/"
+        self.context = f"{self.deployment}/contexts/neurosciencegraph/core/data/{self.context_version}"
+        self.query_base = {
+            "@context": self.context,
+            "deprecated": self.include_deprecated,
+            "fields": ["all"],
+            "resource": "instances",
+        }
+
+    # Searching helpers.
+
+    def search(self, query: JSON, limit: int = 10) -> List[JSON]:
+        size = min(50, limit)
+        url = f"{self.endpoint}?size={size}"
+        cursor_response = requests.post(url, json=query, headers=self.headers, allow_redirects=False)
+
+        try:
+            cursor = cursor_response.headers["Location"]
+        except Exception as e:
+            print(cursor_response.content)
+            raise e
+
+        page = requests.get(cursor, headers=self.headers).json()
+        total = page["total"]
+        results = page["results"]
+        count = len(results)
+
+        while count < min(total, limit):
+            new_size = min(size, limit - count)
+            cursor = page["links"]["next"]
+            cursor = cursor.replace(f"size={size}", f"size={new_size}")
+            page = requests.get(cursor, headers=self.headers).json()
+            new_results = page["results"]
+            count += new_size
+            results.extend(new_results)
+
+        print("<count>", total)
+        if count < total:
+            print("<warning>", f"{total - count} still to be retrieved")
+
+        return [x["source"] for x in results]
+
+    def search_by_path(self, path: str, value: Any, limit: int = 10) -> List[JSON]:
+        _filter = {
+            "filter": self._condition_eq(path, value),
+        }
+        query = {**self.query_base, **_filter}
+        return self.search(query, limit)
+
+    def search_by_paths(self, paths_values: List[Tuple[str, Any]], limit: int = 10) -> List[JSON]:
+        conditions = [self._condition_eq(path, value) for path, value in paths_values]
+        _filters = {
+            "filter": {
+                "op": "and",
+                "value": conditions,
+            },
+        }
+        query = {**self.query_base, **_filters}
+        return self.search(query, limit)
+
+    @staticmethod
+    def _condition_eq(path: str, value: Any) -> JSON:
+        return {
+            "op": "eq",
+            "path": path,
+            "value": value,
+        }
